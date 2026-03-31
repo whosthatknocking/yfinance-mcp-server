@@ -41,7 +41,7 @@ def _handle_error(exc: Exception) -> None:
 
 
 @mcp.tool()
-def yfinance_get_server_metadata() -> Dict[str, object]:
+def get_server_metadata() -> Dict[str, object]:
     """Return MCP server metadata, supported yfinance version, and transport modes."""
     try:
         metadata = ToolMetadata(**wrapper.get_metadata())
@@ -51,7 +51,7 @@ def yfinance_get_server_metadata() -> Dict[str, object]:
 
 
 @mcp.tool()
-def yfinance_get_info(symbol: str) -> Dict[str, object]:
+def get_info(symbol: str) -> Dict[str, object]:
     """Get comprehensive company and profile information for a ticker symbol."""
     try:
         result = wrapper.get_info(symbol)
@@ -61,7 +61,7 @@ def yfinance_get_info(symbol: str) -> Dict[str, object]:
 
 
 @mcp.tool()
-def yfinance_get_fast_info(symbol: str) -> Dict[str, object]:
+def get_fast_info(symbol: str) -> Dict[str, object]:
     """Get a lightweight quote and profile snapshot for a ticker symbol."""
     try:
         result = wrapper.get_fast_info(symbol)
@@ -71,7 +71,7 @@ def yfinance_get_fast_info(symbol: str) -> Dict[str, object]:
 
 
 @mcp.tool()
-def yfinance_get_history(
+def get_history(
     symbol: str,
     period: Optional[str] = None,
     interval: str = "1d",
@@ -100,7 +100,7 @@ def yfinance_get_history(
 
 
 @mcp.tool()
-def yfinance_download(
+def download(
     tickers: List[str],
     period: Optional[str] = None,
     interval: str = "1d",
@@ -129,7 +129,7 @@ def yfinance_download(
 
 
 @mcp.tool()
-def yfinance_get_news(symbol: str, count: int = 10, tab: str = "news") -> List[Dict[str, object]]:
+def get_news(symbol: str, count: int = 10, tab: str = "news") -> List[Dict[str, object]]:
     """Get Yahoo Finance news results for a ticker symbol."""
     try:
         request = NewsRequest(symbol=symbol, count=count, tab=tab)
@@ -140,7 +140,7 @@ def yfinance_get_news(symbol: str, count: int = 10, tab: str = "news") -> List[D
 
 
 @mcp.tool()
-def yfinance_get_option_expirations(symbol: str) -> List[str]:
+def get_option_expirations(symbol: str) -> List[str]:
     """Get available option expiration dates for a ticker symbol."""
     try:
         result = wrapper.get_option_expirations(symbol)
@@ -150,7 +150,7 @@ def yfinance_get_option_expirations(symbol: str) -> List[str]:
 
 
 @mcp.tool()
-def yfinance_get_option_chain(symbol: str, date: Optional[str] = None) -> Dict[str, object]:
+def get_option_chain(symbol: str, date: Optional[str] = None) -> Dict[str, object]:
     """Get calls and puts for a ticker symbol option chain."""
     try:
         request = OptionChainRequest(symbol=symbol, date=date)
@@ -161,7 +161,7 @@ def yfinance_get_option_chain(symbol: str, date: Optional[str] = None) -> Dict[s
 
 
 @mcp.tool()
-def yfinance_get_income_stmt(symbol: str, freq: str = "yearly", pretty: bool = False) -> Dict[str, object]:
+def get_income_stmt(symbol: str, freq: str = "yearly", pretty: bool = False) -> Dict[str, object]:
     """Get yearly, quarterly, or trailing income statement data for a ticker symbol."""
     try:
         request = StatementRequest(symbol=symbol, freq=freq, pretty=pretty)
@@ -172,7 +172,7 @@ def yfinance_get_income_stmt(symbol: str, freq: str = "yearly", pretty: bool = F
 
 
 @mcp.tool()
-def yfinance_get_balance_sheet(symbol: str, freq: str = "yearly", pretty: bool = False) -> Dict[str, object]:
+def get_balance_sheet(symbol: str, freq: str = "yearly", pretty: bool = False) -> Dict[str, object]:
     """Get yearly or quarterly balance sheet data for a ticker symbol."""
     try:
         request = StatementRequest(symbol=symbol, freq=freq, pretty=pretty)
@@ -183,7 +183,7 @@ def yfinance_get_balance_sheet(symbol: str, freq: str = "yearly", pretty: bool =
 
 
 @mcp.tool()
-def yfinance_get_cashflow(symbol: str, freq: str = "yearly", pretty: bool = False) -> Dict[str, object]:
+def get_cashflow(symbol: str, freq: str = "yearly", pretty: bool = False) -> Dict[str, object]:
     """Get yearly, quarterly, or trailing cashflow data for a ticker symbol."""
     try:
         request = StatementRequest(symbol=symbol, freq=freq, pretty=pretty)
@@ -194,7 +194,7 @@ def yfinance_get_cashflow(symbol: str, freq: str = "yearly", pretty: bool = Fals
 
 
 @mcp.tool()
-def yfinance_get_market_summary(market: str) -> Dict[str, object]:
+def get_market_summary(market: str) -> Dict[str, object]:
     """Get Yahoo Finance market summary data for a market code."""
     try:
         request = MarketRequest(market=market)

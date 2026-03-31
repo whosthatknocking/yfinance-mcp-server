@@ -2,9 +2,12 @@
 
 `yfinance-mcp-server` is a Python MCP server that exposes the information-collection parts of the `yfinance` library as discoverable, type-safe tools for AI hosts.
 
-## Overview
+## Objectives
 
-The project provides a production-oriented MCP server that maps supported `yfinance` data APIs into explicit read-only tools for local and remote MCP clients. It is designed for AI hosts that need direct access to market data, company information, financial statements, analyst signals, options data, search results, and related financial reference data through stable structured tool contracts.
+- expose supported `yfinance` information APIs as explicit MCP tools
+- provide typed, schema-stable responses for AI hosts
+- support both local stdio mode and remote streamable HTTP mode
+- include caching, retry, and rate-limit-aware wrapper behavior
 
 ## Features
 
@@ -50,18 +53,18 @@ Remote HTTP mode:
 
 The initial implementation scaffolds the package, abstract cache layer, serialization utilities, MCP entrypoint, and a first working tool slice:
 
-- `yfinance_get_server_metadata`
-- `yfinance_get_info`
-- `yfinance_get_fast_info`
-- `yfinance_get_history`
-- `yfinance_download`
-- `yfinance_get_news`
-- `yfinance_get_option_expirations`
-- `yfinance_get_option_chain`
-- `yfinance_get_income_stmt`
-- `yfinance_get_balance_sheet`
-- `yfinance_get_cashflow`
-- `yfinance_get_market_summary`
+- `get_server_metadata`
+- `get_info`
+- `get_fast_info`
+- `get_history`
+- `download`
+- `get_news`
+- `get_option_expirations`
+- `get_option_chain`
+- `get_income_stmt`
+- `get_balance_sheet`
+- `get_cashflow`
+- `get_market_summary`
 
 ## Configuration
 
@@ -88,12 +91,6 @@ Common settings:
 - [src/yfinance_mcp/wrapper.py](/Users/emt/Workspace/yfinance-mcp-server/src/yfinance_mcp/wrapper.py) contains the yfinance wrapper, retry policy, and cache usage.
 - [src/yfinance_mcp/cache.py](/Users/emt/Workspace/yfinance-mcp-server/src/yfinance_mcp/cache.py) defines the cache abstraction and in-memory backend.
 - [src/yfinance_mcp/schemas.py](/Users/emt/Workspace/yfinance-mcp-server/src/yfinance_mcp/schemas.py) contains request and response schemas.
-
-## Development
-
-- install development dependencies with uv pip install -e .[dev]
-- run tests with PYTHONPATH=src pytest
-- keep changes aligned with the spec and API mapping docs
 
 ## Development
 

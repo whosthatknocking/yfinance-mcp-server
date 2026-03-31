@@ -122,7 +122,7 @@ The authoritative source for scope is the latest supported upstream `yfinance` d
 - Example structure:
   - instantiate `FastMCP` with a server name such as `yfinance`
   - create a shared wrapper instance
-  - register explicit tools such as `yfinance_get_info(symbol: str) -> dict`
+  - register explicit tools such as `get_info(symbol: str) -> dict`
   - start the server with either `stdio` or `streamable-http` transport
 
 ### `wrapper.py`
@@ -150,7 +150,7 @@ The authoritative source for scope is the latest supported upstream `yfinance` d
 
 ### Tool Naming and Contract Recommendations
 
-- Use stable, explicit names such as `yfinance_get_info`, `yfinance_get_history`, and `yfinance_download`.
+- Use stable, explicit names such as `get_info`, `get_history`, and `download`.
 - Prefer one tool per upstream concept instead of large polymorphic tools with many mutually exclusive parameters.
 - Keep return contracts stable across transports.
 - Avoid switching between JSON objects and markdown strings as the primary return type for the same tool.
@@ -168,16 +168,16 @@ The implementation should maintain an exhaustive mapping of information-collecti
 
 | yfinance Call | MCP Tool Name | Key Parameters | Return Type |
 | --- | --- | --- | --- |
-| `Ticker(symbol).info` | `yfinance_get_info` | `symbol: str` | `dict` |
-| `Ticker(symbol).history(...)` | `yfinance_get_history` | `symbol`, `period`, `interval`, `start`, `end` | `dict` |
-| `Ticker(symbol).financials` | `yfinance_get_income_stmt` | `symbol`, `freq` | `dict` |
-| `Ticker(symbol).balance_sheet` | `yfinance_get_balance_sheet` | `symbol`, `freq` | `dict` |
-| `yf.download(...)` | `yfinance_download` | `tickers: list[str]`, `period`, others | `dict` |
-| `yf.Tickers(...).tickers[...].info` | `yfinance_batch_info` | `symbols: list[str]` | `dict` |
-| `Ticker(symbol).news` | `yfinance_get_news` | `symbol: str` | `list[dict]` |
-| `Ticker(symbol).option_chain(...)` | `yfinance_get_option_chain` | `symbol`, `date: str` | `dict` |
-| `yf.Market(market).summary` | `yfinance_get_market_summary` | `market: str` | `dict` |
-| `yf.screen(query, ...)` | `yfinance_screen` | `query`, `count`, `offset` | `dict` |
+| `Ticker(symbol).info` | `get_info` | `symbol: str` | `dict` |
+| `Ticker(symbol).history(...)` | `get_history` | `symbol`, `period`, `interval`, `start`, `end` | `dict` |
+| `Ticker(symbol).financials` | `get_income_stmt` | `symbol`, `freq` | `dict` |
+| `Ticker(symbol).balance_sheet` | `get_balance_sheet` | `symbol`, `freq` | `dict` |
+| `yf.download(...)` | `download` | `tickers: list[str]`, `period`, others | `dict` |
+| `yf.Tickers(...).tickers[...].info` | `get_batch_info` | `symbols: list[str]` | `dict` |
+| `Ticker(symbol).news` | `get_news` | `symbol: str` | `list[dict]` |
+| `Ticker(symbol).option_chain(...)` | `get_option_chain` | `symbol`, `date: str` | `dict` |
+| `yf.Market(market).summary` | `get_market_summary` | `market: str` | `dict` |
+| `yf.screen(query, ...)` | `screen` | `query`, `count`, `offset` | `dict` |
 
 The final `API_MAPPING.md` should be exhaustive and maintained against the official `yfinance` reference.
 
