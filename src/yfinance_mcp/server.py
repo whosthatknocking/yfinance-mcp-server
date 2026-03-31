@@ -43,7 +43,12 @@ def _handle_error(exc: Exception) -> None:
 
 @mcp.tool()
 def get_server_metadata() -> Dict[str, object]:
-    """Return MCP server metadata, supported yfinance version, and transport modes."""
+    """Return server metadata.
+
+    Use this tool to inspect the MCP server version, supported yfinance version,
+    transport modes, and active cache backend. It is useful for environment
+    checks and compatibility debugging.
+    """
     try:
         metadata = ToolMetadata(**wrapper.get_metadata())
         return metadata.model_dump()
@@ -53,7 +58,12 @@ def get_server_metadata() -> Dict[str, object]:
 
 @mcp.tool()
 def get_info(symbol: str) -> Dict[str, object]:
-    """Get comprehensive company and profile information for a ticker symbol."""
+    """Get detailed company and profile information for a single ticker.
+
+    Use this tool for reference-style data such as company profile fields,
+    exchange metadata, business summary information, and other broad ticker
+    details. For a lighter quote snapshot, use `get_fast_info` instead.
+    """
     try:
         result = wrapper.get_info(symbol)
         return JsonObjectResult.model_validate(result).model_dump()
@@ -63,7 +73,12 @@ def get_info(symbol: str) -> Dict[str, object]:
 
 @mcp.tool()
 def get_fast_info(symbol: str) -> Dict[str, object]:
-    """Get a lightweight quote and profile snapshot for a ticker symbol."""
+    """Get a lightweight market snapshot for a single ticker.
+
+    Use this tool when you need a quick quote-oriented view such as last price,
+    market cap, averages, and basic trading context. For richer company and
+    profile metadata, use `get_info`.
+    """
     try:
         result = wrapper.get_fast_info(symbol)
         return JsonObjectResult.model_validate(result).model_dump()
@@ -82,7 +97,12 @@ def get_history(
     auto_adjust: bool = True,
     actions: bool = True,
 ) -> Dict[str, object]:
-    """Get historical OHLCV data for a ticker symbol."""
+    """Get historical price candles for a single ticker.
+
+    Use this tool for charting, trend analysis, and recent performance review.
+    It supports either a named lookback period or an explicit start/end date
+    range. For multi-ticker historical retrieval, use `download`.
+    """
     try:
         request = HistoryRequest(
             symbol=symbol,
@@ -111,7 +131,12 @@ def download(
     prepost: bool = False,
     actions: bool = False,
 ) -> Dict[str, object]:
-    """Download historical data for one or more ticker symbols."""
+    """Download historical price data for one or more tickers.
+
+    Use this tool when you need a batch historical dataset across multiple
+    symbols. For a single ticker history request, `get_history` is usually the
+    better fit.
+    """
     try:
         request = DownloadRequest(
             tickers=tickers,
@@ -131,7 +156,12 @@ def download(
 
 @mcp.tool()
 def get_news(symbol: str, count: int = 10, tab: str = "news") -> List[Dict[str, object]]:
-    """Get Yahoo Finance news results for a ticker symbol."""
+    """Get recent Yahoo Finance news for a ticker.
+
+    Use this tool to retrieve recent article metadata tied to a symbol. It is
+    useful for event-driven analysis, sentiment review, and contextualizing
+    recent market moves.
+    """
     try:
         request = NewsRequest(symbol=symbol, count=count, tab=tab)
         result = wrapper.get_news(**request.model_dump())
@@ -142,7 +172,11 @@ def get_news(symbol: str, count: int = 10, tab: str = "news") -> List[Dict[str, 
 
 @mcp.tool()
 def get_option_expirations(symbol: str) -> List[str]:
-    """Get available option expiration dates for a ticker symbol."""
+    """Get available option expiration dates for a ticker.
+
+    Use this tool before `get_option_chain` when you need to discover which
+    option expiration dates are available for a symbol.
+    """
     try:
         result = wrapper.get_option_expirations(symbol)
         return JsonListResult(items=result).items
@@ -152,7 +186,12 @@ def get_option_expirations(symbol: str) -> List[str]:
 
 @mcp.tool()
 def get_option_chain(symbol: str, date: Optional[str] = None) -> Dict[str, object]:
-    """Get calls and puts for a ticker symbol option chain."""
+    """Get calls and puts for a ticker option chain.
+
+    Use this tool for options analysis after you know the desired expiration
+    date. Pair it with `get_option_expirations` when you need to discover valid
+    dates first.
+    """
     try:
         request = OptionChainRequest(symbol=symbol, date=date)
         result = wrapper.get_option_chain(**request.model_dump())
@@ -163,7 +202,11 @@ def get_option_chain(symbol: str, date: Optional[str] = None) -> Dict[str, objec
 
 @mcp.tool()
 def get_income_stmt(symbol: str, freq: str = "yearly", pretty: bool = False) -> Dict[str, object]:
-    """Get yearly, quarterly, or trailing income statement data for a ticker symbol."""
+    """Get income statement data for a ticker.
+
+    Use this tool for annual, quarterly, or trailing income statement analysis.
+    It is best suited for revenue, margin, and profitability review.
+    """
     try:
         request = StatementRequest(symbol=symbol, freq=freq, pretty=pretty)
         result = wrapper.get_income_stmt(**request.model_dump())
@@ -174,7 +217,11 @@ def get_income_stmt(symbol: str, freq: str = "yearly", pretty: bool = False) -> 
 
 @mcp.tool()
 def get_balance_sheet(symbol: str, freq: str = "yearly", pretty: bool = False) -> Dict[str, object]:
-    """Get yearly or quarterly balance sheet data for a ticker symbol."""
+    """Get balance sheet data for a ticker.
+
+    Use this tool for annual or quarterly balance sheet analysis such as assets,
+    liabilities, and capital structure review.
+    """
     try:
         request = StatementRequest(symbol=symbol, freq=freq, pretty=pretty)
         result = wrapper.get_balance_sheet(**request.model_dump())
@@ -185,7 +232,12 @@ def get_balance_sheet(symbol: str, freq: str = "yearly", pretty: bool = False) -
 
 @mcp.tool()
 def get_cashflow(symbol: str, freq: str = "yearly", pretty: bool = False) -> Dict[str, object]:
-    """Get yearly, quarterly, or trailing cashflow data for a ticker symbol."""
+    """Get cashflow statement data for a ticker.
+
+    Use this tool for annual, quarterly, or trailing cashflow analysis,
+    including operating cashflow, investing activity, and free-cash-flow style
+    review.
+    """
     try:
         request = StatementRequest(symbol=symbol, freq=freq, pretty=pretty)
         result = wrapper.get_cashflow(**request.model_dump())
@@ -196,7 +248,12 @@ def get_cashflow(symbol: str, freq: str = "yearly", pretty: bool = False) -> Dic
 
 @mcp.tool()
 def get_market_summary(market: str) -> Dict[str, object]:
-    """Get Yahoo Finance market summary data for a market code."""
+    """Get Yahoo Finance market summary data for a market code.
+
+    Use this tool when you need a market-level overview rather than a
+    single-ticker lookup. For example, it can provide a quick view of the US
+    market summary.
+    """
     try:
         request = MarketRequest(market=market)
         result = wrapper.get_market_summary(**request.model_dump())

@@ -45,11 +45,31 @@ class OptionChainResult(BaseModel):
 class HistoryRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    symbol: str = Field(min_length=1)
-    period: Optional[str] = None
-    interval: str = "1d"
-    start: Optional[str] = None
-    end: Optional[str] = None
+    symbol: str = Field(
+        min_length=1,
+        description="Yahoo Finance ticker symbol such as AAPL, MSFT, TSLA, or SPY.",
+        examples=["AAPL"],
+    )
+    period: Optional[str] = Field(
+        default=None,
+        description="Named lookback period such as 1d, 5d, 1mo, 6mo, 1y, 5y, or max. Use either period or start/end.",
+        examples=["6mo"],
+    )
+    interval: str = Field(
+        default="1d",
+        description="Price interval such as 1d, 1wk, 1mo, or supported intraday intervals when available.",
+        examples=["1d"],
+    )
+    start: Optional[str] = Field(
+        default=None,
+        description="Start date in YYYY-MM-DD format. Use with end for explicit date ranges.",
+        examples=["2025-01-01"],
+    )
+    end: Optional[str] = Field(
+        default=None,
+        description="End date in YYYY-MM-DD format. Use with start for explicit date ranges.",
+        examples=["2025-03-31"],
+    )
     prepost: bool = False
     auto_adjust: bool = True
     actions: bool = True
@@ -58,19 +78,40 @@ class HistoryRequest(BaseModel):
 class StatementRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    symbol: str = Field(min_length=1)
-    freq: str = Field(default="yearly", pattern="^(yearly|quarterly|trailing)$")
+    symbol: str = Field(
+        min_length=1,
+        description="Yahoo Finance ticker symbol such as AAPL, AMZN, or META.",
+        examples=["AMZN"],
+    )
+    freq: str = Field(
+        default="yearly",
+        pattern="^(yearly|quarterly|trailing)$",
+        description="Statement frequency. Use yearly for annual statements, quarterly for quarter-level data, or trailing where supported.",
+        examples=["yearly"],
+    )
     pretty: bool = False
 
 
 class DownloadRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    tickers: List[str] = Field(min_length=1)
-    period: Optional[str] = None
-    interval: str = "1d"
-    start: Optional[str] = None
-    end: Optional[str] = None
+    tickers: List[str] = Field(
+        min_length=1,
+        description="List of Yahoo Finance ticker symbols for a batch historical download.",
+        examples=[["AAPL", "MSFT", "NVDA"]],
+    )
+    period: Optional[str] = Field(
+        default=None,
+        description="Named lookback period such as 1mo, 6mo, 1y, or max. Use either period or start/end.",
+        examples=["1y"],
+    )
+    interval: str = Field(
+        default="1d",
+        description="Price interval such as 1d, 1wk, or 1mo.",
+        examples=["1wk"],
+    )
+    start: Optional[str] = Field(default=None, description="Start date in YYYY-MM-DD format.", examples=["2024-01-01"])
+    end: Optional[str] = Field(default=None, description="End date in YYYY-MM-DD format.", examples=["2025-01-01"])
     auto_adjust: bool = True
     prepost: bool = False
     actions: bool = False
@@ -79,22 +120,48 @@ class DownloadRequest(BaseModel):
 class NewsRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    symbol: str = Field(min_length=1)
-    count: int = Field(default=10, ge=1, le=100)
-    tab: str = "news"
+    symbol: str = Field(
+        min_length=1,
+        description="Yahoo Finance ticker symbol for which to retrieve recent news.",
+        examples=["TSLA"],
+    )
+    count: int = Field(
+        default=10,
+        ge=1,
+        le=100,
+        description="Maximum number of news items to request.",
+        examples=[10],
+    )
+    tab: str = Field(
+        default="news",
+        description="Yahoo Finance news tab to query. Use the default unless you know a specific tab is needed.",
+        examples=["news"],
+    )
 
 
 class OptionChainRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    symbol: str = Field(min_length=1)
-    date: Optional[str] = None
+    symbol: str = Field(
+        min_length=1,
+        description="Yahoo Finance ticker symbol for the option chain, such as SPY or AAPL.",
+        examples=["SPY"],
+    )
+    date: Optional[str] = Field(
+        default=None,
+        description="Specific expiration date in YYYY-MM-DD format. If omitted, yfinance uses its default behavior.",
+        examples=["2025-06-20"],
+    )
 
 
 class MarketRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    market: str = Field(min_length=1)
+    market: str = Field(
+        min_length=1,
+        description="Yahoo Finance market code such as us.",
+        examples=["us"],
+    )
 
 
 class ErrorPayload(BaseModel):
