@@ -57,6 +57,15 @@ To bind a host and port explicitly:
 
 An example Claude Desktop MCP config is available in [examples/claude_config.json.example](/Users/emt/Workspace/yfinance-mcp-server/examples/claude_config.json.example).
 
+## LM Studio Example
+
+LM Studio examples are available in:
+
+- [examples/lmstudio_config.json.example](/Users/emt/Workspace/yfinance-mcp-server/examples/lmstudio_config.json.example) for a `uv`-based setup
+- [examples/lmstudio_config.venv.json.example](/Users/emt/Workspace/yfinance-mcp-server/examples/lmstudio_config.venv.json.example) for an explicit virtualenv Python path
+
+For LM Studio, make sure the config uses the project directory as `cwd`. If LM Studio launches the system Python without the project environment, it will fail to import `yfinance_mcp`.
+
 ## Verify
 
 After starting the server:

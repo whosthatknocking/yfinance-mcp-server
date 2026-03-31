@@ -2,10 +2,8 @@
   "mcpServers": {
     "yfinance": {
       "cwd": "/path/to/yfinance-mcp-server",
-      "command": "uv",
+      "command": "/path/to/yfinance-mcp-server/.venv/bin/python",
       "args": [
-        "run",
-        "python",
         "-m",
         "yfinance_mcp.server"
       ]
