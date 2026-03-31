@@ -95,28 +95,20 @@ The authoritative source for scope is the latest supported upstream `yfinance` d
 
 ## Proposed Folder Structure
 
-```text
-yfinance-mcp-server/
-├── pyproject.toml
-├── README.md
-├── LICENSE
-├── .env.example
-├── src/
-│   └── yfinance_mcp/
-│       ├── __init__.py
-│       ├── server.py
-│       ├── wrapper.py
-│       ├── schemas.py
-│       └── utils.py
-├── tests/
-│   ├── test_tools.py
-│   └── test_serialization.py
-├── examples/
-│   └── claude_config.json.example
-└── docs/
-    ├── PROJECT_SPEC.md
-    └── API_MAPPING.md
-```
+- `pyproject.toml`
+- `README.md`
+- `LICENSE`
+- `.env.example`
+- `src/yfinance_mcp/__init__.py`
+- `src/yfinance_mcp/server.py`
+- `src/yfinance_mcp/wrapper.py`
+- `src/yfinance_mcp/schemas.py`
+- `src/yfinance_mcp/utils.py`
+- `tests/test_tools.py`
+- `tests/test_serialization.py`
+- `examples/claude_config.json.example`
+- `docs/PROJECT_SPEC.md`
+- `docs/API_MAPPING.md`
 
 ## Architecture
 

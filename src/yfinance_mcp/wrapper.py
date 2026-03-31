@@ -3,33 +3,18 @@ from __future__ import annotations
 import os
 import threading
 import time
+import random
 from dataclasses import dataclass
-import logging
 from typing import Any, Callable, Dict, List, Optional
 
+import structlog
 import yfinance as yf
 
+from . import __version__
 from .cache import CacheBackend, InMemoryTTLCache
 from .utils import normalize_symbol, normalize_symbols, serialize_value
 
-try:
-    import structlog
-except Exception:  # pragma: no cover - dependency may be absent in minimal environments
-    structlog = None  # type: ignore[assignment]
-
-
-class _FallbackLogger:
-    def __init__(self, name: str) -> None:
-        self._logger = logging.getLogger(name)
-
-    def info(self, event: str, **kwargs: Any) -> None:
-        self._logger.info("%s %s", event, kwargs)
-
-    def warning(self, event: str, **kwargs: Any) -> None:
-        self._logger.warning("%s %s", event, kwargs)
-
-
-logger = structlog.get_logger(__name__) if structlog is not None else _FallbackLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 class YFinanceError(RuntimeError):
@@ -45,6 +30,7 @@ class RetryPolicy:
     connect_timeout: int
     read_timeout: int
     total_timeout: int
+    backoff_cap_seconds: float
 
 
 class ConcurrencyLimiter:
@@ -72,6 +58,7 @@ class YFinanceWrapper:
             connect_timeout=int(os.getenv("YF_CONNECT_TIMEOUT", "5")),
             read_timeout=int(os.getenv("YF_READ_TIMEOUT", "20")),
             total_timeout=int(os.getenv("YF_TOTAL_TIMEOUT", "30")),
+            backoff_cap_seconds=float(os.getenv("YF_BACKOFF_CAP_SECONDS", "4")),
         )
         self.timeout = min(self.retry_policy.read_timeout, self.retry_policy.total_timeout)
         self.limiter = ConcurrencyLimiter(int(os.getenv("YF_UPSTREAM_CONCURRENCY", "4")))
@@ -79,7 +66,7 @@ class YFinanceWrapper:
     def get_metadata(self) -> Dict[str, Any]:
         return {
             "server_name": "yfinance",
-            "server_version": "0.1.0",
+            "server_version": __version__,
             "supported_yfinance_version": getattr(yf, "__version__", "unknown"),
             "transport_modes": ["stdio", "streamable-http"],
             "cache_backend": self.cache_backend_name,
@@ -92,6 +79,7 @@ class YFinanceWrapper:
             ttl=self.reference_ttl,
             operation=lambda: serialize_value(self._ticker(normalized).info),
             error_context={"symbol": normalized},
+            allow_stale=True,
         )
 
     def get_fast_info(self, symbol: str) -> Dict[str, Any]:
@@ -101,6 +89,7 @@ class YFinanceWrapper:
             ttl=self.quote_ttl,
             operation=lambda: serialize_value(dict(self._ticker(normalized).fast_info)),
             error_context={"symbol": normalized},
+            allow_stale=False,
         )
 
     def get_history(
@@ -130,6 +119,7 @@ class YFinanceWrapper:
             ttl=self.history_ttl,
             operation=lambda: serialize_value(self._ticker(normalized).history(**{k: v for k, v in params.items() if v is not None})),
             error_context={"symbol": normalized, "params": params},
+            allow_stale=True,
         )
 
     def download(
@@ -176,6 +166,7 @@ class YFinanceWrapper:
                 )
             ),
             error_context={"tickers": normalized, "params": params},
+            allow_stale=True,
         )
 
     def get_news(self, symbol: str, count: int = 10, tab: str = "news") -> List[Dict[str, Any]]:
@@ -185,6 +176,7 @@ class YFinanceWrapper:
             ttl=self.quote_ttl,
             operation=lambda: serialize_value(self._ticker(normalized).get_news(count=count, tab=tab)),
             error_context={"symbol": normalized, "count": count, "tab": tab},
+            allow_stale=True,
         )
 
     def get_option_expirations(self, symbol: str) -> List[str]:
@@ -194,6 +186,7 @@ class YFinanceWrapper:
             ttl=self.quote_ttl,
             operation=lambda: serialize_value(list(self._ticker(normalized).options)),
             error_context={"symbol": normalized},
+            allow_stale=False,
         )
 
     def get_option_chain(self, symbol: str, date: Optional[str] = None) -> Dict[str, Any]:
@@ -213,6 +206,7 @@ class YFinanceWrapper:
             ttl=self.quote_ttl,
             operation=operation,
             error_context={"symbol": normalized, "date": date},
+            allow_stale=False,
         )
 
     def get_income_stmt(self, symbol: str, freq: str = "yearly", pretty: bool = False) -> Dict[str, Any]:
@@ -236,6 +230,7 @@ class YFinanceWrapper:
             ttl=self.quote_ttl,
             operation=operation,
             error_context={"market": normalized},
+            allow_stale=False,
         )
 
     def _statement_call(self, symbol: str, statement_name: str, freq: str, pretty: bool) -> Dict[str, Any]:
@@ -272,6 +267,7 @@ class YFinanceWrapper:
             ttl=self.reference_ttl,
             operation=lambda: serialize_value(operation()),
             error_context={"symbol": normalized, "statement_name": statement_name, "freq": freq},
+            allow_stale=True,
         )
 
     def _cached_call(
@@ -280,17 +276,29 @@ class YFinanceWrapper:
         ttl: int,
         operation: Callable[[], Any],
         error_context: Dict[str, Any],
+        allow_stale: bool,
     ) -> Any:
         cached = self.cache.get(key)
         if cached is not None:
             logger.info("cache_hit", cache_key=key)
             return cached
         logger.info("cache_miss", cache_key=key)
-        value = self._run_with_retry(operation=operation, error_context=error_context)
+        stale_entry_getter = getattr(self.cache, "get_entry", None)
+        stale_value = None
+        if callable(stale_entry_getter) and allow_stale:
+            stale_entry = stale_entry_getter(key, allow_stale=True)
+            if stale_entry is not None:
+                stale_value = stale_entry.value
+        value = self._run_with_retry(operation=operation, error_context=error_context, stale_value=stale_value)
         self.cache.set(key, value, ttl_seconds=ttl)
         return value
 
-    def _run_with_retry(self, operation: Callable[[], Any], error_context: Dict[str, Any]) -> Any:
+    def _run_with_retry(
+        self,
+        operation: Callable[[], Any],
+        error_context: Dict[str, Any],
+        stale_value: Optional[Any] = None,
+    ) -> Any:
         start = time.time()
         attempt = 0
         while True:
@@ -307,8 +315,15 @@ class YFinanceWrapper:
                     raise YFinanceError(category, str(exc), error_context)
                 elapsed = time.time() - start
                 if attempt > self.retry_policy.max_retries or elapsed >= self.retry_policy.total_timeout:
+                    if stale_value is not None and category in {"upstream_temporary", "timeout"}:
+                        logger.warning("serving_stale_cache", category=category, **error_context)
+                        return stale_value
                     raise YFinanceError(category, str(exc), error_context) from exc
-                time.sleep(min(2 ** (attempt - 1), 4))
+                time.sleep(self._compute_backoff(attempt))
+
+    def _compute_backoff(self, attempt: int) -> float:
+        base_delay = min(2 ** (attempt - 1), self.retry_policy.backoff_cap_seconds)
+        return random.uniform(0, base_delay)
 
     def _classify_exception(self, exc: Exception) -> str:
         message = str(exc).lower()
@@ -316,6 +331,8 @@ class YFinanceWrapper:
             return "invalid_input"
         if "429" in message or "rate limit" in message or "too many requests" in message:
             return "upstream_temporary"
+        if "not found" in message:
+            return "invalid_input"
         if "timeout" in message:
             return "timeout"
         return "upstream_temporary"

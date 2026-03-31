@@ -23,6 +23,25 @@ class ToolMetadata(BaseModel):
     cache_backend: str
 
 
+class JsonObjectResult(BaseModel):
+    model_config = ConfigDict(extra="allow")
+
+
+class JsonListResult(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    items: List[Any]
+
+
+class OptionChainResult(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    symbol: str
+    date: Optional[str]
+    calls: DataFramePayload
+    puts: DataFramePayload
+
+
 class HistoryRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
