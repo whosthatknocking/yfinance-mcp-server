@@ -14,27 +14,22 @@ This document maps the latest supported `yfinance` API surface to explicit MCP t
 
 - `planned`: explicit MCP tool in v1
 - `alias`: upstream alias handled by an existing planned tool
-- `deferred`: intentionally not a normal MCP request-response tool in v1
-- `config-only`: handled through server configuration, not exposed as a user-facing market-data tool
+- `documented-out-of-scope`: documented for completeness but not part of the MCP information-tool surface
 
-## Top-Level Functions and Utilities
+## Top-Level Information APIs
 
 | Upstream API | Kind | MCP Tool | Status | Notes |
 | --- | --- | --- | --- | --- |
 | `yf.download(...)` | function | `yfinance_download` | planned | Multi-ticker historical download with explicit history parameters. |
-| `yf.screen(...)` | function | `yfinance_screen` | planned | Accept predefined query names or serialized query objects. |
+| `yf.screen(...)` | function | `yfinance_screen` | planned | Canonical screener tool that accepts predefined names or serialized query objects. |
 | `yf.Search(...)` | class constructor | `yfinance_search` | planned | Returns structured search payload and selected views. |
 | `yf.Lookup(...)` | class constructor | `yfinance_lookup` | planned | Returns grouped lookup data. |
 | `yf.Market(market)` | class constructor | `yfinance_get_market` | planned | Returns summary and status for a market code. |
 | `yf.Calendars(...)` | class constructor | `yfinance_get_calendars` | planned | Returns default calendar bundle for a date range. |
 | `yf.Sector(key)` | class constructor | `yfinance_get_sector` | planned | Returns sector overview and linked data. |
 | `yf.Industry(key)` | class constructor | `yfinance_get_industry` | planned | Returns industry overview and linked data. |
-| `yf.EquityQuery(...)` | class constructor | `yfinance_build_equity_query` | planned | Produces validated serialized query objects for screening. |
-| `yf.FundQuery(...)` | class constructor | `yfinance_build_fund_query` | planned | Produces validated serialized query objects for screening. |
-| `yf.enable_debug_mode()` | function | none | config-only | Prefer server logging configuration over runtime debug mutation. |
-| `yf.set_tz_cache_location(path)` | function | none | config-only | Prefer environment/config at server startup. |
-| `yf.WebSocket(...)` | class constructor | none | deferred | Streaming does not fit core request-response MCP tools cleanly. |
-| `yf.AsyncWebSocket(...)` | class constructor | none | deferred | Same rationale as synchronous WebSocket. |
+| `yf.EquityQuery(...)` | class constructor | `yfinance_build_equity_query` | planned | Helper tool that produces validated serialized query objects for read-only screening. |
+| `yf.FundQuery(...)` | class constructor | `yfinance_build_fund_query` | planned | Helper tool that produces validated serialized query objects for read-only screening. |
 
 ## Ticker Construction and Core Access
 
@@ -53,7 +48,6 @@ This document maps the latest supported `yfinance` API surface to explicit MCP t
 | `Ticker.get_news(count=10, tab='news')` | method | `yfinance_get_news` | alias | MCP tool should expose `count` and `tab`. |
 | `Ticker.options` | property | `yfinance_get_option_expirations` | planned | Returns available option expiration dates. |
 | `Ticker.option_chain(date=None, tz=None)` | method | `yfinance_get_option_chain` | planned | Returns calls and puts in structured schema. |
-| `Ticker.live(message_handler=None, verbose=True)` | method | none | deferred | Streaming-oriented behavior. |
 
 ## Ticker Price, Corporate Actions, and Ownership Time Series
 
@@ -173,15 +167,16 @@ This document maps the latest supported `yfinance` API surface to explicit MCP t
 | `Tickers.history(...)` | method | `yfinance_get_batch_history` | planned | Multi-symbol history wrapper. |
 | `Tickers.download(...)` | method | `yfinance_download` | alias | Same behavior family as top-level `yf.download`. |
 | `Tickers.news()` | method | `yfinance_get_batch_news` | planned | Returns news grouped by symbol or upstream response shape. |
-| `Tickers.live(message_handler=None, verbose=True)` | method | none | deferred | Streaming-oriented behavior. |
 | `Tickers.tickers[...]` | attribute access | `yfinance_get_batch_info` | planned | Expose common batch getter helpers without raw object traversal. |
 
 ## Market, Calendars, Search, and Lookup
 
 | Upstream API | Kind | MCP Tool | Status | Notes |
 | --- | --- | --- | --- | --- |
+| `Market(market)` | class constructor | `yfinance_get_market` | planned | Aggregate market tool returning summary and status in one normalized payload. |
 | `Market.status` | property | `yfinance_get_market_status` | planned | Market open/closed state and metadata. |
 | `Market.summary` | property | `yfinance_get_market_summary` | planned | Market summary payload. |
+| `Calendars(...)` | class constructor | `yfinance_get_calendars` | planned | Aggregate calendars tool returning the supported calendar views in one normalized payload. |
 | `Calendars.earnings_calendar` | property | `yfinance_get_earnings_calendar` | planned | Default range earnings calendar. |
 | `Calendars.get_earnings_calendar(...)` | method | `yfinance_get_earnings_calendar` | alias | Expose `market_cap`, `filter_most_active`, `start`, `end`, `limit`, `offset`, `force`. |
 | `Calendars.economic_events_calendar` | property | `yfinance_get_economic_events_calendar` | planned | Default range economic events. |
@@ -198,6 +193,7 @@ This document maps the latest supported `yfinance` API surface to explicit MCP t
 | `Search.nav` | property | `yfinance_search` | alias | Include navigation links view in output. |
 | `Search.research` | property | `yfinance_search` | alias | Include research view in output. |
 | `Search.search()` | method | `yfinance_search` | alias | Constructor-plus-search should collapse into one MCP call. |
+| `Lookup(...)` | class constructor | `yfinance_lookup` | planned | Aggregate lookup tool returning grouped results across supported instrument types. |
 | `Lookup.all` | property | `yfinance_lookup_all` | planned | All matching instruments. |
 | `Lookup.get_all(count=25)` | method | `yfinance_lookup_all` | alias | Same MCP tool as property. |
 | `Lookup.stock` | property | `yfinance_lookup_stock` | planned | Stocks only. |
@@ -249,22 +245,28 @@ This document maps the latest supported `yfinance` API surface to explicit MCP t
 | `EquityQuery.valid_fields` | attribute | `yfinance_get_equity_query_fields` | planned | Surface valid fields metadata for tool discoverability. |
 | `FundQuery.to_dict()` | method | `yfinance_build_fund_query` | alias | MCP output should be a serialized query object. |
 | `FundQuery.valid_fields` | attribute | `yfinance_get_fund_query_fields` | planned | Surface valid fields metadata. |
-| `screen(query, ...)` with predefined name | function | `yfinance_screen_predefined` | planned | Convenience wrapper for named screeners. |
-| `screen(query, ...)` with `EquityQuery` | function | `yfinance_screen_equities` | planned | Typed screener wrapper for equities. |
-| `screen(query, ...)` with `FundQuery` | function | `yfinance_screen_funds` | planned | Typed screener wrapper for funds. |
+| `screen(query, ...)` with predefined name | function | `yfinance_screen` | alias | Canonical screener tool should accept predefined names. |
+| `screen(query, ...)` with `EquityQuery` | function | `yfinance_screen` | alias | Canonical screener tool should accept serialized equity queries. |
+| `screen(query, ...)` with `FundQuery` | function | `yfinance_screen` | alias | Canonical screener tool should accept serialized fund queries. |
 
-## WebSocket APIs
+## Documented Out-of-Scope APIs
 
 | Upstream API | Kind | MCP Tool | Status | Notes |
 | --- | --- | --- | --- | --- |
-| `WebSocket.subscribe(symbols)` | method | none | deferred | Better fit for future MCP notifications/resources support. |
-| `WebSocket.unsubscribe(symbols)` | method | none | deferred | Same rationale. |
-| `WebSocket.listen(message_handler=None)` | method | none | deferred | Long-lived stream. |
-| `WebSocket.close()` | method | none | deferred | Stream lifecycle operation. |
-| `AsyncWebSocket.subscribe(symbols)` | method | none | deferred | Long-lived async stream. |
-| `AsyncWebSocket.unsubscribe(symbols)` | method | none | deferred | Long-lived async stream. |
-| `AsyncWebSocket.listen(message_handler=None)` | method | none | deferred | Long-lived async stream. |
-| `AsyncWebSocket.close()` | method | none | deferred | Stream lifecycle operation. |
+| `yf.enable_debug_mode()` | function | none | documented-out-of-scope | Process-level helper, not an information tool. |
+| `yf.set_tz_cache_location(path)` | function | none | documented-out-of-scope | Startup configuration, not an information tool. |
+| `yf.WebSocket(...)` | class constructor | none | documented-out-of-scope | Streaming does not fit the core request-response MCP scope. |
+| `yf.AsyncWebSocket(...)` | class constructor | none | documented-out-of-scope | Streaming does not fit the core request-response MCP scope. |
+| `Ticker.live(message_handler=None, verbose=True)` | method | none | documented-out-of-scope | Streaming-oriented behavior. |
+| `Tickers.live(message_handler=None, verbose=True)` | method | none | documented-out-of-scope | Streaming-oriented behavior. |
+| `WebSocket.subscribe(symbols)` | method | none | documented-out-of-scope | Long-lived stream lifecycle operation. |
+| `WebSocket.unsubscribe(symbols)` | method | none | documented-out-of-scope | Long-lived stream lifecycle operation. |
+| `WebSocket.listen(message_handler=None)` | method | none | documented-out-of-scope | Long-lived stream lifecycle operation. |
+| `WebSocket.close()` | method | none | documented-out-of-scope | Long-lived stream lifecycle operation. |
+| `AsyncWebSocket.subscribe(symbols)` | method | none | documented-out-of-scope | Long-lived async stream lifecycle operation. |
+| `AsyncWebSocket.unsubscribe(symbols)` | method | none | documented-out-of-scope | Long-lived async stream lifecycle operation. |
+| `AsyncWebSocket.listen(message_handler=None)` | method | none | documented-out-of-scope | Long-lived async stream lifecycle operation. |
+| `AsyncWebSocket.close()` | method | none | documented-out-of-scope | Long-lived async stream lifecycle operation. |
 
 ## Recommended Initial Tool Set
 
@@ -287,7 +289,7 @@ These tools should exist first because they cover the highest-value `yfinance` p
 - `yfinance_get_earnings_calendar`
 - `yfinance_search`
 - `yfinance_lookup_stock`
-- `yfinance_screen_predefined`
+- `yfinance_screen`
 
 ## Implementation Notes
 
@@ -295,7 +297,7 @@ These tools should exist first because they cover the highest-value `yfinance` p
 - For nested objects like `FundsData`, expose either:
   - one aggregate tool returning the whole normalized object, and
   - optional narrow tools for high-value subfields
-- Keep WebSocket support out of the default request-response tool set until the server has a clear streaming design.
+- Keep out-of-scope config and streaming APIs out of the default request-response tool set.
 - Update this mapping whenever the supported `yfinance` version changes.
 
 ## Upstream References
