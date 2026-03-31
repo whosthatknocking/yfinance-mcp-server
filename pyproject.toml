@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "yfinance-mcp-server"
+version = "0.1.0"
+description = "MCP server exposing yfinance information APIs as typed tools."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [
+  { name = "whosthatknocking" }
+]
+dependencies = [
+  "modelcontextprotocol>=1.0.1",
+  "pandas>=2.2",
+  "pydantic>=2.8",
+  "structlog>=24.4",
+  "yfinance>=1.2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.3",
+]
+
+[project.scripts]
+yfinance-mcp-server = "yfinance_mcp.server:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
