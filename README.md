@@ -55,9 +55,9 @@ The initial implementation scaffolds the package, abstract cache layer, serializ
 
 - `get_server_metadata`
 - `get_info`
-- `get_fast_info`
+- `get_quote_snapshot`
 - `get_history`
-- `download`
+- `download_history`
 - `get_news`
 - `get_option_expirations`
 - `get_option_chain`

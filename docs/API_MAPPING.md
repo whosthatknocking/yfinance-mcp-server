@@ -5,7 +5,7 @@ This document maps the latest supported `yfinance` API surface to explicit MCP t
 ## Mapping Rules
 
 - Source of truth: official `yfinance` API reference and documented behavior for the latest supported upstream release.
-- MCP tool names use stable snake case with a `yfinance_` prefix.
+- MCP tool names use stable snake case without repeating the server name prefix.
 - The server should prefer canonical upstream concepts over duplicate aliases.
 - Upstream aliases should either map to the same MCP tool or be documented as compatibility aliases.
 - Tools should return structured JSON-safe payloads, even when upstream returns pandas objects.
@@ -20,7 +20,7 @@ This document maps the latest supported `yfinance` API surface to explicit MCP t
 
 | Upstream API | Kind | MCP Tool | Status | Notes |
 | --- | --- | --- | --- | --- |
-| `yf.download(...)` | function | `download` | planned | Multi-ticker historical download with explicit history parameters. |
+| `yf.download(...)` | function | `download_history` | planned | Multi-ticker historical download with explicit history parameters. |
 | `yf.screen(...)` | function | `screen` | planned | Canonical screener tool that accepts predefined names or serialized query objects. |
 | `yf.Search(...)` | class constructor | `search` | planned | Returns structured search payload and selected views. |
 | `yf.Lookup(...)` | class constructor | `lookup` | planned | Returns grouped lookup data. |
@@ -40,8 +40,8 @@ This document maps the latest supported `yfinance` API surface to explicit MCP t
 | `Ticker.get_history_metadata()` | method | `get_history_metadata` | planned | Returns history metadata dict. |
 | `Ticker.info` | property | `get_info` | planned | Canonical info tool. |
 | `Ticker.get_info()` | method | `get_info` | alias | Same MCP tool as `info`. |
-| `Ticker.fast_info` | property | `get_fast_info` | planned | Lightweight quote/profile snapshot. |
-| `Ticker.get_fast_info()` | method | `get_fast_info` | alias | Same MCP tool as `fast_info`. |
+| `Ticker.fast_info` | property | `get_quote_snapshot` | planned | Lightweight quote/profile snapshot exposed with a more natural MCP name. |
+| `Ticker.get_fast_info()` | method | `get_quote_snapshot` | alias | Same MCP tool as `fast_info`. |
 | `Ticker.isin` | property | `get_isin` | planned | Canonical ISIN tool. |
 | `Ticker.get_isin()` | method | `get_isin` | alias | Same MCP tool as `isin`. |
 | `Ticker.news` | property | `get_news` | planned | News list with default upstream behavior. |
@@ -165,7 +165,7 @@ This document maps the latest supported `yfinance` API surface to explicit MCP t
 | --- | --- | --- | --- | --- |
 | `yf.Tickers(tickers, session=None)` | class constructor | internal | planned | Internal wrapper entry point for batch operations. |
 | `Tickers.history(...)` | method | `get_batch_history` | planned | Multi-symbol history wrapper. |
-| `Tickers.download(...)` | method | `download` | alias | Same behavior family as top-level `yf.download`. |
+| `Tickers.download(...)` | method | `download_history` | alias | Same behavior family as top-level `yf.download`. |
 | `Tickers.news()` | method | `get_batch_news` | planned | Returns news grouped by symbol or upstream response shape. |
 | `Tickers.tickers[...]` | attribute access | `get_batch_info` | planned | Expose common batch getter helpers without raw object traversal. |
 
@@ -273,9 +273,9 @@ This document maps the latest supported `yfinance` API surface to explicit MCP t
 These tools should exist first because they cover the highest-value `yfinance` paths while preserving the canonical schema design needed for the larger surface:
 
 - `get_info`
-- `get_fast_info`
+- `get_quote_snapshot`
 - `get_history`
-- `download`
+- `download_history`
 - `get_news`
 - `get_option_expirations`
 - `get_option_chain`

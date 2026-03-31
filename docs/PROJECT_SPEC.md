@@ -150,7 +150,7 @@ The authoritative source for scope is the latest supported upstream `yfinance` d
 
 ### Tool Naming and Contract Recommendations
 
-- Use stable, explicit names such as `get_info`, `get_history`, and `download`.
+- Use stable, explicit names such as `get_info`, `get_quote_snapshot`, `get_history`, and `download_history`.
 - Prefer one tool per upstream concept instead of large polymorphic tools with many mutually exclusive parameters.
 - Keep return contracts stable across transports.
 - Avoid switching between JSON objects and markdown strings as the primary return type for the same tool.
@@ -169,10 +169,11 @@ The implementation should maintain an exhaustive mapping of information-collecti
 | yfinance Call | MCP Tool Name | Key Parameters | Return Type |
 | --- | --- | --- | --- |
 | `Ticker(symbol).info` | `get_info` | `symbol: str` | `dict` |
+| latest quote-style ticker snapshot | `get_quote_snapshot` | `symbol: str` | `dict` |
 | `Ticker(symbol).history(...)` | `get_history` | `symbol`, `period`, `interval`, `start`, `end` | `dict` |
 | `Ticker(symbol).financials` | `get_income_stmt` | `symbol`, `freq` | `dict` |
 | `Ticker(symbol).balance_sheet` | `get_balance_sheet` | `symbol`, `freq` | `dict` |
-| `yf.download(...)` | `download` | `tickers: list[str]`, `period`, others | `dict` |
+| `yf.download(...)` | `download_history` | `tickers: list[str]`, `period`, others | `dict` |
 | `yf.Tickers(...).tickers[...].info` | `get_batch_info` | `symbols: list[str]` | `dict` |
 | `Ticker(symbol).news` | `get_news` | `symbol: str` | `list[dict]` |
 | `Ticker(symbol).option_chain(...)` | `get_option_chain` | `symbol`, `date: str` | `dict` |

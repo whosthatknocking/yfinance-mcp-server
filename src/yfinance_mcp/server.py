@@ -72,12 +72,14 @@ def get_info(symbol: str) -> Dict[str, object]:
 
 
 @mcp.tool()
-def get_fast_info(symbol: str) -> Dict[str, object]:
-    """Get a lightweight market snapshot for a single ticker.
+def get_quote_snapshot(symbol: str) -> Dict[str, object]:
+    """Get the latest quote-oriented snapshot for a single ticker.
 
-    Use this tool when you need a quick quote-oriented view such as last price,
-    market cap, averages, and basic trading context. For richer company and
-    profile metadata, use `get_info`.
+    Use this tool when the request is about the latest stock information, latest
+    market snapshot, current trading context, or a quick symbol overview. This
+    tool is intended for quote-style stock lookups such as latest price, market
+    cap, and recent trading context. For richer company profile information, use
+    `get_info`.
     """
     try:
         result = wrapper.get_fast_info(symbol)
@@ -121,7 +123,7 @@ def get_history(
 
 
 @mcp.tool()
-def download(
+def download_history(
     tickers: List[str],
     period: Optional[str] = None,
     interval: str = "1d",
