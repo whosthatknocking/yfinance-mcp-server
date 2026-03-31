@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "yfinance": {
+      "command": "uv",
+      "args": [
+        "run",
+        "python",
+        "-m",
+        "yfinance_mcp.server"
+      ]
+    }
+  }
+}
