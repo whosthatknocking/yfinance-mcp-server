@@ -8,6 +8,7 @@ import yfinance as yf
 from pydantic import ValidationError
 
 from . import __version__
+from .logging_utils import configure_logging
 from .schemas import (
     DownloadRequest,
     HistoryRequest,
@@ -20,12 +21,12 @@ from .schemas import (
     StatementRequest,
     ToolMetadata,
 )
-from .wrapper import YFinanceError, YFinanceWrapper
-
 from mcp.server.fastmcp import FastMCP
 
-structlog.configure(processors=[structlog.processors.TimeStamper(fmt="iso"), structlog.processors.JSONRenderer()])
+configure_logging()
 logger = structlog.get_logger(__name__)
+
+from .wrapper import YFinanceError, YFinanceWrapper
 
 
 wrapper = YFinanceWrapper()

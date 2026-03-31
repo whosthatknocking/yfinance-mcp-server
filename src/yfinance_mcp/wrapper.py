@@ -12,8 +12,10 @@ import yfinance as yf
 
 from . import __version__
 from .cache import CacheBackend, InMemoryTTLCache
+from .logging_utils import configure_logging
 from .utils import normalize_symbol, normalize_symbols, serialize_value
 
+configure_logging()
 logger = structlog.get_logger(__name__)
 
 
