@@ -10,15 +10,21 @@ from pydantic import ValidationError
 from . import __version__
 from .logging_utils import configure_logging
 from .schemas import (
+    DownloadHistoryResult,
     DownloadRequest,
     HistoryRequest,
-    JsonListResult,
-    JsonObjectResult,
+    HistoryResult,
+    InfoResult,
     MarketRequest,
+    MarketSummaryResult,
+    NewsListResult,
     NewsRequest,
     OptionChainResult,
     OptionChainRequest,
+    QuoteSnapshotResult,
     StatementRequest,
+    StatementResult,
+    StringListResult,
     ToolMetadata,
 )
 from mcp.server.fastmcp import FastMCP
@@ -62,11 +68,11 @@ def get_info(symbol: str) -> Dict[str, object]:
 
     Use this tool for reference-style data such as company profile fields,
     exchange metadata, business summary information, and other broad ticker
-    details. For a lighter quote snapshot, use `get_fast_info` instead.
+    details. For a lighter quote snapshot, use `get_quote_snapshot` instead.
     """
     try:
         result = wrapper.get_info(symbol)
-        return JsonObjectResult.model_validate(result).model_dump()
+        return InfoResult.model_validate(result).model_dump()
     except Exception as exc:
         _handle_error(exc)
 
@@ -83,7 +89,7 @@ def get_quote_snapshot(symbol: str) -> Dict[str, object]:
     """
     try:
         result = wrapper.get_fast_info(symbol)
-        return JsonObjectResult.model_validate(result).model_dump()
+        return QuoteSnapshotResult.model_validate(result).model_dump()
     except Exception as exc:
         _handle_error(exc)
 
@@ -103,7 +109,7 @@ def get_history(
 
     Use this tool for charting, trend analysis, and recent performance review.
     It supports either a named lookback period or an explicit start/end date
-    range. For multi-ticker historical retrieval, use `download`.
+    range. For multi-ticker historical retrieval, use `download_history`.
     """
     try:
         request = HistoryRequest(
@@ -117,7 +123,7 @@ def get_history(
             actions=actions,
         )
         result = wrapper.get_history(**request.model_dump())
-        return JsonObjectResult.model_validate(result).model_dump()
+        return HistoryResult.model_validate(result).model_dump()
     except Exception as exc:
         _handle_error(exc)
 
@@ -151,7 +157,7 @@ def download_history(
             actions=actions,
         )
         result = wrapper.download(**request.model_dump())
-        return JsonObjectResult.model_validate(result).model_dump()
+        return DownloadHistoryResult.model_validate(result).model_dump()
     except Exception as exc:
         _handle_error(exc)
 
@@ -167,7 +173,7 @@ def get_news(symbol: str, count: int = 10, tab: str = "news") -> List[Dict[str, 
     try:
         request = NewsRequest(symbol=symbol, count=count, tab=tab)
         result = wrapper.get_news(**request.model_dump())
-        return JsonListResult(items=result).items
+        return NewsListResult(items=result).model_dump()["items"]
     except Exception as exc:
         _handle_error(exc)
 
@@ -181,7 +187,7 @@ def get_option_expirations(symbol: str) -> List[str]:
     """
     try:
         result = wrapper.get_option_expirations(symbol)
-        return JsonListResult(items=result).items
+        return StringListResult(items=result).items
     except Exception as exc:
         _handle_error(exc)
 
@@ -212,7 +218,7 @@ def get_income_stmt(symbol: str, freq: str = "yearly", pretty: bool = False) -> 
     try:
         request = StatementRequest(symbol=symbol, freq=freq, pretty=pretty)
         result = wrapper.get_income_stmt(**request.model_dump())
-        return JsonObjectResult.model_validate(result).model_dump()
+        return StatementResult.model_validate(result).model_dump()
     except Exception as exc:
         _handle_error(exc)
 
@@ -227,7 +233,7 @@ def get_balance_sheet(symbol: str, freq: str = "yearly", pretty: bool = False) -
     try:
         request = StatementRequest(symbol=symbol, freq=freq, pretty=pretty)
         result = wrapper.get_balance_sheet(**request.model_dump())
-        return JsonObjectResult.model_validate(result).model_dump()
+        return StatementResult.model_validate(result).model_dump()
     except Exception as exc:
         _handle_error(exc)
 
@@ -243,7 +249,7 @@ def get_cashflow(symbol: str, freq: str = "yearly", pretty: bool = False) -> Dic
     try:
         request = StatementRequest(symbol=symbol, freq=freq, pretty=pretty)
         result = wrapper.get_cashflow(**request.model_dump())
-        return JsonObjectResult.model_validate(result).model_dump()
+        return StatementResult.model_validate(result).model_dump()
     except Exception as exc:
         _handle_error(exc)
 
@@ -259,7 +265,7 @@ def get_market_summary(market: str) -> Dict[str, object]:
     try:
         request = MarketRequest(market=market)
         result = wrapper.get_market_summary(**request.model_dump())
-        return JsonObjectResult.model_validate(result).model_dump()
+        return MarketSummaryResult.model_validate(result).model_dump()
     except Exception as exc:
         _handle_error(exc)
 

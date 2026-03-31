@@ -5,14 +5,14 @@
 ## Objectives
 
 - expose supported `yfinance` information APIs as explicit MCP tools
-- provide typed, schema-stable responses for AI hosts
+- provide typed request models and validated JSON responses for AI hosts
 - support both local stdio mode and remote streamable HTTP mode
 - include caching, retry, and rate-limit-aware wrapper behavior
 
 ## Features
 
 - explicit MCP tools instead of a generic passthrough interface
-- typed request models and schema-stable JSON responses
+- typed request models and validated JSON-serializable responses
 - backend-agnostic caching with an in-memory implementation for v1
 - retry, timeout, and concurrency controls around upstream calls
 - support for both local `stdio` mode and remote `streamable-http` mode
@@ -66,6 +66,8 @@ The initial implementation scaffolds the package, abstract cache layer, serializ
 - `get_cashflow`
 - `get_market_summary`
 
+The current slice uses typed request models and validated JSON-safe outputs. History, download, statement, option chain, list-style outputs, and the current metadata, info, quote snapshot, and market summary tools all use named response models. The broadest upstream payloads still allow extra fields where `yfinance` is less stable.
+
 ## Configuration
 
 Environment settings are documented in [.env.example](/Users/emt/Workspace/yfinance-mcp-server/.env.example).
@@ -75,15 +77,23 @@ Common settings:
 - YF_TRANSPORT
 - YF_CACHE_BACKEND
 - YF_CACHE_TTL
+- YF_UPSTREAM_CONCURRENCY
+- YF_READ_TIMEOUT
+- YF_TOTAL_TIMEOUT
+- YF_MAX_RETRIES
+- YF_LOG_LEVEL
 - YF_HTTP_HOST
 - YF_HTTP_PORT
-- YF_MAX_WORKERS
 
 ## Documentation
 
 - [docs/USER_GUIDE.md](/Users/emt/Workspace/yfinance-mcp-server/docs/USER_GUIDE.md) for installation and run steps
 - [docs/PROJECT_SPEC.md](/Users/emt/Workspace/yfinance-mcp-server/docs/PROJECT_SPEC.md) for requirements and scope
 - [docs/API_MAPPING.md](/Users/emt/Workspace/yfinance-mcp-server/docs/API_MAPPING.md) for upstream-to-MCP tool mapping
+
+## Remote Mode
+
+Remote `streamable-http` transport is available in the current slice. Production-focused health and readiness support described in the project spec is still planned work.
 
 ## Project Layout
 

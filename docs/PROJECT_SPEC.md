@@ -237,7 +237,7 @@ The final `API_MAPPING.md` should be exhaustive and maintained against the offic
   - `YF_CACHE_TTL_REFERENCE`
   - `YF_CACHE_TTL_HISTORY`
   - `YF_CACHE_PATH`
-  - `YF_MAX_WORKERS`
+  - `YF_UPSTREAM_CONCURRENCY`
   - `YF_TRANSPORT`
   - `YF_LOG_LEVEL`
 - Recommended cache policy:

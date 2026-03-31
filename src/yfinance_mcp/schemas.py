@@ -13,6 +13,18 @@ class DataFramePayload(BaseModel):
     index: List[Any]
 
 
+class HistoryResult(DataFramePayload):
+    pass
+
+
+class DownloadHistoryResult(DataFramePayload):
+    pass
+
+
+class StatementResult(DataFramePayload):
+    pass
+
+
 class ToolMetadata(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -23,14 +35,125 @@ class ToolMetadata(BaseModel):
     cache_backend: str
 
 
-class JsonObjectResult(BaseModel):
+class InfoResult(BaseModel):
     model_config = ConfigDict(extra="allow")
+
+    symbol: Optional[str] = Field(
+        default=None,
+        description="Ticker symbol when available in the upstream info payload.",
+    )
+    shortName: Optional[str] = Field(
+        default=None,
+        description="Short company or instrument name when available.",
+    )
+    longName: Optional[str] = Field(
+        default=None,
+        description="Long company or instrument name when available.",
+    )
+    exchange: Optional[str] = Field(
+        default=None,
+        description="Exchange code when available.",
+    )
+    quoteType: Optional[str] = Field(
+        default=None,
+        description="Instrument type such as EQUITY or ETF when available.",
+    )
+    currency: Optional[str] = Field(
+        default=None,
+        description="Currency code when available.",
+    )
+    marketCap: Optional[Any] = Field(
+        default=None,
+        description="Market capitalization when available.",
+    )
+    longBusinessSummary: Optional[str] = Field(
+        default=None,
+        description="Business summary text when available.",
+    )
+
+
+class QuoteSnapshotResult(BaseModel):
+    model_config = ConfigDict(extra="allow")
+
+    currency: Optional[str] = Field(
+        default=None,
+        description="Currency code for the quote snapshot when available.",
+    )
+    exchange: Optional[str] = Field(
+        default=None,
+        description="Exchange code when available.",
+    )
+    lastPrice: Optional[Any] = Field(
+        default=None,
+        description="Latest known trading price when available.",
+    )
+    previousClose: Optional[Any] = Field(
+        default=None,
+        description="Previous close value when available.",
+    )
+    open: Optional[Any] = Field(
+        default=None,
+        description="Session open price when available.",
+    )
+    dayHigh: Optional[Any] = Field(
+        default=None,
+        description="Session high price when available.",
+    )
+    dayLow: Optional[Any] = Field(
+        default=None,
+        description="Session low price when available.",
+    )
+    marketCap: Optional[Any] = Field(
+        default=None,
+        description="Market capitalization when available.",
+    )
+    quoteType: Optional[str] = Field(
+        default=None,
+        description="Instrument type such as EQUITY or ETF when available.",
+    )
+    timezone: Optional[str] = Field(
+        default=None,
+        description="Exchange timezone when available.",
+    )
 
 
 class JsonListResult(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     items: List[Any]
+
+
+class StringListResult(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    items: List[str]
+
+
+class NewsItem(BaseModel):
+    model_config = ConfigDict(extra="allow")
+
+
+class NewsListResult(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    items: List[NewsItem]
+
+
+class MarketSummaryResult(BaseModel):
+    model_config = ConfigDict(extra="allow")
+
+    market: Optional[str] = Field(
+        default=None,
+        description="Requested market code when included in the payload.",
+    )
+    status: Optional[Any] = Field(
+        default=None,
+        description="Market status payload when available.",
+    )
+    summary: Optional[Any] = Field(
+        default=None,
+        description="Market summary payload when available.",
+    )
 
 
 class OptionChainResult(BaseModel):

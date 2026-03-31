@@ -35,6 +35,9 @@ Common settings:
 - YF_TRANSPORT=streamable-http for remote HTTP mode
 - YF_HTTP_HOST and YF_HTTP_PORT for remote mode
 - YF_CACHE_BACKEND, YF_CACHE_TTL, and related cache settings
+- YF_UPSTREAM_CONCURRENCY for upstream request concurrency limits
+- YF_READ_TIMEOUT, YF_TOTAL_TIMEOUT, and YF_MAX_RETRIES for upstream call handling
+- YF_LOG_LEVEL to control stderr log verbosity
 
 ## Run Locally with stdio
 
@@ -72,6 +75,7 @@ After starting the server:
 
 - local mode should start without errors and wait on stdio
 - remote mode should start an HTTP listener on the configured host and port
+- remote mode in the current implementation does not yet expose dedicated health or readiness endpoints
 
 ## Notes
 

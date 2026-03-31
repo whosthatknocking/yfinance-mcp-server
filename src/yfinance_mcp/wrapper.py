@@ -29,7 +29,6 @@ class YFinanceError(RuntimeError):
 @dataclass
 class RetryPolicy:
     max_retries: int
-    connect_timeout: int
     read_timeout: int
     total_timeout: int
     backoff_cap_seconds: float
@@ -57,7 +56,6 @@ class YFinanceWrapper:
         self.history_ttl = int(os.getenv("YF_CACHE_TTL_HISTORY", "900"))
         self.retry_policy = RetryPolicy(
             max_retries=int(os.getenv("YF_MAX_RETRIES", "3")),
-            connect_timeout=int(os.getenv("YF_CONNECT_TIMEOUT", "5")),
             read_timeout=int(os.getenv("YF_READ_TIMEOUT", "20")),
             total_timeout=int(os.getenv("YF_TOTAL_TIMEOUT", "30")),
             backoff_cap_seconds=float(os.getenv("YF_BACKOFF_CAP_SECONDS", "4")),
