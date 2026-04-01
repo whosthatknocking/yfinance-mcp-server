@@ -1,5 +1,11 @@
 [MASTER]
 ignore=.venv
+init-hook=
+    import os, site, sys; \
+    root = os.getcwd(); \
+    sys.path.insert(0, os.path.join(root, "src")); \
+    venv_python = os.path.join(root, ".venv", "lib", f"python{sys.version_info.major}.{sys.version_info.minor}", "site-packages"); \
+    os.path.isdir(venv_python) and site.addsitedir(venv_python)
 
 [MESSAGES CONTROL]
 disable=
