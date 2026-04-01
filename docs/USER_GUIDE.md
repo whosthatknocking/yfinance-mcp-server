@@ -80,8 +80,8 @@ After starting the server:
 
 - The package expects Python 3.11+, even if some local smoke checks were done with an older interpreter.
 - If dependencies such as the MCP SDK are missing, install the project again in a fresh Python 3.11+ environment.
-- Removed endpoints:
-- `get_shares` was removed because current `yfinance` does not implement the upstream shares call reliably.
-- `get_earnings` was removed because the upstream earnings table path is deprecated and unstable.
-- `get_capital_gains` was removed because live upstream checks consistently returned no capital gains data.
-- `get_sustainability` was removed because Yahoo frequently returns no sustainability or ESG fundamentals data.
+- Not implemented:
+- `get_shares` is not implemented because current `yfinance` does not implement the upstream shares call reliably.
+- `get_earnings` is not implemented because the upstream earnings table path is deprecated and unstable.
+- `get_capital_gains` is not implemented because live upstream checks consistently returned no capital gains data.
+- `get_sustainability` is not implemented because Yahoo frequently returns no sustainability or ESG fundamentals data.

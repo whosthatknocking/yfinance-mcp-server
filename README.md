@@ -55,12 +55,12 @@ The current implementation includes the core information-retrieval surface for y
 
 Tool requests use typed request models and validated JSON-safe outputs. Detailed tool coverage and the upstream-to-MCP mapping live in docs/API_MAPPING.md, and the full contract and scope live in docs/PROJECT_SPEC.md.
 
-Removed endpoints:
+Not implemented:
 
-- `get_shares` was removed because current `yfinance` raises `YFNotImplementedError` for that path, so the upstream capability is not actually supported.
-- `get_earnings` was removed because the upstream earnings table path is deprecated and does not reliably return usable tabular data.
-- `get_capital_gains` was removed because live upstream checks consistently returned no capital gains data across tested fund and ETF symbols.
-- `get_sustainability` was removed because Yahoo frequently returns no sustainability or ESG fundamentals data for otherwise valid symbols.
+- `get_shares` is not implemented because current `yfinance` raises `YFNotImplementedError` for that upstream path.
+- `get_earnings` is not implemented because the upstream earnings table path is deprecated and does not reliably return usable tabular data.
+- `get_capital_gains` is not implemented because live upstream checks consistently returned no capital gains data across tested fund and ETF symbols.
+- `get_sustainability` is not implemented because Yahoo frequently returns no sustainability or ESG fundamentals data for otherwise valid symbols.
 
 ## Configuration
 
