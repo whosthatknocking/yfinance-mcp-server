@@ -1,4 +1,5 @@
 from unittest.mock import patch
+import pandas as pd
 
 from yfinance_mcp.cache import InMemoryTTLCache
 from yfinance_mcp.wrapper import YFinanceError, YFinanceWrapper
@@ -71,3 +72,18 @@ def test_get_market_summary_raises_invalid_input_for_bad_market_code():
             assert "invalid broad market region" in str(exc)
         else:  # pragma: no cover - defensive
             raise AssertionError("Expected YFinanceError for invalid market code")
+
+
+def test_get_history_raises_invalid_input_for_empty_dataframe():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+
+    with patch("yfinance_mcp.wrapper.yf.Ticker") as mocked_ticker:
+        mocked_ticker.return_value.history.return_value = pd.DataFrame()
+        try:
+            wrapper.get_history("MSFT.", period="6mo", interval="1d")
+        except YFinanceError as exc:
+            assert exc.category == "invalid_input"
+            assert "No price history data was returned" in str(exc)
+            assert exc.details["symbol"] == "MSFT"
+        else:  # pragma: no cover - defensive
+            raise AssertionError("Expected YFinanceError for empty history response")

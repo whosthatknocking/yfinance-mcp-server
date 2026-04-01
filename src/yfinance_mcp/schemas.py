@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+from .utils import normalize_period
 
 
 class DataFramePayload(BaseModel):
@@ -197,6 +199,11 @@ class HistoryRequest(BaseModel):
     auto_adjust: bool = True
     actions: bool = True
 
+    @field_validator("period")
+    @classmethod
+    def validate_period(cls, value: Optional[str]) -> Optional[str]:
+        return normalize_period(value)
+
 
 class StatementRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -238,6 +245,11 @@ class DownloadRequest(BaseModel):
     auto_adjust: bool = True
     prepost: bool = False
     actions: bool = False
+
+    @field_validator("period")
+    @classmethod
+    def validate_period(cls, value: Optional[str]) -> Optional[str]:
+        return normalize_period(value)
 
 
 class NewsRequest(BaseModel):

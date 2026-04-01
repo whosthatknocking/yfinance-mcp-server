@@ -1,17 +1,39 @@
 from __future__ import annotations
 
+import re
 from datetime import date, datetime
-from typing import Any, Dict, Iterable, List
+from typing import Any, Dict, Iterable, List, Optional
 
 import pandas as pd
 
 
 def normalize_symbol(symbol: str) -> str:
-    return symbol.strip().upper()
+    normalized = symbol.strip()
+    normalized = normalized.strip("()[]{}")
+    normalized = normalized.lstrip("$")
+    normalized = re.sub(r"[.,:;!?]+$", "", normalized)
+    return normalized.upper()
 
 
 def normalize_symbols(symbols: Iterable[str]) -> List[str]:
     return [normalize_symbol(symbol) for symbol in symbols if symbol.strip()]
+
+
+def normalize_period(period: Optional[str]) -> Optional[str]:
+    if period is None:
+        return None
+    normalized = period.strip().lower()
+    aliases = {
+        "1m": "1mo",
+        "2m": "2mo",
+        "3m": "3mo",
+        "6m": "6mo",
+        "1w": "5d",
+        "1wk": "5d",
+        "2w": "10d",
+        "2wk": "10d",
+    }
+    return aliases.get(normalized, normalized)
 
 
 def serialize_value(value: Any) -> Any:

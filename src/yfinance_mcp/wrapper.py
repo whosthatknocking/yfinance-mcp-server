@@ -9,6 +9,7 @@ from typing import Any, Callable, Dict, List, Optional
 
 import structlog
 import yfinance as yf
+import pandas as pd
 
 from . import __version__
 from .cache import CacheBackend, InMemoryTTLCache
@@ -117,7 +118,10 @@ class YFinanceWrapper:
         return self._cached_call(
             key=f"history:{normalized}:{params}",
             ttl=self.history_ttl,
-            operation=lambda: serialize_value(self._ticker(normalized).history(**{k: v for k, v in params.items() if v is not None})),
+            operation=lambda: self._serialize_history_result(
+                self._ticker(normalized).history(**{k: v for k, v in params.items() if v is not None}),
+                error_context={"symbol": normalized, "params": params},
+            ),
             error_context={"symbol": normalized, "params": params},
             allow_stale=True,
         )
@@ -151,7 +155,7 @@ class YFinanceWrapper:
         return self._cached_call(
             key=f"download:{params}",
             ttl=self.history_ttl,
-            operation=lambda: serialize_value(
+            operation=lambda: self._serialize_history_result(
                 yf.download(
                     tickers=normalized,
                     period=period,
@@ -163,7 +167,8 @@ class YFinanceWrapper:
                     actions=actions,
                     timeout=self.timeout,
                     progress=False,
-                )
+                ),
+                error_context={"tickers": normalized, "params": params},
             ),
             error_context={"tickers": normalized, "params": params},
             allow_stale=True,
@@ -374,6 +379,17 @@ class YFinanceWrapper:
         if "timeout" in message:
             return "timeout"
         return "upstream_temporary"
+
+    def _serialize_history_result(self, result: Any, error_context: Dict[str, Any]) -> Dict[str, Any]:
+        if isinstance(result, pd.DataFrame) and result.empty:
+            details = dict(error_context)
+            details["reason"] = "empty_history"
+            raise YFinanceError(
+                "invalid_input",
+                "No price history data was returned for the requested symbol and date range.",
+                details,
+            )
+        return serialize_value(result)
 
     @staticmethod
     def _extract_market_error(payload: Any) -> Optional[Dict[str, Any]]:
