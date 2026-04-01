@@ -25,6 +25,21 @@ def test_get_quote_snapshot_returns_wrapper_payload():
     mocked.assert_called_once_with("TSLA")
 
 
+def test_get_batch_quote_snapshot_returns_named_response_model_payload():
+    payload = {
+        "symbols": ["AAPL", "MSFT"],
+        "results": {
+            "AAPL": {"lastPrice": 123.45, "currency": "USD"},
+            "MSFT": {"lastPrice": 234.56, "currency": "USD"},
+        },
+    }
+    with patch.object(server.wrapper, "get_batch_quote_snapshot", return_value=payload) as mocked:
+        result = server.get_batch_quote_snapshot(["AAPL", "MSFT"])
+
+    assert result == payload
+    mocked.assert_called_once_with(symbols=["AAPL", "MSFT"])
+
+
 def test_get_info_returns_named_response_model_payload():
     payload = {"symbol": "TSLA", "shortName": "Tesla, Inc.", "marketCap": 1000}
     with patch.object(server.wrapper, "get_info", return_value=payload) as mocked:
@@ -32,6 +47,21 @@ def test_get_info_returns_named_response_model_payload():
 
     assert result == payload
     mocked.assert_called_once_with("TSLA")
+
+
+def test_get_batch_info_returns_named_response_model_payload():
+    payload = {
+        "symbols": ["AAPL", "MSFT"],
+        "results": {
+            "AAPL": {"symbol": "AAPL", "shortName": "Apple Inc."},
+            "MSFT": {"symbol": "MSFT", "shortName": "Microsoft Corporation"},
+        },
+    }
+    with patch.object(server.wrapper, "get_batch_info", return_value=payload) as mocked:
+        result = server.get_batch_info(["AAPL", "MSFT"])
+
+    assert result == payload
+    mocked.assert_called_once_with(symbols=["AAPL", "MSFT"])
 
 
 def test_get_history_returns_dataframe_payload():
@@ -89,6 +119,40 @@ def test_get_splits_returns_series_payload():
 
     assert result == SERIES_PAYLOAD
     mocked.assert_called_once_with(symbol="AAPL", period="1y")
+
+
+def test_get_earnings_dates_returns_dataframe_payload():
+    with patch.object(server.wrapper, "get_earnings_dates", return_value=DATAFRAME_PAYLOAD) as mocked:
+        result = server.get_earnings_dates("AAPL", limit=4, offset=0)
+
+    assert result == DATAFRAME_PAYLOAD
+    mocked.assert_called_once_with(symbol="AAPL", limit=4, offset=0)
+
+
+def test_get_ticker_calendar_returns_calendar_payload():
+    payload = {"Dividend Date": "2026-02-11", "Earnings Average": 1.95}
+    with patch.object(server.wrapper, "get_ticker_calendar", return_value=payload) as mocked:
+        result = server.get_ticker_calendar("AAPL")
+
+    assert result == payload
+    mocked.assert_called_once_with("AAPL")
+
+
+def test_get_recommendations_returns_dataframe_payload():
+    with patch.object(server.wrapper, "get_recommendations", return_value=DATAFRAME_PAYLOAD) as mocked:
+        result = server.get_recommendations("AAPL")
+
+    assert result == DATAFRAME_PAYLOAD
+    mocked.assert_called_once_with("AAPL")
+
+
+def test_get_analyst_price_targets_returns_payload():
+    payload = {"current": 253.79, "high": 350.0, "low": 205.0, "mean": 295.31, "median": 300.0}
+    with patch.object(server.wrapper, "get_analyst_price_targets", return_value=payload) as mocked:
+        result = server.get_analyst_price_targets("AAPL")
+
+    assert result == payload
+    mocked.assert_called_once_with("AAPL")
 
 
 def test_get_income_stmt_returns_statement_payload():

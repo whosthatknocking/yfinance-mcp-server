@@ -168,6 +168,7 @@ This document maps the latest supported `yfinance` API surface to explicit MCP t
 | `Tickers.download(...)` | method | `download_history` | alias | Same behavior family as top-level `yf.download`. |
 | `Tickers.news()` | method | `get_batch_news` | planned | Returns news grouped by symbol or upstream response shape. |
 | `Tickers.tickers[...]` | attribute access | `get_batch_info` | planned | Expose common batch getter helpers without raw object traversal. |
+| `Tickers.tickers[...].fast_info` | attribute access | `get_batch_quote_snapshot` | planned | Expose lightweight quote snapshots for multiple symbols. |
 
 ## Market, Calendars, Search, and Lookup
 
@@ -274,21 +275,26 @@ These tools should exist first because they cover the highest-value `yfinance` p
 
 - `get_info`
 - `get_quote_snapshot`
+- `get_batch_info`
+- `get_batch_quote_snapshot`
 - `get_history`
 - `download_history`
 - `get_news`
 - `get_option_expirations`
 - `get_option_chain`
+- `get_actions`
+- `get_dividends`
+- `get_splits`
 - `get_income_stmt`
 - `get_balance_sheet`
 - `get_cashflow`
-- `get_earnings`
+- `get_earnings_dates`
+- `get_ticker_calendar`
 - `get_recommendations`
 - `get_analyst_price_targets`
 - `get_market_summary`
-- `get_earnings_calendar`
 - `search`
-- `lookup_stock`
+- `lookup`
 - `screen`
 
 ## Implementation Notes

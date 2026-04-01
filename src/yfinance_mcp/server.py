@@ -20,6 +20,11 @@ from .schemas import (
     DownloadHistoryResult,
     DownloadRequest,
     ActionSeriesResult,
+    AnalystPriceTargetsResult,
+    BatchInfoResult,
+    BatchQuoteSnapshotResult,
+    CalendarResult,
+    EarningsDatesRequest,
     HistoryRequest,
     HistoryResult,
     InfoResult,
@@ -38,6 +43,8 @@ from .schemas import (
     StatementRequest,
     StatementResult,
     StringListResult,
+    SymbolRequest,
+    SymbolsRequest,
     ToolMetadata,
 )
 from mcp.server.fastmcp import FastMCP
@@ -152,6 +159,40 @@ def get_quote_snapshot(symbol: str) -> Dict[str, object]:
         result = wrapper.get_fast_info(symbol)
         return QuoteSnapshotResult.model_validate(result).model_dump()
     return _run_tool("get_quote_snapshot", operation)
+
+
+@mcp.tool()
+def get_batch_info(symbols: List[str]) -> Dict[str, object]:
+    """Get detailed reference information for multiple tickers.
+
+    Use this tool for comparison workflows when you need company and profile
+    metadata across several symbols in one call. For the latest quote-style
+    market snapshot across multiple symbols, use `get_batch_quote_snapshot`.
+    """
+
+    def operation() -> Dict[str, object]:
+        request = SymbolsRequest(symbols=symbols)
+        result = wrapper.get_batch_info(**request.model_dump())
+        return BatchInfoResult.model_validate(result).model_dump()
+
+    return _run_tool("get_batch_info", operation)
+
+
+@mcp.tool()
+def get_batch_quote_snapshot(symbols: List[str]) -> Dict[str, object]:
+    """Get the latest quote-oriented snapshot for multiple tickers.
+
+    Use this tool for multi-symbol comparison of recent market context such as
+    latest price, previous close, open, day range, and market cap. For broader
+    company or profile metadata across several symbols, use `get_batch_info`.
+    """
+
+    def operation() -> Dict[str, object]:
+        request = SymbolsRequest(symbols=symbols)
+        result = wrapper.get_batch_quote_snapshot(**request.model_dump())
+        return BatchQuoteSnapshotResult.model_validate(result).model_dump()
+
+    return _run_tool("get_batch_quote_snapshot", operation)
 
 
 @mcp.tool()
@@ -301,6 +342,70 @@ def get_splits(symbol: str, period: str = "max") -> Dict[str, object]:
         return ActionSeriesResult.model_validate(result).model_dump()
 
     return _run_tool("get_splits", operation)
+
+
+@mcp.tool()
+def get_earnings_dates(symbol: str, limit: int = 12, offset: int = 0) -> Dict[str, object]:
+    """Get historical and upcoming earnings dates for a ticker.
+
+    Use this tool when the user asks about earnings events, earnings timing, or
+    recent earnings history for a specific symbol.
+    """
+
+    def operation() -> Dict[str, object]:
+        request = EarningsDatesRequest(symbol=symbol, limit=limit, offset=offset)
+        result = wrapper.get_earnings_dates(**request.model_dump())
+        return HistoryResult.model_validate(result).model_dump()
+
+    return _run_tool("get_earnings_dates", operation)
+
+
+@mcp.tool()
+def get_ticker_calendar(symbol: str) -> Dict[str, object]:
+    """Get calendar and event summary data for a ticker.
+
+    Use this tool for earnings-event context, dividend dates, and related
+    calendar-style company event fields for a single ticker.
+    """
+
+    def operation() -> Dict[str, object]:
+        request = SymbolRequest(symbol=symbol)
+        result = wrapper.get_ticker_calendar(**request.model_dump())
+        return CalendarResult.model_validate(result).model_dump()
+
+    return _run_tool("get_ticker_calendar", operation)
+
+
+@mcp.tool()
+def get_recommendations(symbol: str) -> Dict[str, object]:
+    """Get analyst recommendation summary data for a ticker.
+
+    Use this tool when the user asks for recommendation trends, buy/hold/sell
+    counts, or recent analyst sentiment for a symbol.
+    """
+
+    def operation() -> Dict[str, object]:
+        request = SymbolRequest(symbol=symbol)
+        result = wrapper.get_recommendations(**request.model_dump())
+        return HistoryResult.model_validate(result).model_dump()
+
+    return _run_tool("get_recommendations", operation)
+
+
+@mcp.tool()
+def get_analyst_price_targets(symbol: str) -> Dict[str, object]:
+    """Get analyst price target summary data for a ticker.
+
+    Use this tool when the user asks for consensus analyst target levels or the
+    current, mean, high, low, and median target prices for a symbol.
+    """
+
+    def operation() -> Dict[str, object]:
+        request = SymbolRequest(symbol=symbol)
+        result = wrapper.get_analyst_price_targets(**request.model_dump())
+        return AnalystPriceTargetsResult.model_validate(result).model_dump()
+
+    return _run_tool("get_analyst_price_targets", operation)
 
 
 @mcp.tool()

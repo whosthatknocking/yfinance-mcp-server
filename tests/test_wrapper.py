@@ -37,6 +37,36 @@ def test_retry_returns_stale_cache_for_transient_failures():
     assert result == {"cached": True}
 
 
+def test_get_batch_info_returns_payload_keyed_by_symbol():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+
+    with patch.object(wrapper, "get_info", side_effect=[{"symbol": "AAPL"}, {"symbol": "MSFT"}]) as mocked:
+        result = wrapper.get_batch_info(["AAPL", "MSFT"])
+
+    assert result == {"symbols": ["AAPL", "MSFT"], "results": {"AAPL": {"symbol": "AAPL"}, "MSFT": {"symbol": "MSFT"}}}
+    assert mocked.call_count == 2
+
+
+def test_get_batch_quote_snapshot_returns_payload_keyed_by_symbol():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+
+    with patch.object(
+        wrapper,
+        "get_fast_info",
+        side_effect=[{"lastPrice": 123.45, "currency": "USD"}, {"lastPrice": 234.56, "currency": "USD"}],
+    ) as mocked:
+        result = wrapper.get_batch_quote_snapshot(["AAPL", "MSFT"])
+
+    assert result == {
+        "symbols": ["AAPL", "MSFT"],
+        "results": {
+            "AAPL": {"lastPrice": 123.45, "currency": "USD"},
+            "MSFT": {"lastPrice": 234.56, "currency": "USD"},
+        },
+    }
+    assert mocked.call_count == 2
+
+
 def test_get_market_summary_returns_normalized_payload():
     wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
 
@@ -87,3 +117,51 @@ def test_get_history_raises_invalid_input_for_empty_dataframe():
             assert exc.details["symbol"] == "MSFT"
         else:  # pragma: no cover - defensive
             raise AssertionError("Expected YFinanceError for empty history response")
+
+
+def test_get_earnings_dates_returns_dataframe_payload():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+    payload = pd.DataFrame({"EPS Estimate": [1.23]}, index=["2026-01-30"])
+
+    with patch("yfinance_mcp.wrapper.yf.Ticker") as mocked_ticker:
+        mocked_ticker.return_value.get_earnings_dates.return_value = payload
+        result = wrapper.get_earnings_dates("AAPL", limit=4, offset=0)
+
+    assert result == {"columns": ["EPS Estimate"], "data": [[1.23]], "index": ["2026-01-30"]}
+
+
+def test_get_ticker_calendar_returns_serialized_payload():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+
+    with patch("yfinance_mcp.wrapper.yf.Ticker") as mocked_ticker:
+        mocked_ticker.return_value.get_calendar.return_value = {"dividendDate": "2026-02-11", "earningsAverage": 1.95}
+        result = wrapper.get_ticker_calendar("AAPL")
+
+    assert result == {"dividendDate": "2026-02-11", "earningsAverage": 1.95}
+
+
+def test_get_recommendations_returns_dataframe_payload():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+    payload = pd.DataFrame({"strongBuy": [10], "hold": [5]}, index=["2026-03-01"])
+
+    with patch("yfinance_mcp.wrapper.yf.Ticker") as mocked_ticker:
+        mocked_ticker.return_value.get_recommendations.return_value = payload
+        result = wrapper.get_recommendations("AAPL")
+
+    assert result == {"columns": ["strongBuy", "hold"], "data": [[10, 5]], "index": ["2026-03-01"]}
+
+
+def test_get_analyst_price_targets_returns_serialized_payload():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+
+    with patch("yfinance_mcp.wrapper.yf.Ticker") as mocked_ticker:
+        mocked_ticker.return_value.get_analyst_price_targets.return_value = {
+            "current": 253.79,
+            "high": 350.0,
+            "low": 205.0,
+            "mean": 295.31,
+            "median": 300.0,
+        }
+        result = wrapper.get_analyst_price_targets("AAPL")
+
+    assert result == {"current": 253.79, "high": 350.0, "low": 205.0, "mean": 295.31, "median": 300.0}

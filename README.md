@@ -56,6 +56,8 @@ The initial implementation scaffolds the package, abstract cache layer, serializ
 - `get_server_metadata`
 - `get_info`
 - `get_quote_snapshot`
+- `get_batch_info`
+- `get_batch_quote_snapshot`
 - `get_history`
 - `download_history`
 - `get_news`
@@ -67,6 +69,10 @@ The initial implementation scaffolds the package, abstract cache layer, serializ
 - `get_income_stmt`
 - `get_balance_sheet`
 - `get_cashflow`
+- `get_earnings_dates`
+- `get_ticker_calendar`
+- `get_recommendations`
+- `get_analyst_price_targets`
 - `get_market_summary`
 - `search`
 - `lookup`

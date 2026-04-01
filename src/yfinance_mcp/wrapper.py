@@ -93,6 +93,44 @@ class YFinanceWrapper:
             allow_stale=False,
         )
 
+    def get_batch_info(self, symbols: List[str]) -> Dict[str, Any]:
+        normalized = normalize_symbols(symbols)
+        if not normalized:
+            raise YFinanceError("invalid_input", "At least one ticker symbol is required.")
+
+        def operation() -> Dict[str, Any]:
+            return {
+                "symbols": normalized,
+                "results": {symbol: self.get_info(symbol) for symbol in normalized},
+            }
+
+        return self._cached_call(
+            key=f"batch_info:{normalized}",
+            ttl=self.reference_ttl,
+            operation=operation,
+            error_context={"symbols": normalized},
+            allow_stale=True,
+        )
+
+    def get_batch_quote_snapshot(self, symbols: List[str]) -> Dict[str, Any]:
+        normalized = normalize_symbols(symbols)
+        if not normalized:
+            raise YFinanceError("invalid_input", "At least one ticker symbol is required.")
+
+        def operation() -> Dict[str, Any]:
+            return {
+                "symbols": normalized,
+                "results": {symbol: self.get_fast_info(symbol) for symbol in normalized},
+            }
+
+        return self._cached_call(
+            key=f"batch_quote_snapshot:{normalized}",
+            ttl=self.quote_ttl,
+            operation=operation,
+            error_context={"symbols": normalized},
+            allow_stale=False,
+        )
+
     def get_history(
         self,
         symbol: str,
@@ -340,6 +378,69 @@ class YFinanceWrapper:
             allow_stale=True,
         )
 
+    def get_earnings_dates(self, symbol: str, limit: int = 12, offset: int = 0) -> Dict[str, Any]:
+        normalized = normalize_symbol(symbol)
+
+        def operation() -> Dict[str, Any]:
+            ticker = self._ticker(normalized)
+            result = ticker.get_earnings_dates(limit=limit, offset=offset)
+            if isinstance(result, pd.DataFrame) and result.empty:
+                raise YFinanceError(
+                    "invalid_input",
+                    "No earnings dates were returned for the requested symbol.",
+                    {"symbol": normalized, "limit": limit, "offset": offset},
+                )
+            return serialize_value(result)
+
+        return self._cached_call(
+            key=f"earnings_dates:{normalized}:{limit}:{offset}",
+            ttl=self.reference_ttl,
+            operation=operation,
+            error_context={"symbol": normalized, "limit": limit, "offset": offset},
+            allow_stale=True,
+        )
+
+    def get_ticker_calendar(self, symbol: str) -> Dict[str, Any]:
+        normalized = normalize_symbol(symbol)
+        return self._cached_call(
+            key=f"calendar:{normalized}",
+            ttl=self.reference_ttl,
+            operation=lambda: serialize_value(self._ticker(normalized).get_calendar()),
+            error_context={"symbol": normalized},
+            allow_stale=True,
+        )
+
+    def get_recommendations(self, symbol: str) -> Dict[str, Any]:
+        normalized = normalize_symbol(symbol)
+
+        def operation() -> Dict[str, Any]:
+            result = self._ticker(normalized).get_recommendations()
+            if isinstance(result, pd.DataFrame) and result.empty:
+                raise YFinanceError(
+                    "invalid_input",
+                    "No recommendations data was returned for the requested symbol.",
+                    {"symbol": normalized},
+                )
+            return serialize_value(result)
+
+        return self._cached_call(
+            key=f"recommendations:{normalized}",
+            ttl=self.reference_ttl,
+            operation=operation,
+            error_context={"symbol": normalized},
+            allow_stale=True,
+        )
+
+    def get_analyst_price_targets(self, symbol: str) -> Dict[str, Any]:
+        normalized = normalize_symbol(symbol)
+        return self._cached_call(
+            key=f"analyst_price_targets:{normalized}",
+            ttl=self.reference_ttl,
+            operation=lambda: serialize_value(self._ticker(normalized).get_analyst_price_targets()),
+            error_context={"symbol": normalized},
+            allow_stale=True,
+        )
+
     def _statement_call(self, symbol: str, statement_name: str, freq: str, pretty: bool) -> Dict[str, Any]:
         normalized = normalize_symbol(symbol)
         allowed = {"yearly", "quarterly", "trailing"}
@@ -484,6 +585,8 @@ class YFinanceWrapper:
 
     def _classify_exception(self, exc: Exception) -> str:
         message = str(exc).lower()
+        if "missing optional dependency" in message:
+            return "internal_error"
         if "404" in message or "invalid" in message:
             return "invalid_input"
         if "429" in message or "rate limit" in message or "too many requests" in message:

@@ -63,6 +63,71 @@ class LookupResult(BaseModel):
     cryptocurrency: DataFramePayload
 
 
+class BatchInfoResult(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    symbols: List[str]
+    results: Dict[str, "InfoResult"]
+
+
+class BatchQuoteSnapshotResult(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    symbols: List[str]
+    results: Dict[str, "QuoteSnapshotResult"]
+
+
+class CalendarResult(BaseModel):
+    model_config = ConfigDict(extra="allow")
+
+    dividendDate: Optional[Any] = Field(
+        default=None,
+        description="Upcoming or recent dividend date when available.",
+    )
+    exDividendDate: Optional[Any] = Field(
+        default=None,
+        description="Ex-dividend date when available.",
+    )
+    earningsDate: Optional[Any] = Field(
+        default=None,
+        description="Upcoming or recent earnings date information when available.",
+    )
+    earningsAverage: Optional[Any] = Field(
+        default=None,
+        description="Consensus earnings-per-share estimate when available.",
+    )
+    earningsLow: Optional[Any] = Field(
+        default=None,
+        description="Low earnings estimate when available.",
+    )
+    earningsHigh: Optional[Any] = Field(
+        default=None,
+        description="High earnings estimate when available.",
+    )
+    revenueAverage: Optional[Any] = Field(
+        default=None,
+        description="Consensus revenue estimate when available.",
+    )
+    revenueLow: Optional[Any] = Field(
+        default=None,
+        description="Low revenue estimate when available.",
+    )
+    revenueHigh: Optional[Any] = Field(
+        default=None,
+        description="High revenue estimate when available.",
+    )
+
+
+class AnalystPriceTargetsResult(BaseModel):
+    model_config = ConfigDict(extra="allow")
+
+    current: Optional[Any] = None
+    high: Optional[Any] = None
+    low: Optional[Any] = None
+    mean: Optional[Any] = None
+    median: Optional[Any] = None
+
+
 class ToolMetadata(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -335,6 +400,26 @@ class MarketRequest(BaseModel):
     )
 
 
+class SymbolRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    symbol: str = Field(
+        min_length=1,
+        description="Yahoo Finance ticker symbol such as AAPL, MSFT, TSLA, or SPY.",
+        examples=["AAPL"],
+    )
+
+
+class SymbolsRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    symbols: List[str] = Field(
+        min_length=1,
+        description="List of Yahoo Finance ticker symbols for batch metadata or quote retrieval.",
+        examples=[["AAPL", "MSFT", "NVDA"]],
+    )
+
+
 class SearchRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -392,6 +477,29 @@ class LookupRequest(BaseModel):
         le=100,
         description="Maximum number of rows to return per lookup category.",
         examples=[25],
+    )
+
+
+class EarningsDatesRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    symbol: str = Field(
+        min_length=1,
+        description="Yahoo Finance ticker symbol such as AAPL, AMZN, or MSFT.",
+        examples=["AAPL"],
+    )
+    limit: int = Field(
+        default=12,
+        ge=1,
+        le=100,
+        description="Maximum number of earnings date rows to return.",
+        examples=[12],
+    )
+    offset: int = Field(
+        default=0,
+        ge=0,
+        description="Row offset for paginated earnings date retrieval.",
+        examples=[0],
     )
 
 
