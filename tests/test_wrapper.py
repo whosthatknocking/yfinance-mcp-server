@@ -470,3 +470,69 @@ def test_get_fund_quote_type_returns_text_payload():
         result = wrapper.get_fund_quote_type("SPY")
 
     assert result == {"value": "ETF"}
+
+
+class _FakeCalendars:
+    def __init__(self, start=None, end=None):
+        self.start = start
+        self.end = end
+
+    def get_earnings_calendar(self, **kwargs):
+        return pd.DataFrame({"Symbol": ["AAPL"]}, index=["2026-01-30"])
+
+    def get_economic_events_calendar(self, **kwargs):
+        return pd.DataFrame({"Event": ["CPI"]}, index=["2026-01-10"])
+
+    def get_ipo_info_calendar(self, **kwargs):
+        return pd.DataFrame({"Company": ["Example Co"]}, index=["2026-01-15"])
+
+    def get_splits_calendar(self, **kwargs):
+        return pd.DataFrame({"Symbol": ["XYZ"]}, index=["2026-01-20"])
+
+
+def test_get_calendars_returns_aggregate_payload():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+
+    with patch("yfinance_mcp.wrapper.yf.Calendars", _FakeCalendars):
+        result = wrapper.get_calendars(start="2026-01-01", end="2026-03-31")
+
+    assert result["earnings_calendar"] == {"columns": ["Symbol"], "data": [["AAPL"]], "index": ["2026-01-30"]}
+    assert result["economic_events_calendar"] == {"columns": ["Event"], "data": [["CPI"]], "index": ["2026-01-10"]}
+    assert result["ipo_calendar"] == {"columns": ["Company"], "data": [["Example Co"]], "index": ["2026-01-15"]}
+    assert result["splits_calendar"] == {"columns": ["Symbol"], "data": [["XYZ"]], "index": ["2026-01-20"]}
+
+
+def test_get_earnings_calendar_returns_dataframe_payload():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+
+    with patch("yfinance_mcp.wrapper.yf.Calendars", _FakeCalendars):
+        result = wrapper.get_earnings_calendar(start="2026-01-01", end="2026-03-31")
+
+    assert result == {"columns": ["Symbol"], "data": [["AAPL"]], "index": ["2026-01-30"]}
+
+
+def test_get_economic_events_calendar_returns_dataframe_payload():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+
+    with patch("yfinance_mcp.wrapper.yf.Calendars", _FakeCalendars):
+        result = wrapper.get_economic_events_calendar(start="2026-01-01", end="2026-03-31")
+
+    assert result == {"columns": ["Event"], "data": [["CPI"]], "index": ["2026-01-10"]}
+
+
+def test_get_ipo_calendar_returns_dataframe_payload():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+
+    with patch("yfinance_mcp.wrapper.yf.Calendars", _FakeCalendars):
+        result = wrapper.get_ipo_calendar(start="2026-01-01", end="2026-03-31")
+
+    assert result == {"columns": ["Company"], "data": [["Example Co"]], "index": ["2026-01-15"]}
+
+
+def test_get_splits_calendar_returns_dataframe_payload():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+
+    with patch("yfinance_mcp.wrapper.yf.Calendars", _FakeCalendars):
+        result = wrapper.get_splits_calendar(start="2026-01-01", end="2026-03-31")
+
+    assert result == {"columns": ["Symbol"], "data": [["XYZ"]], "index": ["2026-01-20"]}

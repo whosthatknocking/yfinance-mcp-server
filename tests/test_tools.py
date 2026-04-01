@@ -389,6 +389,68 @@ def test_get_fund_quote_type_returns_text_payload():
     mocked.assert_called_once_with(symbol="SPY")
 
 
+def test_get_calendars_returns_named_response_model_payload():
+    payload = {
+        "earnings_calendar": DATAFRAME_PAYLOAD,
+        "economic_events_calendar": DATAFRAME_PAYLOAD,
+        "ipo_calendar": DATAFRAME_PAYLOAD,
+        "splits_calendar": DATAFRAME_PAYLOAD,
+    }
+    with patch.object(server.wrapper, "get_calendars", return_value=payload) as mocked:
+        result = server.get_calendars(start="2026-01-01", end="2026-03-31")
+
+    assert result == payload
+    mocked.assert_called_once_with(
+        start="2026-01-01",
+        end="2026-03-31",
+        limit=12,
+        offset=0,
+        force=False,
+        market_cap=None,
+        filter_most_active=True,
+    )
+
+
+def test_get_earnings_calendar_returns_dataframe_payload():
+    with patch.object(server.wrapper, "get_earnings_calendar", return_value=DATAFRAME_PAYLOAD) as mocked:
+        result = server.get_earnings_calendar(start="2026-01-01", end="2026-03-31")
+
+    assert result == DATAFRAME_PAYLOAD
+    mocked.assert_called_once_with(
+        start="2026-01-01",
+        end="2026-03-31",
+        limit=12,
+        offset=0,
+        force=False,
+        market_cap=None,
+        filter_most_active=True,
+    )
+
+
+def test_get_economic_events_calendar_returns_dataframe_payload():
+    with patch.object(server.wrapper, "get_economic_events_calendar", return_value=DATAFRAME_PAYLOAD) as mocked:
+        result = server.get_economic_events_calendar(start="2026-01-01", end="2026-03-31")
+
+    assert result == DATAFRAME_PAYLOAD
+    mocked.assert_called_once_with(start="2026-01-01", end="2026-03-31", limit=12, offset=0, force=False)
+
+
+def test_get_ipo_calendar_returns_dataframe_payload():
+    with patch.object(server.wrapper, "get_ipo_calendar", return_value=DATAFRAME_PAYLOAD) as mocked:
+        result = server.get_ipo_calendar(start="2026-01-01", end="2026-03-31")
+
+    assert result == DATAFRAME_PAYLOAD
+    mocked.assert_called_once_with(start="2026-01-01", end="2026-03-31", limit=12, offset=0, force=False)
+
+
+def test_get_splits_calendar_returns_dataframe_payload():
+    with patch.object(server.wrapper, "get_splits_calendar", return_value=DATAFRAME_PAYLOAD) as mocked:
+        result = server.get_splits_calendar(start="2026-01-01", end="2026-03-31")
+
+    assert result == DATAFRAME_PAYLOAD
+    mocked.assert_called_once_with(start="2026-01-01", end="2026-03-31", limit=12, offset=0, force=False)
+
+
 def test_get_income_stmt_returns_statement_payload():
     with patch.object(server.wrapper, "get_income_stmt", return_value=DATAFRAME_PAYLOAD) as mocked:
         result = server.get_income_stmt("AMZN", freq="yearly")

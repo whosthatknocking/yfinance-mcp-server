@@ -157,6 +157,15 @@ class FundsDataResult(BaseModel):
     top_holdings: DataFramePayload
 
 
+class CalendarsResult(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    earnings_calendar: DataFramePayload
+    economic_events_calendar: DataFramePayload
+    ipo_calendar: DataFramePayload
+    splits_calendar: DataFramePayload
+
+
 class ToolMetadata(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -546,6 +555,25 @@ class EarningsDatesRequest(BaseModel):
         description="Row offset for paginated earnings date retrieval.",
         examples=[0],
     )
+
+
+class CalendarRangeRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    start: Optional[str] = Field(default=None, description="Start date in YYYY-MM-DD format.", examples=["2026-01-01"])
+    end: Optional[str] = Field(default=None, description="End date in YYYY-MM-DD format.", examples=["2026-03-31"])
+    limit: int = Field(default=12, ge=1, le=100, description="Maximum number of calendar rows to return.", examples=[12])
+    offset: int = Field(default=0, ge=0, description="Row offset for paginated calendar retrieval.", examples=[0])
+    force: bool = False
+
+
+class EarningsCalendarRequest(CalendarRangeRequest):
+    market_cap: Optional[float] = Field(
+        default=None,
+        description="Optional market-cap filter for the Yahoo Finance earnings calendar.",
+        examples=[1000000000.0],
+    )
+    filter_most_active: bool = True
 
 
 class PeriodRequest(BaseModel):

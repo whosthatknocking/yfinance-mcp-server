@@ -24,8 +24,11 @@ from .schemas import (
     AnalystPriceTargetsResult,
     BatchInfoResult,
     BatchQuoteSnapshotResult,
+    CalendarsResult,
     CalendarResult,
+    CalendarRangeRequest,
     EarningsRequest,
+    EarningsCalendarRequest,
     EarningsDatesRequest,
     FundsDataResult,
     HistoryRequest,
@@ -747,6 +750,116 @@ def get_fund_quote_type(symbol: str) -> Dict[str, object]:
         return TextValueResult.model_validate(result).model_dump()
 
     return _run_tool("get_fund_quote_type", operation)
+
+
+@mcp.tool()
+def get_calendars(
+    start: Optional[str] = None,
+    end: Optional[str] = None,
+    limit: int = 12,
+    offset: int = 0,
+    force: bool = False,
+    market_cap: Optional[float] = None,
+    filter_most_active: bool = True,
+) -> Dict[str, object]:
+    """Get the aggregate Yahoo Finance calendars bundle for a date range."""
+
+    def operation() -> Dict[str, object]:
+        request = EarningsCalendarRequest(
+            start=start,
+            end=end,
+            limit=limit,
+            offset=offset,
+            force=force,
+            market_cap=market_cap,
+            filter_most_active=filter_most_active,
+        )
+        result = wrapper.get_calendars(**request.model_dump())
+        return CalendarsResult.model_validate(result).model_dump()
+
+    return _run_tool("get_calendars", operation)
+
+
+@mcp.tool()
+def get_earnings_calendar(
+    start: Optional[str] = None,
+    end: Optional[str] = None,
+    limit: int = 12,
+    offset: int = 0,
+    force: bool = False,
+    market_cap: Optional[float] = None,
+    filter_most_active: bool = True,
+) -> Dict[str, object]:
+    """Get the Yahoo Finance earnings calendar for a date range."""
+
+    def operation() -> Dict[str, object]:
+        request = EarningsCalendarRequest(
+            start=start,
+            end=end,
+            limit=limit,
+            offset=offset,
+            force=force,
+            market_cap=market_cap,
+            filter_most_active=filter_most_active,
+        )
+        result = wrapper.get_earnings_calendar(**request.model_dump())
+        return AnalysisTableResult.model_validate(result).model_dump()
+
+    return _run_tool("get_earnings_calendar", operation)
+
+
+@mcp.tool()
+def get_economic_events_calendar(
+    start: Optional[str] = None,
+    end: Optional[str] = None,
+    limit: int = 12,
+    offset: int = 0,
+    force: bool = False,
+) -> Dict[str, object]:
+    """Get the Yahoo Finance economic events calendar for a date range."""
+
+    def operation() -> Dict[str, object]:
+        request = CalendarRangeRequest(start=start, end=end, limit=limit, offset=offset, force=force)
+        result = wrapper.get_economic_events_calendar(**request.model_dump())
+        return AnalysisTableResult.model_validate(result).model_dump()
+
+    return _run_tool("get_economic_events_calendar", operation)
+
+
+@mcp.tool()
+def get_ipo_calendar(
+    start: Optional[str] = None,
+    end: Optional[str] = None,
+    limit: int = 12,
+    offset: int = 0,
+    force: bool = False,
+) -> Dict[str, object]:
+    """Get the Yahoo Finance IPO calendar for a date range."""
+
+    def operation() -> Dict[str, object]:
+        request = CalendarRangeRequest(start=start, end=end, limit=limit, offset=offset, force=force)
+        result = wrapper.get_ipo_calendar(**request.model_dump())
+        return AnalysisTableResult.model_validate(result).model_dump()
+
+    return _run_tool("get_ipo_calendar", operation)
+
+
+@mcp.tool()
+def get_splits_calendar(
+    start: Optional[str] = None,
+    end: Optional[str] = None,
+    limit: int = 12,
+    offset: int = 0,
+    force: bool = False,
+) -> Dict[str, object]:
+    """Get the Yahoo Finance splits calendar for a date range."""
+
+    def operation() -> Dict[str, object]:
+        request = CalendarRangeRequest(start=start, end=end, limit=limit, offset=offset, force=force)
+        result = wrapper.get_splits_calendar(**request.model_dump())
+        return AnalysisTableResult.model_validate(result).model_dump()
+
+    return _run_tool("get_splits_calendar", operation)
 
 
 @mcp.tool()

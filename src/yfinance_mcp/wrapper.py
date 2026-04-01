@@ -5,6 +5,7 @@ import threading
 import time
 import random
 from dataclasses import dataclass
+from datetime import date, datetime
 from typing import Any, Callable, Dict, List, Optional
 
 import structlog
@@ -665,6 +666,159 @@ class YFinanceWrapper:
             allow_stale=True,
         )
 
+    def get_calendars(
+        self,
+        start: Optional[str] = None,
+        end: Optional[str] = None,
+        limit: int = 12,
+        offset: int = 0,
+        force: bool = False,
+        market_cap: Optional[float] = None,
+        filter_most_active: bool = True,
+    ) -> Dict[str, Any]:
+        normalized_start = self._normalize_calendar_date(start)
+        normalized_end = self._normalize_calendar_date(end)
+
+        def operation() -> Dict[str, Any]:
+            calendars = yf.Calendars(start=normalized_start, end=normalized_end)
+            return {
+                "earnings_calendar": serialize_value(
+                    calendars.get_earnings_calendar(
+                        market_cap=market_cap,
+                        filter_most_active=filter_most_active,
+                        start=normalized_start,
+                        end=normalized_end,
+                        limit=limit,
+                        offset=offset,
+                        force=force,
+                    )
+                ),
+                "economic_events_calendar": serialize_value(
+                    calendars.get_economic_events_calendar(
+                        start=normalized_start,
+                        end=normalized_end,
+                        limit=limit,
+                        offset=offset,
+                        force=force,
+                    )
+                ),
+                "ipo_calendar": serialize_value(
+                    calendars.get_ipo_info_calendar(
+                        start=normalized_start,
+                        end=normalized_end,
+                        limit=limit,
+                        offset=offset,
+                        force=force,
+                    )
+                ),
+                "splits_calendar": serialize_value(
+                    calendars.get_splits_calendar(
+                        start=normalized_start,
+                        end=normalized_end,
+                        limit=limit,
+                        offset=offset,
+                        force=force,
+                    )
+                ),
+            }
+
+        return self._cached_call(
+            key=f"calendars:{normalized_start}:{normalized_end}:{limit}:{offset}:{force}:{market_cap}:{filter_most_active}",
+            ttl=self.quote_ttl,
+            operation=operation,
+            error_context={"start": normalized_start, "end": normalized_end, "limit": limit, "offset": offset},
+            allow_stale=True,
+        )
+
+    def get_earnings_calendar(
+        self,
+        start: Optional[str] = None,
+        end: Optional[str] = None,
+        limit: int = 12,
+        offset: int = 0,
+        force: bool = False,
+        market_cap: Optional[float] = None,
+        filter_most_active: bool = True,
+    ) -> Dict[str, Any]:
+        normalized_start = self._normalize_calendar_date(start)
+        normalized_end = self._normalize_calendar_date(end)
+
+        def operation() -> Dict[str, Any]:
+            calendars = yf.Calendars(start=normalized_start, end=normalized_end)
+            return serialize_value(
+                calendars.get_earnings_calendar(
+                    market_cap=market_cap,
+                    filter_most_active=filter_most_active,
+                    start=normalized_start,
+                    end=normalized_end,
+                    limit=limit,
+                    offset=offset,
+                    force=force,
+                )
+            )
+
+        return self._cached_call(
+            key=f"earnings_calendar:{normalized_start}:{normalized_end}:{limit}:{offset}:{force}:{market_cap}:{filter_most_active}",
+            ttl=self.quote_ttl,
+            operation=operation,
+            error_context={"start": normalized_start, "end": normalized_end, "limit": limit, "offset": offset},
+            allow_stale=True,
+        )
+
+    def get_economic_events_calendar(
+        self,
+        start: Optional[str] = None,
+        end: Optional[str] = None,
+        limit: int = 12,
+        offset: int = 0,
+        force: bool = False,
+    ) -> Dict[str, Any]:
+        return self._calendar_getter_call(
+            cache_key_prefix="economic_events_calendar",
+            getter_name="get_economic_events_calendar",
+            start=start,
+            end=end,
+            limit=limit,
+            offset=offset,
+            force=force,
+        )
+
+    def get_ipo_calendar(
+        self,
+        start: Optional[str] = None,
+        end: Optional[str] = None,
+        limit: int = 12,
+        offset: int = 0,
+        force: bool = False,
+    ) -> Dict[str, Any]:
+        return self._calendar_getter_call(
+            cache_key_prefix="ipo_calendar",
+            getter_name="get_ipo_info_calendar",
+            start=start,
+            end=end,
+            limit=limit,
+            offset=offset,
+            force=force,
+        )
+
+    def get_splits_calendar(
+        self,
+        start: Optional[str] = None,
+        end: Optional[str] = None,
+        limit: int = 12,
+        offset: int = 0,
+        force: bool = False,
+    ) -> Dict[str, Any]:
+        return self._calendar_getter_call(
+            cache_key_prefix="splits_calendar",
+            getter_name="get_splits_calendar",
+            start=start,
+            end=end,
+            limit=limit,
+            offset=offset,
+            force=force,
+        )
+
     def _statement_call(self, symbol: str, statement_name: str, freq: str, pretty: bool) -> Dict[str, Any]:
         normalized = normalize_symbol(symbol)
         allowed = {"yearly", "quarterly", "trailing"}
@@ -781,6 +935,48 @@ class YFinanceWrapper:
                 {"symbol": symbol},
             )
         return funds_data
+
+    def _calendar_getter_call(
+        self,
+        cache_key_prefix: str,
+        getter_name: str,
+        start: Optional[str],
+        end: Optional[str],
+        limit: int,
+        offset: int,
+        force: bool,
+    ) -> Dict[str, Any]:
+        normalized_start = self._normalize_calendar_date(start)
+        normalized_end = self._normalize_calendar_date(end)
+
+        def operation() -> Dict[str, Any]:
+            calendars = yf.Calendars(start=normalized_start, end=normalized_end)
+            getter = getattr(calendars, getter_name)
+            return serialize_value(
+                getter(
+                    start=normalized_start,
+                    end=normalized_end,
+                    limit=limit,
+                    offset=offset,
+                    force=force,
+                )
+            )
+
+        return self._cached_call(
+            key=f"{cache_key_prefix}:{normalized_start}:{normalized_end}:{limit}:{offset}:{force}",
+            ttl=self.quote_ttl,
+            operation=operation,
+            error_context={"start": normalized_start, "end": normalized_end, "limit": limit, "offset": offset},
+            allow_stale=True,
+        )
+
+    @staticmethod
+    def _normalize_calendar_date(value: Optional[str]) -> Optional[date]:
+        if value is None:
+            return None
+        if isinstance(value, date):
+            return value
+        return datetime.fromisoformat(value).date()
 
     def _cached_call(
         self,
