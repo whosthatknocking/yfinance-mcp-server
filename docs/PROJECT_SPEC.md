@@ -216,6 +216,7 @@ The final `API_MAPPING.md` should be exhaustive and maintained against the offic
 - All tools must return JSON-serializable `dict` or `list` payloads.
 - Each tool should have one canonical primary response schema.
 - Canonical tool schemas should be defined and validated before serialization, preferably through Pydantic models or equivalent schema-checked structures.
+- Broad or irregular upstream payloads should expose canonical fields explicitly and preserve non-canonical upstream keys under a stable container such as `additional_fields`.
 - `DataFrame` values should default to a structured object with `columns`, `data`, and `index` keys.
 - Where useful, the server may offer markdown table output as a fallback or optional display-oriented format.
 - Large responses should support truncation, summarization, or chunking where necessary without changing the top-level schema for a tool.

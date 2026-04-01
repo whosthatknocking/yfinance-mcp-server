@@ -133,7 +133,7 @@ The initial implementation scaffolds the package, abstract cache layer, serializ
 - `search`
 - `lookup`
 
-The current slice uses typed request models and validated JSON-safe outputs. History, download, statement, option chain, list-style outputs, and the current metadata, info, quote snapshot, and market summary tools all use named response models. The broadest upstream payloads still allow extra fields where `yfinance` is less stable.
+The current slice uses typed request models and validated JSON-safe outputs. History, download, statement, option chain, list-style outputs, and the current metadata, info, quote snapshot, and market summary tools all use named response models. For broader or less stable upstream payloads, canonical fields are exposed explicitly and non-canonical upstream fields are preserved under an `additional_fields` container.
 
 ## Configuration
 
@@ -161,6 +161,7 @@ Common settings:
 - [docs/USER_GUIDE.md](/Users/emt/Workspace/yfinance-mcp-server/docs/USER_GUIDE.md) for installation and run steps
 - [docs/PROJECT_SPEC.md](/Users/emt/Workspace/yfinance-mcp-server/docs/PROJECT_SPEC.md) for requirements and scope
 - [docs/API_MAPPING.md](/Users/emt/Workspace/yfinance-mcp-server/docs/API_MAPPING.md) for upstream-to-MCP tool mapping
+- [examples/QUERIES.md](/Users/emt/Workspace/yfinance-mcp-server/examples/QUERIES.md) for example prompts
 
 ## Remote Mode
 
@@ -171,6 +172,11 @@ Current remote endpoints:
 - `/mcp` for streamable HTTP MCP traffic
 - `/healthz` for basic liveness
 - `/readyz` for basic readiness and version metadata
+
+## Testing
+
+- offline tests: `PYTHONPATH=src pytest`
+- live integration tests: `YF_RUN_LIVE_TESTS=1 PYTHONPATH=src pytest -m live`
 
 ## Project Layout
 

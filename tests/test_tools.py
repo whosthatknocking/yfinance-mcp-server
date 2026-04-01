@@ -17,11 +17,13 @@ SERIES_PAYLOAD = {
 
 
 def test_get_quote_snapshot_returns_wrapper_payload():
-    with patch.object(server.wrapper, "get_fast_info", return_value={"lastPrice": 123.45, "currency": "USD"}) as mocked:
+    payload = {"lastPrice": 123.45, "currency": "USD", "fiftyDayAverage": 200.0}
+    with patch.object(server.wrapper, "get_fast_info", return_value=payload) as mocked:
         result = server.get_quote_snapshot("TSLA")
 
     assert result["lastPrice"] == 123.45
     assert result["currency"] == "USD"
+    assert result["additional_fields"] == {"fiftyDayAverage": 200.0}
     mocked.assert_called_once_with("TSLA")
 
 
@@ -50,11 +52,14 @@ def test_get_batch_news_returns_list_payload():
 
 
 def test_get_info_returns_named_response_model_payload():
-    payload = {"symbol": "TSLA", "shortName": "Tesla, Inc.", "marketCap": 1000}
+    payload = {"symbol": "TSLA", "shortName": "Tesla, Inc.", "marketCap": 1000, "industry": "Auto Manufacturers"}
     with patch.object(server.wrapper, "get_info", return_value=payload) as mocked:
         result = server.get_info("TSLA")
 
-    assert result == payload
+    assert result["symbol"] == "TSLA"
+    assert result["shortName"] == "Tesla, Inc."
+    assert result["marketCap"] == 1000
+    assert result["additional_fields"] == {"industry": "Auto Manufacturers"}
     mocked.assert_called_once_with("TSLA")
 
 
@@ -108,11 +113,25 @@ def test_download_history_returns_dataframe_payload():
 
 
 def test_get_news_returns_news_list():
-    news_item = {"title": "Tesla rises", "publisher": "Example News", "link": "https://example.com/story"}
+    news_item = {
+        "title": "Tesla rises",
+        "publisher": "Example News",
+        "link": "https://example.com/story",
+        "uuid": "news-1",
+        "summary": "Extra field",
+    }
     with patch.object(server.wrapper, "get_news", return_value=[news_item]) as mocked:
         result = server.get_news("TSLA")
 
-    assert result == [news_item]
+    assert result == [
+        {
+            "uuid": "news-1",
+            "title": "Tesla rises",
+            "publisher": "Example News",
+            "link": "https://example.com/story",
+            "additional_fields": {"summary": "Extra field"},
+        }
+    ]
     mocked.assert_called_once_with(symbol="TSLA", count=10, tab="news")
 
 
@@ -190,12 +209,16 @@ def test_get_earnings_dates_returns_dataframe_payload():
 
 
 def test_get_ticker_calendar_returns_calendar_payload():
-    payload = {"Dividend Date": "2026-02-11", "Earnings Average": 1.95}
+    payload = {"dividendDate": "2026-02-11", "earningsAverage": 1.95, "customField": "extra"}
     with patch.object(server.wrapper, "get_ticker_calendar", return_value=payload) as mocked:
         result = server.get_ticker_calendar("AAPL")
 
-    assert result == payload
-    mocked.assert_called_once_with("AAPL")
+    assert result == {
+        "dividendDate": "2026-02-11",
+        "earningsAverage": 1.95,
+        "additional_fields": {"customField": "extra"},
+    }
+    mocked.assert_called_once_with(symbol="AAPL")
 
 
 def test_get_recommendations_returns_dataframe_payload():
@@ -207,12 +230,19 @@ def test_get_recommendations_returns_dataframe_payload():
 
 
 def test_get_analyst_price_targets_returns_payload():
-    payload = {"current": 253.79, "high": 350.0, "low": 205.0, "mean": 295.31, "median": 300.0}
+    payload = {"current": 253.79, "high": 350.0, "low": 205.0, "mean": 295.31, "median": 300.0, "numberOfAnalysts": 42}
     with patch.object(server.wrapper, "get_analyst_price_targets", return_value=payload) as mocked:
         result = server.get_analyst_price_targets("AAPL")
 
-    assert result == payload
-    mocked.assert_called_once_with("AAPL")
+    assert result == {
+        "current": 253.79,
+        "high": 350.0,
+        "low": 205.0,
+        "mean": 295.31,
+        "median": 300.0,
+        "additional_fields": {"numberOfAnalysts": 42},
+    }
+    mocked.assert_called_once_with(symbol="AAPL")
 
 
 def test_get_earnings_returns_dataframe_payload():
@@ -673,11 +703,11 @@ def test_get_income_stmt_returns_statement_payload():
 
 
 def test_get_market_summary_returns_named_response_model_payload():
-    payload = {"market": "us", "summary": [{"symbol": "^GSPC"}]}
+    payload = {"market": "us", "summary": [{"symbol": "^GSPC"}], "region": "United States"}
     with patch.object(server.wrapper, "get_market_summary", return_value=payload) as mocked:
         result = server.get_market_summary("us")
 
-    assert result == payload
+    assert result == {"market": "us", "summary": [{"symbol": "^GSPC"}], "additional_fields": {"region": "United States"}}
     mocked.assert_called_once_with(market="us")
 
 
@@ -691,11 +721,11 @@ def test_get_market_returns_named_response_model_payload():
 
 
 def test_get_market_status_returns_named_response_model_payload():
-    payload = {"market": "us", "status": {"status": "open"}}
+    payload = {"market": "us", "status": {"status": "open"}, "region": "United States"}
     with patch.object(server.wrapper, "get_market_status", return_value=payload) as mocked:
         result = server.get_market_status("us")
 
-    assert result == payload
+    assert result == {"market": "us", "status": {"status": "open"}, "additional_fields": {"region": "United States"}}
     mocked.assert_called_once_with(market="us")
 
 

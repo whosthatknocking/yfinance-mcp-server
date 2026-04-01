@@ -56,16 +56,14 @@ To bind a host and port explicitly:
 
 - YF_TRANSPORT=streamable-http YF_HTTP_HOST=127.0.0.1 YF_HTTP_PORT=8000 uv run python -m yfinance_mcp.server
 
-## Claude Desktop Example
+## Examples
 
-An example Claude Desktop MCP config is available in [examples/claude_config.json.example](/Users/emt/Workspace/yfinance-mcp-server/examples/claude_config.json.example).
+Configuration and prompt examples are available in:
 
-## LM Studio Example
-
-LM Studio examples are available in:
-
-- [examples/lmstudio_config.json.example](/Users/emt/Workspace/yfinance-mcp-server/examples/lmstudio_config.json.example) for a `uv`-based setup
-- [examples/lmstudio_config.venv.json.example](/Users/emt/Workspace/yfinance-mcp-server/examples/lmstudio_config.venv.json.example) for an explicit virtualenv Python path
+- [examples/claude_config.json.example](/Users/emt/Workspace/yfinance-mcp-server/examples/claude_config.json.example) for Claude Desktop
+- [examples/lmstudio_config.json.example](/Users/emt/Workspace/yfinance-mcp-server/examples/lmstudio_config.json.example) for LM Studio with `uv`
+- [examples/lmstudio_config.venv.json.example](/Users/emt/Workspace/yfinance-mcp-server/examples/lmstudio_config.venv.json.example) for LM Studio with an explicit virtualenv Python path
+- [examples/QUERIES.md](/Users/emt/Workspace/yfinance-mcp-server/examples/QUERIES.md) for example prompts and tool-oriented queries
 
 For LM Studio, make sure the config uses the project directory as `cwd`. If LM Studio launches the system Python without the project environment, it will fail to import `yfinance_mcp`.
 

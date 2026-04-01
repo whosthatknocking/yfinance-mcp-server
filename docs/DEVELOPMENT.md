@@ -24,6 +24,7 @@ Recommended setup:
 ## Testing
 
 - run tests with PYTHONPATH=src pytest
+- run live integration tests with `YF_RUN_LIVE_TESTS=1 PYTHONPATH=src pytest -m live`
 - keep direct tests around public server tool functions in addition to wrapper and serialization tests
 - for local smoke checks, validate imports and basic wrapper behavior before opening a PR
 

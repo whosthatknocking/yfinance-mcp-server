@@ -39,3 +39,6 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = [
+  "live: opt-in live-network tests against Yahoo Finance via yfinance",
+]

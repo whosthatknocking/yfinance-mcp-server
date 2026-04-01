@@ -152,7 +152,7 @@ def get_info(symbol: str) -> Dict[str, object]:
     """
     def operation() -> Dict[str, object]:
         result = wrapper.get_info(symbol)
-        return InfoResult.model_validate(result).model_dump()
+        return InfoResult.model_validate(result).model_dump(exclude_none=True)
     return _run_tool("get_info", operation)
 
 
@@ -170,7 +170,7 @@ def get_quote_snapshot(symbol: str) -> Dict[str, object]:
     """
     def operation() -> Dict[str, object]:
         result = wrapper.get_fast_info(symbol)
-        return QuoteSnapshotResult.model_validate(result).model_dump()
+        return QuoteSnapshotResult.model_validate(result).model_dump(exclude_none=True)
     return _run_tool("get_quote_snapshot", operation)
 
 
@@ -186,7 +186,7 @@ def get_batch_info(symbols: List[str]) -> Dict[str, object]:
     def operation() -> Dict[str, object]:
         request = SymbolsRequest(symbols=symbols)
         result = wrapper.get_batch_info(**request.model_dump())
-        return BatchInfoResult.model_validate(result).model_dump()
+        return BatchInfoResult.model_validate(result).model_dump(exclude_none=True)
 
     return _run_tool("get_batch_info", operation)
 
@@ -203,7 +203,7 @@ def get_batch_quote_snapshot(symbols: List[str]) -> Dict[str, object]:
     def operation() -> Dict[str, object]:
         request = SymbolsRequest(symbols=symbols)
         result = wrapper.get_batch_quote_snapshot(**request.model_dump())
-        return BatchQuoteSnapshotResult.model_validate(result).model_dump()
+        return BatchQuoteSnapshotResult.model_validate(result).model_dump(exclude_none=True)
 
     return _run_tool("get_batch_quote_snapshot", operation)
 
@@ -215,7 +215,7 @@ def get_batch_news(symbols: List[str]) -> List[Dict[str, object]]:
     def operation() -> List[Dict[str, object]]:
         request = SymbolsRequest(symbols=symbols)
         result = wrapper.get_batch_news(**request.model_dump())
-        return NewsListResult(items=result).model_dump()["items"]
+        return NewsListResult(items=result).model_dump(exclude_none=True)["items"]
 
     return _run_tool("get_batch_news", operation)
 
@@ -321,7 +321,7 @@ def get_news(symbol: str, count: int = 10, tab: str = "news") -> List[Dict[str, 
     def operation() -> List[Dict[str, object]]:
         request = NewsRequest(symbol=symbol, count=count, tab=tab)
         result = wrapper.get_news(**request.model_dump())
-        return NewsListResult(items=result).model_dump()["items"]
+        return NewsListResult(items=result).model_dump(exclude_none=True)["items"]
     return _run_tool("get_news", operation)
 
 
@@ -436,7 +436,7 @@ def get_sec_filings(symbol: str) -> List[Dict[str, object]]:
     def operation() -> List[Dict[str, object]]:
         request = SymbolRequest(symbol=symbol)
         result = wrapper.get_sec_filings(**request.model_dump())
-        return NewsListResult(items=result).model_dump()["items"]
+        return NewsListResult(items=result).model_dump(exclude_none=True)["items"]
 
     return _run_tool("get_sec_filings", operation)
 
@@ -468,7 +468,7 @@ def get_ticker_calendar(symbol: str) -> Dict[str, object]:
     def operation() -> Dict[str, object]:
         request = SymbolRequest(symbol=symbol)
         result = wrapper.get_ticker_calendar(**request.model_dump())
-        return CalendarResult.model_validate(result).model_dump()
+        return CalendarResult.model_validate(result).model_dump(exclude_none=True)
 
     return _run_tool("get_ticker_calendar", operation)
 
@@ -500,7 +500,7 @@ def get_analyst_price_targets(symbol: str) -> Dict[str, object]:
     def operation() -> Dict[str, object]:
         request = SymbolRequest(symbol=symbol)
         result = wrapper.get_analyst_price_targets(**request.model_dump())
-        return AnalystPriceTargetsResult.model_validate(result).model_dump()
+        return AnalystPriceTargetsResult.model_validate(result).model_dump(exclude_none=True)
 
     return _run_tool("get_analyst_price_targets", operation)
 
@@ -1186,7 +1186,7 @@ def get_market_summary(market: str) -> Dict[str, object]:
     def operation() -> Dict[str, object]:
         request = MarketRequest(market=market)
         result = wrapper.get_market_summary(**request.model_dump())
-        return MarketSummaryResult.model_validate(result).model_dump()
+        return MarketSummaryResult.model_validate(result).model_dump(exclude_none=True)
     return _run_tool("get_market_summary", operation)
 
 
@@ -1201,7 +1201,7 @@ def get_market(market: str) -> Dict[str, object]:
     def operation() -> Dict[str, object]:
         request = MarketRequest(market=market)
         result = wrapper.get_market(**request.model_dump())
-        return MarketSummaryResult.model_validate(result).model_dump()
+        return MarketSummaryResult.model_validate(result).model_dump(exclude_none=True)
 
     return _run_tool("get_market", operation)
 
@@ -1213,7 +1213,7 @@ def get_market_status(market: str) -> Dict[str, object]:
     def operation() -> Dict[str, object]:
         request = MarketRequest(market=market)
         result = wrapper.get_market_status(**request.model_dump())
-        return MarketStatusResult.model_validate(result).model_dump()
+        return MarketStatusResult.model_validate(result).model_dump(exclude_none=True)
 
     return _run_tool("get_market_status", operation)
 

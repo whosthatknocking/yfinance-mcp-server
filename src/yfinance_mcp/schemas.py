@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from .utils import normalize_period
 
@@ -43,6 +43,30 @@ class ActionSeriesResult(SeriesPayload):
     pass
 
 
+class StructuredExtrasModel(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    additional_fields: Optional[Dict[str, Any]] = Field(
+        default=None,
+        description="Non-canonical upstream fields preserved under a stable container when present.",
+    )
+
+    @model_validator(mode="before")
+    @classmethod
+    def collect_additional_fields(cls, value: Any) -> Any:
+        if not isinstance(value, dict):
+            return value
+        field_names = set(getattr(cls, "model_fields", {}).keys())
+        if "additional_fields" in value:
+            return value
+        extras = {key: item for key, item in value.items() if key not in field_names}
+        if not extras:
+            return value
+        normalized = {key: item for key, item in value.items() if key in field_names}
+        normalized["additional_fields"] = extras
+        return normalized
+
+
 class SearchResult(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -81,8 +105,7 @@ class BatchQuoteSnapshotResult(BaseModel):
     results: Dict[str, "QuoteSnapshotResult"]
 
 
-class CalendarResult(BaseModel):
-    model_config = ConfigDict(extra="allow")
+class CalendarResult(StructuredExtrasModel):
 
     dividendDate: Optional[Any] = Field(
         default=None,
@@ -122,8 +145,7 @@ class CalendarResult(BaseModel):
     )
 
 
-class AnalystPriceTargetsResult(BaseModel):
-    model_config = ConfigDict(extra="allow")
+class AnalystPriceTargetsResult(StructuredExtrasModel):
 
     current: Optional[Any] = None
     high: Optional[Any] = None
@@ -197,8 +219,7 @@ class CalendarsResult(BaseModel):
     splits_calendar: DataFramePayload
 
 
-class MarketStatusResult(BaseModel):
-    model_config = ConfigDict(extra="allow")
+class MarketStatusResult(StructuredExtrasModel):
 
     market: Optional[str] = Field(
         default=None,
@@ -220,8 +241,7 @@ class ToolMetadata(BaseModel):
     cache_backend: str
 
 
-class InfoResult(BaseModel):
-    model_config = ConfigDict(extra="allow")
+class InfoResult(StructuredExtrasModel):
 
     symbol: Optional[str] = Field(
         default=None,
@@ -257,8 +277,7 @@ class InfoResult(BaseModel):
     )
 
 
-class QuoteSnapshotResult(BaseModel):
-    model_config = ConfigDict(extra="allow")
+class QuoteSnapshotResult(StructuredExtrasModel):
 
     currency: Optional[str] = Field(
         default=None,
@@ -314,8 +333,14 @@ class StringListResult(BaseModel):
     items: List[str]
 
 
-class NewsItem(BaseModel):
-    model_config = ConfigDict(extra="allow")
+class NewsItem(StructuredExtrasModel):
+    uuid: Optional[str] = None
+    title: Optional[str] = None
+    publisher: Optional[str] = None
+    providerPublishTime: Optional[Any] = None
+    type: Optional[str] = None
+    link: Optional[str] = None
+    relatedTickers: Optional[List[str]] = None
 
 
 class NewsListResult(BaseModel):
@@ -324,8 +349,7 @@ class NewsListResult(BaseModel):
     items: List[NewsItem]
 
 
-class MarketSummaryResult(BaseModel):
-    model_config = ConfigDict(extra="allow")
+class MarketSummaryResult(StructuredExtrasModel):
 
     market: Optional[str] = Field(
         default=None,
