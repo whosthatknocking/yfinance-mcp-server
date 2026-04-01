@@ -130,6 +130,67 @@ def test_get_batch_quote_snapshot_returns_payload_keyed_by_symbol():
     assert mocked.call_count == 2
 
 
+def test_get_fast_info_uses_explicit_ticker_without_lookup():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+
+    with patch("yfinance_mcp.wrapper.yf.Ticker") as mocked_ticker, patch.object(wrapper, "lookup") as mocked_lookup:
+        mocked_ticker.return_value.fast_info = {"lastPrice": 123.45, "currency": "USD"}
+
+        result = wrapper.get_fast_info("GOOG")
+
+    assert result == {"lastPrice": 123.45, "currency": "USD"}
+    mocked_ticker.assert_called_once_with("GOOG")
+    mocked_lookup.assert_not_called()
+
+
+def test_get_fast_info_resolves_unique_company_name_via_lookup():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+    lookup_payload = {
+        "query": "Tesla",
+        "stock": {
+            "columns": ["symbol", "shortName"],
+            "data": [["TSLA", "Tesla, Inc."]],
+            "index": [0],
+        },
+    }
+
+    with patch.object(wrapper, "lookup", return_value=lookup_payload) as mocked_lookup, patch(
+        "yfinance_mcp.wrapper.yf.Ticker"
+    ) as mocked_ticker:
+        mocked_ticker.return_value.fast_info = {"lastPrice": 234.56, "currency": "USD"}
+
+        result = wrapper.get_fast_info("Tesla")
+
+    assert result == {"lastPrice": 234.56, "currency": "USD"}
+    mocked_lookup.assert_called_once_with("Tesla", count=10)
+    mocked_ticker.assert_called_once_with("TSLA")
+
+
+def test_get_fast_info_rejects_ambiguous_company_name_lookup():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+    lookup_payload = {
+        "query": "Google",
+        "stock": {
+            "columns": ["symbol", "shortName"],
+            "data": [["GOOG", "Alphabet Inc."], ["GOOGL", "Alphabet Inc."]],
+            "index": [0, 1],
+        },
+    }
+
+    with patch.object(wrapper, "lookup", return_value=lookup_payload):
+        try:
+            wrapper.get_fast_info("Google")
+        except YFinanceError as exc:
+            assert exc.category == "invalid_input"
+            assert "ambiguous" in str(exc)
+            assert exc.details["matches"] == [
+                {"symbol": "GOOG", "name": "Alphabet Inc."},
+                {"symbol": "GOOGL", "name": "Alphabet Inc."},
+            ]
+        else:  # pragma: no cover - defensive
+            raise AssertionError("Expected YFinanceError for ambiguous company-name quote request")
+
+
 def test_get_batch_news_returns_list_payload():
     wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
 

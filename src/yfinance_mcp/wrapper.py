@@ -4,6 +4,7 @@ import os
 import threading
 import time
 import random
+import re
 from dataclasses import dataclass
 from datetime import date, datetime
 from email.utils import parsedate_to_datetime
@@ -20,6 +21,8 @@ from .utils import normalize_symbol, normalize_symbols, serialize_value
 
 configure_logging()
 logger = structlog.get_logger(__name__)
+
+_TICKER_PATTERN = re.compile(r"^[A-Z0-9.^=\-]{1,10}$")
 
 
 class YFinanceError(RuntimeError):
@@ -95,12 +98,12 @@ class YFinanceWrapper:
         )
 
     def get_fast_info(self, symbol: str) -> Dict[str, Any]:
-        normalized = normalize_symbol(symbol)
+        normalized = self._resolve_quote_symbol(symbol)
         return self._cached_call(
             key=f"fast_info:{normalized}",
             ttl=self.quote_ttl,
             operation=lambda: serialize_value(dict(self._ticker(normalized).fast_info)),
-            error_context={"symbol": normalized},
+            error_context={"symbol": normalized, "requested_symbol": symbol.strip()},
             allow_stale=False,
         )
 
@@ -1270,6 +1273,74 @@ class YFinanceWrapper:
             error_context={"key": normalized, "field": field_name},
             allow_stale=True,
         )
+
+    def _resolve_quote_symbol(self, symbol: str) -> str:
+        requested = symbol.strip()
+        normalized = normalize_symbol(symbol)
+        if self._looks_like_explicit_ticker(requested, normalized):
+            return normalized
+
+        matches = self._lookup_stock_candidates(requested, count=10)
+        unique_symbols = list(dict.fromkeys(match["symbol"] for match in matches))
+        if not unique_symbols:
+            return normalized
+        if len(unique_symbols) > 1:
+            raise YFinanceError(
+                "invalid_input",
+                f"Quote request for '{requested}' is ambiguous. Retry with an explicit ticker symbol.",
+                {"query": requested, "matches": matches},
+            )
+        return unique_symbols[0]
+
+    @staticmethod
+    def _looks_like_explicit_ticker(requested: str, normalized: str) -> bool:
+        return bool(requested) and requested == normalized and _TICKER_PATTERN.fullmatch(normalized) is not None
+
+    def _lookup_stock_candidates(self, query: str, count: int) -> List[Dict[str, str]]:
+        result = self.lookup(query, count=count)
+        stock_matches = self._extract_lookup_matches(result.get("stock"))
+        if stock_matches:
+            return stock_matches
+        return self._extract_lookup_matches(result.get("all"))
+
+    @staticmethod
+    def _extract_lookup_matches(payload: Optional[Dict[str, Any]]) -> List[Dict[str, str]]:
+        if not payload or not isinstance(payload, dict):
+            return []
+
+        columns = payload.get("columns")
+        rows = payload.get("data")
+        if not isinstance(columns, list) or not isinstance(rows, list):
+            return []
+
+        normalized_columns = {str(column).strip().lower(): index for index, column in enumerate(columns)}
+        symbol_index = next(
+            (normalized_columns[key] for key in ("symbol", "ticker") if key in normalized_columns),
+            None,
+        )
+        name_index = next(
+            (
+                normalized_columns[key]
+                for key in ("short name", "shortname", "long name", "longname", "name", "company")
+                if key in normalized_columns
+            ),
+            None,
+        )
+        if symbol_index is None:
+            return []
+
+        matches: List[Dict[str, str]] = []
+        for row in rows:
+            if not isinstance(row, list) or symbol_index >= len(row):
+                continue
+            symbol = str(row[symbol_index]).strip().upper()
+            if not symbol:
+                continue
+            name = ""
+            if name_index is not None and name_index < len(row):
+                name = str(row[name_index]).strip()
+            matches.append({"symbol": symbol, "name": name})
+        return matches
 
     def _cached_call(
         self,
