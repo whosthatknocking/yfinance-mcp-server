@@ -186,11 +186,9 @@ The implementation should maintain an exhaustive mapping of information-collecti
 | Ticker(symbol).get_sec_filings() | get_sec_filings | symbol: str | list[dict] |
 | Ticker(symbol).option_chain(...) | get_option_chain | symbol, date: str | dict |
 | Ticker(symbol).get_capital_gains(period=...) | get_capital_gains | symbol, period | dict |
-| Ticker(symbol).get_shares() | get_shares | symbol: str | dict |
 | Ticker(symbol).get_shares_full(...) | get_shares_full | symbol, start, end | dict |
 | Ticker(symbol).get_earnings_dates(...) | get_earnings_dates | symbol, limit, offset | dict |
 | Ticker(symbol).calendar | get_ticker_calendar | symbol: str | dict |
-| Ticker(symbol).earnings | get_earnings | symbol, freq | dict |
 | Ticker(symbol).recommendations | get_recommendations | symbol: str | dict |
 | Ticker(symbol).recommendations_summary | get_recommendations_summary | symbol: str | dict |
 | Ticker(symbol).upgrades_downgrades | get_upgrades_downgrades | symbol: str | dict |

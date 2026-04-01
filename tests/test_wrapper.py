@@ -1,5 +1,8 @@
 from unittest.mock import patch
+from types import SimpleNamespace
+from datetime import date
 import pandas as pd
+import pytest
 
 from yfinance_mcp.cache import InMemoryTTLCache
 from yfinance_mcp.logging_utils import bind_request_context, clear_request_context, get_upstream_call_count
@@ -148,9 +151,9 @@ def test_get_fast_info_resolves_unique_company_name_via_lookup():
     lookup_payload = {
         "query": "Tesla",
         "stock": {
-            "columns": ["symbol", "shortName"],
-            "data": [["TSLA", "Tesla, Inc."]],
-            "index": [0],
+            "columns": ["shortName", "regularMarketPrice", "exchange", "quoteType"],
+            "data": [["Tesla, Inc.", 381.5, "NMS", "equity"]],
+            "index": ["TSLA"],
         },
     }
 
@@ -179,29 +182,57 @@ def test_get_fast_info_prefers_info_market_price_over_fast_info_last_price():
     assert result["previousClose"] == 240.0
 
 
-def test_get_fast_info_rejects_ambiguous_company_name_lookup():
+def test_get_fast_info_uses_current_price_and_fills_previous_close_when_missing():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+
+    with patch("yfinance_mcp.wrapper.yf.Ticker") as mocked_ticker:
+        mocked_ticker.return_value.fast_info = {"lastPrice": 245.67, "currency": "USD"}
+        mocked_ticker.return_value.info = {"currentPrice": 380.87, "previousClose": 371.75}
+
+        result = wrapper.get_fast_info("TSLA")
+
+    assert result["lastPrice"] == 380.87
+    assert result["previousClose"] == 371.75
+
+
+def test_get_fast_info_keeps_fast_info_price_when_info_has_no_market_price():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+
+    with patch("yfinance_mcp.wrapper.yf.Ticker") as mocked_ticker:
+        mocked_ticker.return_value.fast_info = {"lastPrice": 245.67, "currency": "USD", "previousClose": 240.0}
+        mocked_ticker.return_value.info = {"previousClose": 371.75}
+
+        result = wrapper.get_fast_info("TSLA")
+
+    assert result["lastPrice"] == 245.67
+    assert result["previousClose"] == 240.0
+
+
+def test_get_fast_info_uses_first_lookup_stock_match_for_company_name():
     wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
     lookup_payload = {
         "query": "Google",
         "stock": {
-            "columns": ["symbol", "shortName"],
-            "data": [["GOOG", "Alphabet Inc."], ["GOOGL", "Alphabet Inc."]],
-            "index": [0, 1],
+            "columns": ["shortName", "regularMarketPrice", "exchange", "quoteType", "rank"],
+            "data": [
+                ["Alphabet Inc.", 297.37, "NMS", "equity", 22479],
+                ["Alphabet Inc. Class A", 299.99, "NMS", "equity", 22480],
+            ],
+            "index": ["GOOG", "GOOGL"],
         },
     }
 
-    with patch.object(wrapper, "lookup", return_value=lookup_payload):
-        try:
-            wrapper.get_fast_info("Google")
-        except YFinanceError as exc:
-            assert exc.category == "invalid_input"
-            assert "ambiguous" in str(exc)
-            assert exc.details["matches"] == [
-                {"symbol": "GOOG", "name": "Alphabet Inc."},
-                {"symbol": "GOOGL", "name": "Alphabet Inc."},
-            ]
-        else:  # pragma: no cover - defensive
-            raise AssertionError("Expected YFinanceError for ambiguous company-name quote request")
+    with patch.object(wrapper, "lookup", return_value=lookup_payload) as mocked_lookup, patch(
+        "yfinance_mcp.wrapper.yf.Ticker"
+    ) as mocked_ticker:
+        mocked_ticker.return_value.fast_info = {"lastPrice": 297.37, "currency": "USD"}
+        mocked_ticker.return_value.info = {"regularMarketPrice": 297.37}
+
+        result = wrapper.get_fast_info("Google")
+
+    assert result["lastPrice"] == 297.37
+    mocked_lookup.assert_called_once_with("Google", count=10)
+    mocked_ticker.assert_called_once_with("GOOG")
 
 
 def test_get_batch_news_returns_list_payload():
@@ -218,6 +249,60 @@ def test_get_batch_news_returns_list_payload():
         result = wrapper.get_batch_news(["AAPL", "MSFT"])
 
     assert result == [{"title": "Example", "publisher": "Example News"}]
+
+
+def test_get_batch_news_flattens_symbol_keyed_payloads():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+
+    class FakeTickers:
+        def __init__(self, tickers):
+            self._tickers = tickers
+
+        def news(self):
+            return {
+                "AAPL": [{"title": "Apple story"}],
+                "MSFT": [{"title": "Microsoft story", "symbol": "MSFT"}],
+            }
+
+    with patch("yfinance_mcp.wrapper.yf.Tickers", FakeTickers):
+        result = wrapper.get_batch_news(["AAPL", "MSFT"])
+
+    assert result == [
+        {"symbol": "AAPL", "title": "Apple story"},
+        {"title": "Microsoft story", "symbol": "MSFT"},
+    ]
+
+
+def test_get_batch_news_skips_non_list_symbol_entries():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+
+    class FakeTickers:
+        def __init__(self, tickers):
+            self._tickers = tickers
+
+        def news(self):
+            return {"AAPL": "skip-me", "MSFT": [{"title": "Microsoft story"}]}
+
+    with patch("yfinance_mcp.wrapper.yf.Tickers", FakeTickers):
+        result = wrapper.get_batch_news(["AAPL", "MSFT"])
+
+    assert result == [{"symbol": "MSFT", "title": "Microsoft story"}]
+
+
+def test_get_batch_news_returns_empty_list_for_unexpected_payload_type():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+
+    class FakeTickers:
+        def __init__(self, tickers):
+            self._tickers = tickers
+
+        def news(self):
+            return "unexpected"
+
+    with patch("yfinance_mcp.wrapper.yf.Tickers", FakeTickers):
+        result = wrapper.get_batch_news(["AAPL", "MSFT"])
+
+    assert result == []
 
 
 def test_get_market_summary_returns_normalized_payload():
@@ -351,17 +436,6 @@ def test_get_analyst_price_targets_returns_serialized_payload():
         result = wrapper.get_analyst_price_targets("AAPL")
 
     assert result == {"current": 253.79, "high": 350.0, "low": 205.0, "mean": 295.31, "median": 300.0}
-
-
-def test_get_earnings_returns_dataframe_payload():
-    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
-    payload = pd.DataFrame({"Earnings": [100.0]}, index=["2025"])
-
-    with patch("yfinance_mcp.wrapper.yf.Ticker") as mocked_ticker:
-        mocked_ticker.return_value.get_earnings.return_value = payload
-        result = wrapper.get_earnings("AAPL", freq="yearly")
-
-    assert result == {"columns": ["Earnings"], "data": [[100.0]], "index": ["2025"]}
 
 
 def test_get_recommendations_summary_returns_dataframe_payload():
@@ -838,17 +912,6 @@ def test_get_capital_gains_returns_series_payload():
     assert result == {"name": "Capital Gains", "index": ["2026-01-01"], "data": [0.25]}
 
 
-def test_get_shares_returns_dataframe_payload():
-    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
-    payload = pd.DataFrame({"BasicShares": [1000]}, index=["2025"])
-
-    with patch("yfinance_mcp.wrapper.yf.Ticker") as mocked_ticker:
-        mocked_ticker.return_value.get_shares.return_value = payload
-        result = wrapper.get_shares("AAPL")
-
-    assert result == {"columns": ["BasicShares"], "data": [[1000]], "index": ["2025"]}
-
-
 def test_get_shares_full_returns_series_payload():
     wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
     payload = pd.Series([1000], index=["2025-01-01"], name="Shares")
@@ -869,3 +932,300 @@ def test_get_sec_filings_returns_list_payload():
         result = wrapper.get_sec_filings("AAPL")
 
     assert result == payload
+
+
+def test_get_info_returns_payload():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+
+    with patch("yfinance_mcp.wrapper.yf.Ticker") as mocked_ticker:
+        mocked_ticker.return_value.info = {"symbol": "AAPL", "shortName": "Apple Inc."}
+        result = wrapper.get_info("AAPL")
+
+    assert result == {"symbol": "AAPL", "shortName": "Apple Inc."}
+
+
+@pytest.mark.parametrize("method_name,args", [
+    ("get_batch_info", (["", " "],)),
+    ("get_batch_quote_snapshot", (["", " "],)),
+    ("get_batch_news", (["", " "],)),
+    ("download", (["", " "],)),
+])
+def test_batch_methods_reject_empty_symbols(method_name, args):
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+
+    with pytest.raises(YFinanceError) as exc_info:
+        getattr(wrapper, method_name)(*args)
+
+    assert exc_info.value.category == "invalid_input"
+
+
+def test_download_returns_dataframe_payload():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+    payload = pd.DataFrame({"close": [100.0]}, index=["2026-01-01"])
+
+    with patch("yfinance_mcp.wrapper.yf.download", return_value=payload) as mocked:
+        result = wrapper.download(["AAPL", "MSFT"], period="1mo")
+
+    assert result == {"columns": ["close"], "data": [[100.0]], "index": ["2026-01-01"]}
+    mocked.assert_called_once()
+
+
+def test_get_news_and_option_endpoints_return_payloads():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+
+    class FakeChain:
+        calls = pd.DataFrame({"strike": [500]})
+        puts = pd.DataFrame({"strike": [400]})
+
+    with patch("yfinance_mcp.wrapper.yf.Ticker") as mocked_ticker:
+        mocked_ticker.return_value.get_news.return_value = [{"title": "Example"}]
+        mocked_ticker.return_value.options = ("2026-06-19",)
+        mocked_ticker.return_value.option_chain.return_value = FakeChain()
+
+        news = wrapper.get_news("AAPL")
+        expirations = wrapper.get_option_expirations("AAPL")
+        chain = wrapper.get_option_chain("AAPL", date="2026-06-19")
+
+    assert news == [{"title": "Example"}]
+    assert expirations == ["2026-06-19"]
+    assert chain["symbol"] == "AAPL"
+    assert chain["calls"]["columns"] == ["strike"]
+    assert chain["puts"]["columns"] == ["strike"]
+
+
+@pytest.mark.parametrize("method_name", ["get_actions", "get_dividends", "get_splits"])
+def test_series_wrappers_return_series_payload(method_name):
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+    payload = pd.Series([1.0], index=["2026-01-01"], name="Series")
+
+    with patch("yfinance_mcp.wrapper.yf.Ticker") as mocked_ticker:
+        getattr(mocked_ticker.return_value, method_name).return_value = payload
+        result = getattr(wrapper, method_name)("AAPL", period="1y")
+
+    assert result == {"name": "Series", "index": ["2026-01-01"], "data": [1.0]}
+
+
+def test_shares_and_recommendation_endpoints_raise_on_empty_payloads():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+
+    with patch("yfinance_mcp.wrapper.yf.Ticker") as mocked_ticker:
+        mocked_ticker.return_value.get_shares_full.return_value = pd.Series(dtype=float)
+        mocked_ticker.return_value.get_earnings_dates.return_value = pd.DataFrame()
+        mocked_ticker.return_value.get_recommendations.return_value = pd.DataFrame()
+        with pytest.raises(YFinanceError):
+            wrapper.get_shares_full("AAPL")
+        with pytest.raises(YFinanceError):
+            wrapper.get_earnings_dates("AAPL")
+        with pytest.raises(YFinanceError):
+            wrapper.get_recommendations("AAPL")
+
+
+def test_get_market_status_rejects_invalid_market():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+
+    class FakeMarket:
+        def __init__(self, market: str, timeout: int):
+            self.status = {"finance": {"error": {"description": "invalid broad market region"}}}
+
+    with patch("yfinance_mcp.wrapper.yf.Market", FakeMarket):
+        with pytest.raises(YFinanceError):
+            wrapper.get_market_status("america")
+
+
+@pytest.mark.parametrize("method_name, expected", [
+    ("get_sector_overview", {"description": "Example"}),
+    ("get_sector_research_reports", [{"id": "report-1"}]),
+    ("get_sector_top_companies", {"columns": ["name"], "data": [["Apple"]], "index": [0]}),
+    ("get_sector_top_mutual_funds", {"FSPTX": "Fidelity Select Technology"}),
+    ("get_industry_overview", {"description": "Example"}),
+    ("get_industry_research_reports", [{"id": "report-1"}]),
+    ("get_industry_top_companies", {"columns": ["name"], "data": [["Microsoft"]], "index": [0]}),
+    ("get_industry_top_performing_companies", {"columns": ["name"], "data": [["Infra Co"]], "index": [0]}),
+])
+def test_sector_and_industry_field_endpoints(method_name, expected):
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+    patch_target = "yfinance_mcp.wrapper.yf.Sector" if method_name.startswith("get_sector") else "yfinance_mcp.wrapper.yf.Industry"
+    key = "technology" if method_name.startswith("get_sector") else "software-infrastructure"
+
+    fake_type = _FakeSector if method_name.startswith("get_sector") else _FakeIndustry
+    with patch(patch_target, fake_type):
+        result = getattr(wrapper, method_name)(key)
+
+    assert result == expected
+
+
+def test_search_and_lookup_return_serialized_payloads_and_reject_empty_queries():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+
+    class FakeSearch:
+        def __init__(self, *args, **kwargs):
+            self.all = {"quotes": [{"symbol": "AAPL"}]}
+
+    class FakeLookup:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def get_all(self, count=25):
+            return pd.DataFrame({"shortName": ["Apple Inc."]}, index=["AAPL"])
+
+        get_stock = get_all
+        get_etf = get_all
+        get_mutualfund = get_all
+        get_index = get_all
+        get_future = get_all
+        get_currency = get_all
+        get_cryptocurrency = get_all
+
+    with patch("yfinance_mcp.wrapper.yf.Search", FakeSearch), patch("yfinance_mcp.wrapper.yf.Lookup", FakeLookup):
+        assert wrapper.search("apple") == {"quotes": [{"symbol": "AAPL"}]}
+        lookup_result = wrapper.lookup("apple")
+        assert lookup_result["query"] == "apple"
+        assert lookup_result["stock"]["index"] == ["AAPL"]
+
+    with pytest.raises(YFinanceError):
+        wrapper.search(" ")
+    with pytest.raises(YFinanceError):
+        wrapper.lookup(" ")
+
+
+def test_statement_endpoints_cover_supported_and_invalid_frequencies():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+    ticker = SimpleNamespace(
+        quarterly_income_stmt=pd.DataFrame({"value": [1]}, index=["2026Q1"]),
+        ttm_income_stmt=pd.DataFrame({"value": [2]}, index=["ttm"]),
+        quarterly_balance_sheet=pd.DataFrame({"value": [3]}, index=["2026Q1"]),
+        quarterly_cashflow=pd.DataFrame({"value": [4]}, index=["2026Q1"]),
+        ttm_cashflow=pd.DataFrame({"value": [5]}, index=["ttm"]),
+        get_income_stmt=lambda pretty=False, freq="yearly": pd.DataFrame({"value": [6]}, index=["2025"]),
+        get_balance_sheet=lambda pretty=False, freq="yearly": pd.DataFrame({"value": [7]}, index=["2025"]),
+        get_cashflow=lambda pretty=False, freq="yearly": pd.DataFrame({"value": [8]}, index=["2025"]),
+    )
+
+    with patch.object(wrapper, "_ticker", return_value=ticker):
+        assert wrapper.get_income_stmt("AAPL", freq="yearly")["data"] == [[6]]
+        assert wrapper.get_income_stmt("AAPL", freq="quarterly")["data"] == [[1]]
+        assert wrapper.get_income_stmt("AAPL", freq="trailing")["data"] == [[2]]
+        assert wrapper.get_balance_sheet("AAPL", freq="yearly")["data"] == [[7]]
+        assert wrapper.get_balance_sheet("AAPL", freq="quarterly")["data"] == [[3]]
+        assert wrapper.get_cashflow("AAPL", freq="yearly")["data"] == [[8]]
+        assert wrapper.get_cashflow("AAPL", freq="quarterly")["data"] == [[4]]
+        assert wrapper.get_cashflow("AAPL", freq="trailing")["data"] == [[5]]
+
+    with pytest.raises(YFinanceError):
+        wrapper.get_income_stmt("AAPL", freq="monthly")
+    with pytest.raises(YFinanceError):
+        wrapper.get_balance_sheet("AAPL", freq="trailing")
+    with pytest.raises(YFinanceError):
+        wrapper.get_earnings("AAPL", freq="monthly")
+
+
+def test_statement_call_rejects_unsupported_statement_name():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+
+    with pytest.raises(YFinanceError) as exc_info:
+        wrapper._statement_call("AAPL", "unsupported", freq="yearly", pretty=False)
+
+    assert exc_info.value.category == "internal_error"
+
+
+def test_table_getter_raises_on_empty_dataframe():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+    with patch("yfinance_mcp.wrapper.yf.Ticker") as mocked_ticker:
+        mocked_ticker.return_value.get_recommendations_summary.return_value = pd.DataFrame()
+        with pytest.raises(YFinanceError):
+            wrapper.get_recommendations_summary("AAPL")
+
+
+def test_series_call_raises_on_empty_series():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+    with patch("yfinance_mcp.wrapper.yf.Ticker") as mocked_ticker:
+        mocked_ticker.return_value.get_actions.return_value = pd.Series(dtype=float)
+        with pytest.raises(YFinanceError):
+            wrapper.get_actions("AAPL")
+
+
+def test_get_shares_returns_explicit_unsupported_error():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+
+    with pytest.raises(YFinanceError) as exc_info:
+        wrapper.get_shares("AAPL")
+
+    assert exc_info.value.category == "invalid_input"
+    assert "get_shares endpoint is not supported" in str(exc_info.value)
+
+
+def test_get_earnings_returns_explicit_deprecation_error():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+
+    with pytest.raises(YFinanceError) as exc_info:
+        wrapper.get_earnings("AAPL", freq="yearly")
+
+    assert exc_info.value.category == "invalid_input"
+    assert "deprecated upstream" in str(exc_info.value)
+
+
+def test_funds_helpers_raise_when_no_funds_data():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+    with patch("yfinance_mcp.wrapper.yf.Ticker") as mocked_ticker:
+        mocked_ticker.return_value.get_funds_data.return_value = None
+        with pytest.raises(YFinanceError):
+            wrapper.get_funds_data("SPY")
+
+
+def test_calendar_date_and_lookup_resolution_helpers():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+
+    assert wrapper._normalize_calendar_date(None) is None
+    assert wrapper._normalize_calendar_date(date(2026, 1, 1)) == date(2026, 1, 1)
+    assert wrapper._normalize_calendar_date("2026-01-01") == date(2026, 1, 1)
+
+    with patch.object(wrapper, "lookup", return_value={"stock": None, "all": None}):
+        assert wrapper._resolve_quote_symbol("Google") == "GOOGLE"
+
+    with patch.object(wrapper, "lookup", return_value={"stock": None, "all": {"columns": [], "data": [], "index": []}}):
+        assert wrapper._lookup_stock_candidates("Google", count=10) == []
+
+
+def test_cached_call_hit_and_stale_paths():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+    wrapper.cache.set("hit", {"value": 1}, ttl_seconds=60)
+    assert wrapper._cached_call("hit", 60, lambda: {"value": 2}, {"symbol": "AAPL"}, allow_stale=True) == {"value": 1}
+
+    class FakeCache:
+        def __init__(self):
+            self.saved = None
+
+        def get(self, key):
+            return None
+
+        def get_entry(self, key, allow_stale=False):
+            assert allow_stale is True
+            return SimpleNamespace(value={"stale": True})
+
+        def set(self, key, value, ttl_seconds):
+            self.saved = (key, value, ttl_seconds)
+
+    fake_cache = FakeCache()
+    wrapper.cache = fake_cache
+    with patch.object(wrapper, "_run_with_retry", return_value={"fresh": True}) as mocked_retry:
+        result = wrapper._cached_call("miss", 30, lambda: {"fresh": True}, {"symbol": "AAPL"}, allow_stale=True)
+
+    assert result == {"fresh": True}
+    assert mocked_retry.call_args.kwargs["stale_value"] == {"stale": True}
+
+
+def test_retry_timeout_and_failure_paths():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+    wrapper.retry_policy.max_retries = 0
+    wrapper.retry_policy.total_timeout = 0
+
+    with patch("yfinance_mcp.wrapper.logger") as mocked_logger:
+        with pytest.raises(YFinanceError):
+            wrapper._run_with_retry(
+                operation=lambda: (_ for _ in ()).throw(RuntimeError("timeout")),
+                error_context={"symbol": "AAPL"},
+            )
+
+    warning_events = [call.args[0] for call in mocked_logger.warning.call_args_list]
+    assert "upstream_timeout" in warning_events
+    assert "request_deadline_exceeded" in warning_events

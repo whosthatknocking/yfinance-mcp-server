@@ -61,8 +61,6 @@ This document maps the latest supported yfinance API surface to explicit MCP too
 | Ticker.get_splits(period='max') | method | get_splits | alias | Canonical splits tool. |
 | Ticker.capital_gains | property | get_capital_gains | planned | Useful for funds where available. |
 | Ticker.get_capital_gains(period='max') | method | get_capital_gains | alias | Canonical capital gains tool. |
-| Ticker.shares | property | get_shares | planned | Share count history where available. |
-| Ticker.get_shares(as_dict=False) | method | get_shares | alias | Prefer one normalized response schema. |
 | Ticker.get_shares_full(start=None, end=None) | method | get_shares_full | planned | Extended share count history. |
 
 ## Ticker Financial Statements and Filings
@@ -93,9 +91,6 @@ This document maps the latest supported yfinance API surface to explicit MCP too
 | Ticker.quarterly_cash_flow | property | get_cashflow | alias | Upstream alias. |
 | Ticker.ttm_cashflow | property | get_cashflow | alias | Represent as freq='trailing'. |
 | Ticker.ttm_cash_flow | property | get_cashflow | alias | Upstream alias. |
-| Ticker.earnings | property | get_earnings | planned | Canonical earnings table tool. |
-| Ticker.get_earnings(as_dict=False, freq='yearly') | method | get_earnings | alias | Expose freq including trailing. |
-| Ticker.quarterly_earnings | property | get_earnings | alias | Represent as freq='quarterly'. |
 | Ticker.calendar | property | get_ticker_calendar | planned | Ticker-specific calendar/events dict. |
 | Ticker.get_calendar() | method | get_ticker_calendar | alias | Same MCP tool as calendar. |
 | Ticker.earnings_dates | property | get_earnings_dates | planned | Earnings date DataFrame/records. |
@@ -289,14 +284,12 @@ These tools should exist first because they cover the highest-value yfinance pat
 - get_dividends
 - get_splits
 - get_capital_gains
-- get_shares
 - get_shares_full
 - get_income_stmt
 - get_balance_sheet
 - get_cashflow
 - get_earnings_dates
 - get_ticker_calendar
-- get_earnings
 - get_recommendations
 - get_recommendations_summary
 - get_upgrades_downgrades

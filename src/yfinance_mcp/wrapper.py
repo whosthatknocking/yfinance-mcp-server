@@ -168,7 +168,21 @@ class YFinanceWrapper:
 
         def operation() -> List[Dict[str, Any]]:
             tickers = yf.Tickers(" ".join(normalized))
-            return serialize_value(tickers.news())
+            news_payload = serialize_value(tickers.news())
+            if isinstance(news_payload, list):
+                return news_payload
+            if isinstance(news_payload, dict):
+                items: List[Dict[str, Any]] = []
+                for symbol, stories in news_payload.items():
+                    if not isinstance(stories, list):
+                        continue
+                    for story in stories:
+                        if isinstance(story, dict) and "symbol" not in story:
+                            items.append({"symbol": symbol, **story})
+                        else:
+                            items.append(story)
+                return items
+            return []
 
         return self._cached_call(
             key=f"batch_news:{normalized}",
@@ -333,23 +347,10 @@ class YFinanceWrapper:
 
     def get_shares(self, symbol: str) -> Dict[str, Any]:
         normalized = normalize_symbol(symbol)
-
-        def operation() -> Dict[str, Any]:
-            result = self._ticker(normalized).get_shares(as_dict=False)
-            if isinstance(result, pd.DataFrame) and result.empty:
-                raise YFinanceError(
-                    "invalid_input",
-                    "No shares data was returned for the requested symbol.",
-                    {"symbol": normalized},
-                )
-            return serialize_value(result)
-
-        return self._cached_call(
-            key=f"shares:{normalized}",
-            ttl=self.reference_ttl,
-            operation=operation,
-            error_context={"symbol": normalized},
-            allow_stale=True,
+        raise YFinanceError(
+            "invalid_input",
+            "The get_shares endpoint is not supported by the current yfinance upstream. Use get_shares_full instead.",
+            {"symbol": normalized, "replacement": "get_shares_full"},
         )
 
     def get_shares_full(self, symbol: str, start: Optional[str] = None, end: Optional[str] = None) -> Dict[str, Any]:
@@ -357,7 +358,7 @@ class YFinanceWrapper:
 
         def operation() -> Dict[str, Any]:
             result = self._ticker(normalized).get_shares_full(start=start, end=end)
-            if isinstance(result, pd.Series) and result.empty:
+            if result is None or (isinstance(result, pd.Series) and result.empty):
                 raise YFinanceError(
                     "invalid_input",
                     "No extended shares data was returned for the requested symbol.",
@@ -726,26 +727,10 @@ class YFinanceWrapper:
 
     def get_earnings(self, symbol: str, freq: str = "yearly") -> Dict[str, Any]:
         normalized = normalize_symbol(symbol)
-        if freq not in {"yearly", "quarterly"}:
-            raise YFinanceError("invalid_input", "freq must be one of yearly or quarterly.", {"freq": freq})
-
-        def operation() -> Dict[str, Any]:
-            ticker = self._ticker(normalized)
-            result = ticker.get_earnings(freq=freq)
-            if isinstance(result, pd.DataFrame) and result.empty:
-                raise YFinanceError(
-                    "invalid_input",
-                    "No earnings data was returned for the requested symbol.",
-                    {"symbol": normalized, "freq": freq},
-                )
-            return serialize_value(result)
-
-        return self._cached_call(
-            key=f"earnings:{normalized}:{freq}",
-            ttl=self.reference_ttl,
-            operation=operation,
-            error_context={"symbol": normalized, "freq": freq},
-            allow_stale=True,
+        raise YFinanceError(
+            "invalid_input",
+            "The get_earnings endpoint is deprecated upstream and is no longer exposed. Use get_income_stmt or get_earnings_dates instead.",
+            {"symbol": normalized, "replacements": ["get_income_stmt", "get_earnings_dates"]},
         )
 
     def get_recommendations_summary(self, symbol: str) -> Dict[str, Any]:
@@ -1147,7 +1132,7 @@ class YFinanceWrapper:
             getter_name = f"get_{series_name}"
             getter = getattr(ticker, getter_name)
             result = getter(period=period)
-            if isinstance(result, pd.Series) and result.empty:
+            if result is None or (isinstance(result, pd.Series) and result.empty):
                 raise YFinanceError(
                     "invalid_input",
                     f"No {series_name} data was returned for the requested symbol and period.",
@@ -1176,7 +1161,7 @@ class YFinanceWrapper:
             ticker = self._ticker(normalized)
             getter = getattr(ticker, getter_name)
             result = getter()
-            if isinstance(result, pd.DataFrame) and result.empty:
+            if result is None or (isinstance(result, pd.DataFrame) and result.empty):
                 raise YFinanceError(
                     "invalid_input",
                     empty_message,
@@ -1297,16 +1282,9 @@ class YFinanceWrapper:
             return normalized
 
         matches = self._lookup_stock_candidates(requested, count=10)
-        unique_symbols = list(dict.fromkeys(match["symbol"] for match in matches))
-        if not unique_symbols:
+        if not matches:
             return normalized
-        if len(unique_symbols) > 1:
-            raise YFinanceError(
-                "invalid_input",
-                f"Quote request for '{requested}' is ambiguous. Retry with an explicit ticker symbol.",
-                {"query": requested, "matches": matches},
-            )
-        return unique_symbols[0]
+        return matches[0]["symbol"]
 
     @staticmethod
     def _looks_like_explicit_ticker(requested: str, normalized: str) -> bool:
@@ -1320,20 +1298,17 @@ class YFinanceWrapper:
         return self._extract_lookup_matches(result.get("all"))
 
     @staticmethod
-    def _extract_lookup_matches(payload: Optional[Dict[str, Any]]) -> List[Dict[str, str]]:
+    def _extract_lookup_matches(payload: Optional[Dict[str, Any]]) -> List[Dict[str, Any]]:
         if not payload or not isinstance(payload, dict):
             return []
 
         columns = payload.get("columns")
         rows = payload.get("data")
-        if not isinstance(columns, list) or not isinstance(rows, list):
+        indices = payload.get("index")
+        if not isinstance(columns, list) or not isinstance(rows, list) or not isinstance(indices, list):
             return []
 
         normalized_columns = {str(column).strip().lower(): index for index, column in enumerate(columns)}
-        symbol_index = next(
-            (normalized_columns[key] for key in ("symbol", "ticker") if key in normalized_columns),
-            None,
-        )
         name_index = next(
             (
                 normalized_columns[key]
@@ -1342,20 +1317,43 @@ class YFinanceWrapper:
             ),
             None,
         )
-        if symbol_index is None:
-            return []
+        exchange_index = normalized_columns.get("exchange")
+        quote_type_index = normalized_columns.get("quotetype")
+        price_index = normalized_columns.get("regularmarketprice")
+        rank_index = normalized_columns.get("rank")
 
-        matches: List[Dict[str, str]] = []
-        for row in rows:
-            if not isinstance(row, list) or symbol_index >= len(row):
+        matches: List[Dict[str, Any]] = []
+        for row_index, row in enumerate(rows):
+            if not isinstance(row, list) or row_index >= len(indices):
                 continue
-            symbol = str(row[symbol_index]).strip().upper()
+            symbol = str(indices[row_index]).strip().upper()
             if not symbol:
                 continue
             name = ""
             if name_index is not None and name_index < len(row):
                 name = str(row[name_index]).strip()
-            matches.append({"symbol": symbol, "name": name})
+            exchange = ""
+            if exchange_index is not None and exchange_index < len(row):
+                exchange = str(row[exchange_index]).strip().upper()
+            quote_type = ""
+            if quote_type_index is not None and quote_type_index < len(row):
+                quote_type = str(row[quote_type_index]).strip().lower()
+            last_price = None
+            if price_index is not None and price_index < len(row):
+                last_price = row[price_index]
+            rank = None
+            if rank_index is not None and rank_index < len(row):
+                rank = row[rank_index]
+            matches.append(
+                {
+                    "symbol": symbol,
+                    "name": name,
+                    "exchange": exchange,
+                    "quoteType": quote_type,
+                    "lastPrice": last_price,
+                    "rank": rank,
+                }
+            )
         return matches
 
     def _cached_call(
@@ -1483,9 +1481,9 @@ class YFinanceWrapper:
         if headers is None:
             return None
         retry_after_value = None
-        if hasattr(headers, "get"):
+        if isinstance(headers, dict):
             retry_after_value = headers.get("Retry-After") or headers.get("retry-after")
-        elif isinstance(headers, dict):
+        elif hasattr(headers, "get"):
             retry_after_value = headers.get("Retry-After") or headers.get("retry-after")
         if retry_after_value is None:
             return None

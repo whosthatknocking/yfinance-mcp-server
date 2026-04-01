@@ -34,7 +34,6 @@ from .schemas import (
     CalendarsResult,
     CalendarResult,
     CalendarRangeRequest,
-    EarningsRequest,
     EarningsCalendarRequest,
     EarningsDatesRequest,
     FundsDataResult,
@@ -444,18 +443,6 @@ def get_capital_gains(symbol: str, period: str = "max") -> Dict[str, object]:
 
 
 @mcp.tool()
-def get_shares(symbol: str) -> Dict[str, object]:
-    """Get share-count history for a ticker when available."""
-
-    def operation() -> Dict[str, object]:
-        request = SymbolRequest(symbol=symbol)
-        result = wrapper.get_shares(**request.model_dump())
-        return AnalysisTableResult.model_validate(result).model_dump()
-
-    return _run_tool("get_shares", operation)
-
-
-@mcp.tool()
 def get_shares_full(symbol: str, start: Optional[str] = None, end: Optional[str] = None) -> Dict[str, object]:
     """Get extended share-count history for a ticker."""
 
@@ -541,22 +528,6 @@ def get_analyst_price_targets(symbol: str) -> Dict[str, object]:
         return AnalystPriceTargetsResult.model_validate(result).model_dump(exclude_none=True)
 
     return _run_tool("get_analyst_price_targets", operation)
-
-
-@mcp.tool()
-def get_earnings(symbol: str, freq: str = "yearly") -> Dict[str, object]:
-    """Get annual or quarterly earnings data for a ticker.
-
-    Use this tool for historical earnings result tables. For upcoming and
-    recent earnings event timing, use `get_earnings_dates`.
-    """
-
-    def operation() -> Dict[str, object]:
-        request = EarningsRequest(symbol=symbol, freq=freq)
-        result = wrapper.get_earnings(**request.model_dump())
-        return AnalysisTableResult.model_validate(result).model_dump()
-
-    return _run_tool("get_earnings", operation)
 
 
 @mcp.tool()
@@ -1332,14 +1303,12 @@ def _tool_functions():
         get_dividends,
         get_splits,
         get_capital_gains,
-        get_shares,
         get_shares_full,
         get_sec_filings,
         get_earnings_dates,
         get_ticker_calendar,
         get_recommendations,
         get_analyst_price_targets,
-        get_earnings,
         get_recommendations_summary,
         get_upgrades_downgrades,
         get_earnings_estimate,
