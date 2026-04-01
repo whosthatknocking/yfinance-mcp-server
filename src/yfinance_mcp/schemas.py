@@ -157,6 +157,37 @@ class FundsDataResult(BaseModel):
     top_holdings: DataFramePayload
 
 
+class SectorResult(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    key: str
+    name: str
+    symbol: str
+    overview: Dict[str, Any]
+    research_reports: List[Dict[str, Any]]
+    industries: DataFramePayload
+    top_companies: DataFramePayload
+    top_etfs: Dict[str, Any]
+    top_mutual_funds: Dict[str, Any]
+    ticker_symbol: Optional[str]
+
+
+class IndustryResult(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    key: str
+    name: str
+    symbol: str
+    sector_key: str
+    sector_name: str
+    overview: Dict[str, Any]
+    research_reports: List[Dict[str, Any]]
+    top_companies: DataFramePayload
+    top_growth_companies: DataFramePayload
+    top_performing_companies: DataFramePayload
+    ticker_symbol: Optional[str]
+
+
 class CalendarsResult(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -464,6 +495,16 @@ class MarketRequest(BaseModel):
         min_length=1,
         description="Yahoo Finance market code such as us.",
         examples=["us"],
+    )
+
+
+class KeyRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    key: str = Field(
+        min_length=1,
+        description="Yahoo Finance sector or industry key such as technology or software-infrastructure.",
+        examples=["technology"],
     )
 
 

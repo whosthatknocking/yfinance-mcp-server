@@ -328,6 +328,138 @@ class YFinanceWrapper:
             allow_stale=False,
         )
 
+    def get_sector(self, key: str) -> Dict[str, Any]:
+        normalized = key.strip().lower()
+
+        def operation() -> Dict[str, Any]:
+            sector = yf.Sector(normalized)
+            return {
+                "key": sector.key,
+                "name": sector.name,
+                "symbol": sector.symbol,
+                "overview": serialize_value(sector.overview),
+                "research_reports": serialize_value(sector.research_reports),
+                "industries": serialize_value(sector.industries),
+                "top_companies": serialize_value(sector.top_companies),
+                "top_etfs": serialize_value(sector.top_etfs),
+                "top_mutual_funds": serialize_value(sector.top_mutual_funds),
+                "ticker_symbol": getattr(sector.ticker, "ticker", None),
+            }
+
+        return self._cached_call(
+            key=f"sector:{normalized}",
+            ttl=self.reference_ttl,
+            operation=operation,
+            error_context={"key": normalized},
+            allow_stale=True,
+        )
+
+    def get_sector_overview(self, key: str) -> Dict[str, Any]:
+        return self._sector_field_call(key, "sector_overview", "overview")
+
+    def get_sector_research_reports(self, key: str) -> List[Dict[str, Any]]:
+        normalized = key.strip().lower()
+        return self._cached_call(
+            key=f"sector_research_reports:{normalized}",
+            ttl=self.reference_ttl,
+            operation=lambda: serialize_value(yf.Sector(normalized).research_reports),
+            error_context={"key": normalized},
+            allow_stale=True,
+        )
+
+    def get_sector_industries(self, key: str) -> Dict[str, Any]:
+        return self._sector_field_call(key, "sector_industries", "industries")
+
+    def get_sector_top_companies(self, key: str) -> Dict[str, Any]:
+        return self._sector_field_call(key, "sector_top_companies", "top_companies")
+
+    def get_sector_top_etfs(self, key: str) -> Dict[str, Any]:
+        return self._sector_field_call(key, "sector_top_etfs", "top_etfs")
+
+    def get_sector_top_mutual_funds(self, key: str) -> Dict[str, Any]:
+        return self._sector_field_call(key, "sector_top_mutual_funds", "top_mutual_funds")
+
+    def get_sector_ticker(self, key: str) -> Dict[str, Any]:
+        normalized = key.strip().lower()
+
+        def operation() -> Dict[str, Any]:
+            sector = yf.Sector(normalized)
+            ticker_symbol = getattr(sector.ticker, "ticker", None)
+            return {"value": ticker_symbol}
+
+        return self._cached_call(
+            key=f"sector_ticker:{normalized}",
+            ttl=self.reference_ttl,
+            operation=operation,
+            error_context={"key": normalized},
+            allow_stale=True,
+        )
+
+    def get_industry(self, key: str) -> Dict[str, Any]:
+        normalized = key.strip().lower()
+
+        def operation() -> Dict[str, Any]:
+            industry = yf.Industry(normalized)
+            return {
+                "key": industry.key,
+                "name": industry.name,
+                "symbol": industry.symbol,
+                "sector_key": industry.sector_key,
+                "sector_name": industry.sector_name,
+                "overview": serialize_value(industry.overview),
+                "research_reports": serialize_value(industry.research_reports),
+                "top_companies": serialize_value(industry.top_companies),
+                "top_growth_companies": serialize_value(industry.top_growth_companies),
+                "top_performing_companies": serialize_value(industry.top_performing_companies),
+                "ticker_symbol": getattr(industry.ticker, "ticker", None),
+            }
+
+        return self._cached_call(
+            key=f"industry:{normalized}",
+            ttl=self.reference_ttl,
+            operation=operation,
+            error_context={"key": normalized},
+            allow_stale=True,
+        )
+
+    def get_industry_overview(self, key: str) -> Dict[str, Any]:
+        return self._industry_field_call(key, "industry_overview", "overview")
+
+    def get_industry_research_reports(self, key: str) -> List[Dict[str, Any]]:
+        normalized = key.strip().lower()
+        return self._cached_call(
+            key=f"industry_research_reports:{normalized}",
+            ttl=self.reference_ttl,
+            operation=lambda: serialize_value(yf.Industry(normalized).research_reports),
+            error_context={"key": normalized},
+            allow_stale=True,
+        )
+
+    def get_industry_top_companies(self, key: str) -> Dict[str, Any]:
+        return self._industry_field_call(key, "industry_top_companies", "top_companies")
+
+    def get_industry_top_growth_companies(self, key: str) -> Dict[str, Any]:
+        return self._industry_field_call(key, "industry_top_growth_companies", "top_growth_companies")
+
+    def get_industry_top_performing_companies(self, key: str) -> Dict[str, Any]:
+        return self._industry_field_call(key, "industry_top_performing_companies", "top_performing_companies")
+
+    def get_industry_ticker(self, key: str) -> Dict[str, Any]:
+        normalized = key.strip().lower()
+
+        def operation() -> Dict[str, Any]:
+            industry = yf.Industry(normalized)
+            ticker_symbol = getattr(industry.ticker, "ticker", None)
+            return {"value": ticker_symbol}
+
+        return self._cached_call(
+            key=f"industry_ticker:{normalized}",
+            ttl=self.reference_ttl,
+            operation=operation,
+            error_context={"key": normalized},
+            allow_stale=True,
+        )
+
     def search(
         self,
         query: str,
@@ -1006,6 +1138,36 @@ class YFinanceWrapper:
         if isinstance(value, date):
             return value
         return datetime.fromisoformat(value).date()
+
+    def _sector_field_call(self, key: str, cache_key_prefix: str, field_name: str):
+        normalized = key.strip().lower()
+
+        def operation():
+            sector = yf.Sector(normalized)
+            return serialize_value(getattr(sector, field_name))
+
+        return self._cached_call(
+            key=f"{cache_key_prefix}:{normalized}",
+            ttl=self.reference_ttl,
+            operation=operation,
+            error_context={"key": normalized, "field": field_name},
+            allow_stale=True,
+        )
+
+    def _industry_field_call(self, key: str, cache_key_prefix: str, field_name: str):
+        normalized = key.strip().lower()
+
+        def operation():
+            industry = yf.Industry(normalized)
+            return serialize_value(getattr(industry, field_name))
+
+        return self._cached_call(
+            key=f"{cache_key_prefix}:{normalized}",
+            ttl=self.reference_ttl,
+            operation=operation,
+            error_context={"key": normalized, "field": field_name},
+            allow_stale=True,
+        )
 
     def _cached_call(
         self,

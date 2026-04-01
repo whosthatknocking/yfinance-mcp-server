@@ -549,3 +549,106 @@ def test_get_splits_calendar_returns_dataframe_payload():
         result = wrapper.get_splits_calendar(start="2026-01-01", end="2026-03-31")
 
     assert result == {"columns": ["Symbol"], "data": [["XYZ"]], "index": ["2026-01-20"]}
+
+
+class _FakeTickerObject:
+    def __init__(self, ticker: str):
+        self.ticker = ticker
+
+
+class _FakeSector:
+    def __init__(self, key: str):
+        self.key = key
+        self.name = "Technology"
+        self.symbol = "^YH311"
+        self.overview = {"description": "Example"}
+        self.research_reports = [{"id": "report-1"}]
+        self.industries = pd.DataFrame({"name": ["Software"]}, index=[0])
+        self.top_companies = pd.DataFrame({"name": ["Apple"]}, index=[0])
+        self.top_etfs = {"XLK": "Technology Select Sector SPDR Fund"}
+        self.top_mutual_funds = {"FSPTX": "Fidelity Select Technology"}
+        self.ticker = _FakeTickerObject("^YH311")
+
+
+class _FakeIndustry:
+    def __init__(self, key: str):
+        self.key = key
+        self.name = "Software - Infrastructure"
+        self.symbol = "^YH31110030"
+        self.sector_key = "technology"
+        self.sector_name = "Technology"
+        self.overview = {"description": "Example"}
+        self.research_reports = [{"id": "report-1"}]
+        self.top_companies = pd.DataFrame({"name": ["Microsoft"]}, index=[0])
+        self.top_growth_companies = pd.DataFrame({"name": ["Cloud Co"]}, index=[0])
+        self.top_performing_companies = pd.DataFrame({"name": ["Infra Co"]}, index=[0])
+        self.ticker = _FakeTickerObject("^YH31110030")
+
+
+def test_get_sector_returns_aggregate_payload():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+
+    with patch("yfinance_mcp.wrapper.yf.Sector", _FakeSector):
+        result = wrapper.get_sector("technology")
+
+    assert result["key"] == "technology"
+    assert result["name"] == "Technology"
+    assert result["symbol"] == "^YH311"
+    assert result["ticker_symbol"] == "^YH311"
+
+
+def test_get_sector_industries_returns_dataframe_payload():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+
+    with patch("yfinance_mcp.wrapper.yf.Sector", _FakeSector):
+        result = wrapper.get_sector_industries("technology")
+
+    assert result == {"columns": ["name"], "data": [["Software"]], "index": [0]}
+
+
+def test_get_sector_top_etfs_returns_mapping_payload():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+
+    with patch("yfinance_mcp.wrapper.yf.Sector", _FakeSector):
+        result = wrapper.get_sector_top_etfs("technology")
+
+    assert result == {"XLK": "Technology Select Sector SPDR Fund"}
+
+
+def test_get_sector_ticker_returns_text_payload():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+
+    with patch("yfinance_mcp.wrapper.yf.Sector", _FakeSector):
+        result = wrapper.get_sector_ticker("technology")
+
+    assert result == {"value": "^YH311"}
+
+
+def test_get_industry_returns_aggregate_payload():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+
+    with patch("yfinance_mcp.wrapper.yf.Industry", _FakeIndustry):
+        result = wrapper.get_industry("software-infrastructure")
+
+    assert result["key"] == "software-infrastructure"
+    assert result["symbol"] == "^YH31110030"
+    assert result["sector_key"] == "technology"
+    assert result["ticker_symbol"] == "^YH31110030"
+
+
+def test_get_industry_top_growth_companies_returns_dataframe_payload():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+
+    with patch("yfinance_mcp.wrapper.yf.Industry", _FakeIndustry):
+        result = wrapper.get_industry_top_growth_companies("software-infrastructure")
+
+    assert result == {"columns": ["name"], "data": [["Cloud Co"]], "index": [0]}
+
+
+def test_get_industry_ticker_returns_text_payload():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+
+    with patch("yfinance_mcp.wrapper.yf.Industry", _FakeIndustry):
+        result = wrapper.get_industry_ticker("software-infrastructure")
+
+    assert result == {"value": "^YH31110030"}

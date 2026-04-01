@@ -36,6 +36,7 @@ from .schemas import (
     InfoResult,
     LookupRequest,
     LookupResult,
+    KeyRequest,
     MarketStatusResult,
     MarketRequest,
     MarketSummaryResult,
@@ -48,6 +49,7 @@ from .schemas import (
     QuoteSnapshotResult,
     SearchRequest,
     SearchResult,
+    SectorResult,
     StatementRequest,
     StatementResult,
     StringListResult,
@@ -55,6 +57,7 @@ from .schemas import (
     SymbolsRequest,
     TextValueResult,
     ToolMetadata,
+    IndustryResult,
 )
 from mcp.server.fastmcp import FastMCP
 
@@ -861,6 +864,186 @@ def get_splits_calendar(
         return AnalysisTableResult.model_validate(result).model_dump()
 
     return _run_tool("get_splits_calendar", operation)
+
+
+@mcp.tool()
+def get_sector(key: str) -> Dict[str, object]:
+    """Get aggregate sector overview and linked data for a Yahoo Finance sector key."""
+
+    def operation() -> Dict[str, object]:
+        request = KeyRequest(key=key)
+        result = wrapper.get_sector(**request.model_dump())
+        return SectorResult.model_validate(result).model_dump()
+
+    return _run_tool("get_sector", operation)
+
+
+@mcp.tool()
+def get_sector_overview(key: str) -> Dict[str, object]:
+    """Get sector overview metadata for a Yahoo Finance sector key."""
+
+    def operation() -> Dict[str, object]:
+        request = KeyRequest(key=key)
+        result = wrapper.get_sector_overview(**request.model_dump())
+        return MappingResult.model_validate(result).model_dump()
+
+    return _run_tool("get_sector_overview", operation)
+
+
+@mcp.tool()
+def get_sector_research_reports(key: str) -> List[Dict[str, object]]:
+    """Get sector research reports for a Yahoo Finance sector key."""
+
+    def operation() -> List[Dict[str, object]]:
+        request = KeyRequest(key=key)
+        result = wrapper.get_sector_research_reports(**request.model_dump())
+        return result
+
+    return _run_tool("get_sector_research_reports", operation)
+
+
+@mcp.tool()
+def get_sector_industries(key: str) -> Dict[str, object]:
+    """Get industries within a Yahoo Finance sector."""
+
+    def operation() -> Dict[str, object]:
+        request = KeyRequest(key=key)
+        result = wrapper.get_sector_industries(**request.model_dump())
+        return AnalysisTableResult.model_validate(result).model_dump()
+
+    return _run_tool("get_sector_industries", operation)
+
+
+@mcp.tool()
+def get_sector_top_companies(key: str) -> Dict[str, object]:
+    """Get top companies within a Yahoo Finance sector."""
+
+    def operation() -> Dict[str, object]:
+        request = KeyRequest(key=key)
+        result = wrapper.get_sector_top_companies(**request.model_dump())
+        return AnalysisTableResult.model_validate(result).model_dump()
+
+    return _run_tool("get_sector_top_companies", operation)
+
+
+@mcp.tool()
+def get_sector_top_etfs(key: str) -> Dict[str, object]:
+    """Get top ETFs for a Yahoo Finance sector."""
+
+    def operation() -> Dict[str, object]:
+        request = KeyRequest(key=key)
+        result = wrapper.get_sector_top_etfs(**request.model_dump())
+        return MappingResult.model_validate(result).model_dump()
+
+    return _run_tool("get_sector_top_etfs", operation)
+
+
+@mcp.tool()
+def get_sector_top_mutual_funds(key: str) -> Dict[str, object]:
+    """Get top mutual funds for a Yahoo Finance sector."""
+
+    def operation() -> Dict[str, object]:
+        request = KeyRequest(key=key)
+        result = wrapper.get_sector_top_mutual_funds(**request.model_dump())
+        return MappingResult.model_validate(result).model_dump()
+
+    return _run_tool("get_sector_top_mutual_funds", operation)
+
+
+@mcp.tool()
+def get_sector_ticker(key: str) -> Dict[str, object]:
+    """Get the ticker symbol associated with a Yahoo Finance sector."""
+
+    def operation() -> Dict[str, object]:
+        request = KeyRequest(key=key)
+        result = wrapper.get_sector_ticker(**request.model_dump())
+        return TextValueResult.model_validate(result).model_dump()
+
+    return _run_tool("get_sector_ticker", operation)
+
+
+@mcp.tool()
+def get_industry(key: str) -> Dict[str, object]:
+    """Get aggregate industry overview and linked data for a Yahoo Finance industry key."""
+
+    def operation() -> Dict[str, object]:
+        request = KeyRequest(key=key)
+        result = wrapper.get_industry(**request.model_dump())
+        return IndustryResult.model_validate(result).model_dump()
+
+    return _run_tool("get_industry", operation)
+
+
+@mcp.tool()
+def get_industry_overview(key: str) -> Dict[str, object]:
+    """Get industry overview metadata for a Yahoo Finance industry key."""
+
+    def operation() -> Dict[str, object]:
+        request = KeyRequest(key=key)
+        result = wrapper.get_industry_overview(**request.model_dump())
+        return MappingResult.model_validate(result).model_dump()
+
+    return _run_tool("get_industry_overview", operation)
+
+
+@mcp.tool()
+def get_industry_research_reports(key: str) -> List[Dict[str, object]]:
+    """Get industry research reports for a Yahoo Finance industry key."""
+
+    def operation() -> List[Dict[str, object]]:
+        request = KeyRequest(key=key)
+        result = wrapper.get_industry_research_reports(**request.model_dump())
+        return result
+
+    return _run_tool("get_industry_research_reports", operation)
+
+
+@mcp.tool()
+def get_industry_top_companies(key: str) -> Dict[str, object]:
+    """Get top companies within a Yahoo Finance industry."""
+
+    def operation() -> Dict[str, object]:
+        request = KeyRequest(key=key)
+        result = wrapper.get_industry_top_companies(**request.model_dump())
+        return AnalysisTableResult.model_validate(result).model_dump()
+
+    return _run_tool("get_industry_top_companies", operation)
+
+
+@mcp.tool()
+def get_industry_top_growth_companies(key: str) -> Dict[str, object]:
+    """Get top growth companies within a Yahoo Finance industry."""
+
+    def operation() -> Dict[str, object]:
+        request = KeyRequest(key=key)
+        result = wrapper.get_industry_top_growth_companies(**request.model_dump())
+        return AnalysisTableResult.model_validate(result).model_dump()
+
+    return _run_tool("get_industry_top_growth_companies", operation)
+
+
+@mcp.tool()
+def get_industry_top_performing_companies(key: str) -> Dict[str, object]:
+    """Get top performing companies within a Yahoo Finance industry."""
+
+    def operation() -> Dict[str, object]:
+        request = KeyRequest(key=key)
+        result = wrapper.get_industry_top_performing_companies(**request.model_dump())
+        return AnalysisTableResult.model_validate(result).model_dump()
+
+    return _run_tool("get_industry_top_performing_companies", operation)
+
+
+@mcp.tool()
+def get_industry_ticker(key: str) -> Dict[str, object]:
+    """Get the ticker symbol associated with a Yahoo Finance industry."""
+
+    def operation() -> Dict[str, object]:
+        request = KeyRequest(key=key)
+        result = wrapper.get_industry_ticker(**request.model_dump())
+        return TextValueResult.model_validate(result).model_dump()
+
+    return _run_tool("get_industry_ticker", operation)
 
 
 @mcp.tool()

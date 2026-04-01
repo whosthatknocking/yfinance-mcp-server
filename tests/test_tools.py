@@ -451,6 +451,159 @@ def test_get_splits_calendar_returns_dataframe_payload():
     mocked.assert_called_once_with(start="2026-01-01", end="2026-03-31", limit=12, offset=0, force=False)
 
 
+def test_get_sector_returns_named_response_model_payload():
+    payload = {
+        "key": "technology",
+        "name": "Technology",
+        "symbol": "^YH311",
+        "overview": {"description": "Example"},
+        "research_reports": [{"id": "report-1"}],
+        "industries": DATAFRAME_PAYLOAD,
+        "top_companies": DATAFRAME_PAYLOAD,
+        "top_etfs": {"XLK": "Technology Select Sector SPDR Fund"},
+        "top_mutual_funds": {"FSPTX": "Fidelity Select Technology"},
+        "ticker_symbol": "^YH311",
+    }
+    with patch.object(server.wrapper, "get_sector", return_value=payload) as mocked:
+        result = server.get_sector("technology")
+
+    assert result == payload
+    mocked.assert_called_once_with(key="technology")
+
+
+def test_get_sector_overview_returns_mapping_payload():
+    payload = {"description": "Example"}
+    with patch.object(server.wrapper, "get_sector_overview", return_value=payload) as mocked:
+        result = server.get_sector_overview("technology")
+
+    assert result == payload
+    mocked.assert_called_once_with(key="technology")
+
+
+def test_get_sector_research_reports_returns_list_payload():
+    payload = [{"id": "report-1"}]
+    with patch.object(server.wrapper, "get_sector_research_reports", return_value=payload) as mocked:
+        result = server.get_sector_research_reports("technology")
+
+    assert result == payload
+    mocked.assert_called_once_with(key="technology")
+
+
+def test_get_sector_industries_returns_dataframe_payload():
+    with patch.object(server.wrapper, "get_sector_industries", return_value=DATAFRAME_PAYLOAD) as mocked:
+        result = server.get_sector_industries("technology")
+
+    assert result == DATAFRAME_PAYLOAD
+    mocked.assert_called_once_with(key="technology")
+
+
+def test_get_sector_top_companies_returns_dataframe_payload():
+    with patch.object(server.wrapper, "get_sector_top_companies", return_value=DATAFRAME_PAYLOAD) as mocked:
+        result = server.get_sector_top_companies("technology")
+
+    assert result == DATAFRAME_PAYLOAD
+    mocked.assert_called_once_with(key="technology")
+
+
+def test_get_sector_top_etfs_returns_mapping_payload():
+    payload = {"XLK": "Technology Select Sector SPDR Fund"}
+    with patch.object(server.wrapper, "get_sector_top_etfs", return_value=payload) as mocked:
+        result = server.get_sector_top_etfs("technology")
+
+    assert result == payload
+    mocked.assert_called_once_with(key="technology")
+
+
+def test_get_sector_top_mutual_funds_returns_mapping_payload():
+    payload = {"FSPTX": "Fidelity Select Technology"}
+    with patch.object(server.wrapper, "get_sector_top_mutual_funds", return_value=payload) as mocked:
+        result = server.get_sector_top_mutual_funds("technology")
+
+    assert result == payload
+    mocked.assert_called_once_with(key="technology")
+
+
+def test_get_sector_ticker_returns_text_payload():
+    payload = {"value": "^YH311"}
+    with patch.object(server.wrapper, "get_sector_ticker", return_value=payload) as mocked:
+        result = server.get_sector_ticker("technology")
+
+    assert result == payload
+    mocked.assert_called_once_with(key="technology")
+
+
+def test_get_industry_returns_named_response_model_payload():
+    payload = {
+        "key": "software-infrastructure",
+        "name": "Software - Infrastructure",
+        "symbol": "^YH31110030",
+        "sector_key": "technology",
+        "sector_name": "Technology",
+        "overview": {"description": "Example"},
+        "research_reports": [{"id": "report-1"}],
+        "top_companies": DATAFRAME_PAYLOAD,
+        "top_growth_companies": DATAFRAME_PAYLOAD,
+        "top_performing_companies": DATAFRAME_PAYLOAD,
+        "ticker_symbol": "^YH31110030",
+    }
+    with patch.object(server.wrapper, "get_industry", return_value=payload) as mocked:
+        result = server.get_industry("software-infrastructure")
+
+    assert result == payload
+    mocked.assert_called_once_with(key="software-infrastructure")
+
+
+def test_get_industry_overview_returns_mapping_payload():
+    payload = {"description": "Example"}
+    with patch.object(server.wrapper, "get_industry_overview", return_value=payload) as mocked:
+        result = server.get_industry_overview("software-infrastructure")
+
+    assert result == payload
+    mocked.assert_called_once_with(key="software-infrastructure")
+
+
+def test_get_industry_research_reports_returns_list_payload():
+    payload = [{"id": "report-1"}]
+    with patch.object(server.wrapper, "get_industry_research_reports", return_value=payload) as mocked:
+        result = server.get_industry_research_reports("software-infrastructure")
+
+    assert result == payload
+    mocked.assert_called_once_with(key="software-infrastructure")
+
+
+def test_get_industry_top_companies_returns_dataframe_payload():
+    with patch.object(server.wrapper, "get_industry_top_companies", return_value=DATAFRAME_PAYLOAD) as mocked:
+        result = server.get_industry_top_companies("software-infrastructure")
+
+    assert result == DATAFRAME_PAYLOAD
+    mocked.assert_called_once_with(key="software-infrastructure")
+
+
+def test_get_industry_top_growth_companies_returns_dataframe_payload():
+    with patch.object(server.wrapper, "get_industry_top_growth_companies", return_value=DATAFRAME_PAYLOAD) as mocked:
+        result = server.get_industry_top_growth_companies("software-infrastructure")
+
+    assert result == DATAFRAME_PAYLOAD
+    mocked.assert_called_once_with(key="software-infrastructure")
+
+
+def test_get_industry_top_performing_companies_returns_dataframe_payload():
+    with patch.object(server.wrapper, "get_industry_top_performing_companies", return_value=DATAFRAME_PAYLOAD) as mocked:
+        result = server.get_industry_top_performing_companies("software-infrastructure")
+
+    assert result == DATAFRAME_PAYLOAD
+    mocked.assert_called_once_with(key="software-infrastructure")
+
+
+def test_get_industry_ticker_returns_text_payload():
+    payload = {"value": "^YH31110030"}
+    with patch.object(server.wrapper, "get_industry_ticker", return_value=payload) as mocked:
+        result = server.get_industry_ticker("software-infrastructure")
+
+    assert result == payload
+    mocked.assert_called_once_with(key="software-infrastructure")
+
+
 def test_get_income_stmt_returns_statement_payload():
     with patch.object(server.wrapper, "get_income_stmt", return_value=DATAFRAME_PAYLOAD) as mocked:
         result = server.get_income_stmt("AMZN", freq="yearly")
