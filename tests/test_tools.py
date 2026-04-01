@@ -104,7 +104,7 @@ def test_get_history_metadata_returns_mapping_payload():
     with patch.object(server.wrapper, "get_history_metadata", return_value=payload) as mocked:
         result = server.get_history_metadata("AAPL")
 
-    assert result == payload
+    assert result == {"values": payload}
     mocked.assert_called_once_with(symbol="AAPL")
 
 
@@ -411,7 +411,7 @@ def test_get_fund_asset_classes_returns_mapping_payload():
     with patch.object(server.wrapper, "get_fund_asset_classes", return_value=payload) as mocked:
         result = server.get_fund_asset_classes("SPY")
 
-    assert result == payload
+    assert result == {"values": payload}
     mocked.assert_called_once_with(symbol="SPY")
 
 
@@ -428,7 +428,7 @@ def test_get_fund_bond_ratings_returns_mapping_payload():
     with patch.object(server.wrapper, "get_fund_bond_ratings", return_value=payload) as mocked:
         result = server.get_fund_bond_ratings("SPY")
 
-    assert result == payload
+    assert result == {"values": payload}
     mocked.assert_called_once_with(symbol="SPY")
 
 
@@ -462,7 +462,7 @@ def test_get_fund_overview_returns_mapping_payload():
     with patch.object(server.wrapper, "get_fund_overview", return_value=payload) as mocked:
         result = server.get_fund_overview("SPY")
 
-    assert result == payload
+    assert result == {"values": payload}
     mocked.assert_called_once_with(symbol="SPY")
 
 
@@ -471,7 +471,7 @@ def test_get_fund_sector_weightings_returns_mapping_payload():
     with patch.object(server.wrapper, "get_fund_sector_weightings", return_value=payload) as mocked:
         result = server.get_fund_sector_weightings("SPY")
 
-    assert result == payload
+    assert result == {"values": payload}
     mocked.assert_called_once_with(symbol="SPY")
 
 
@@ -579,7 +579,7 @@ def test_get_sector_overview_returns_mapping_payload():
     with patch.object(server.wrapper, "get_sector_overview", return_value=payload) as mocked:
         result = server.get_sector_overview("technology")
 
-    assert result == payload
+    assert result == {"values": payload}
     mocked.assert_called_once_with(key="technology")
 
 
@@ -613,7 +613,7 @@ def test_get_sector_top_etfs_returns_mapping_payload():
     with patch.object(server.wrapper, "get_sector_top_etfs", return_value=payload) as mocked:
         result = server.get_sector_top_etfs("technology")
 
-    assert result == payload
+    assert result == {"values": payload}
     mocked.assert_called_once_with(key="technology")
 
 
@@ -622,7 +622,7 @@ def test_get_sector_top_mutual_funds_returns_mapping_payload():
     with patch.object(server.wrapper, "get_sector_top_mutual_funds", return_value=payload) as mocked:
         result = server.get_sector_top_mutual_funds("technology")
 
-    assert result == payload
+    assert result == {"values": payload}
     mocked.assert_called_once_with(key="technology")
 
 
@@ -661,7 +661,7 @@ def test_get_industry_overview_returns_mapping_payload():
     with patch.object(server.wrapper, "get_industry_overview", return_value=payload) as mocked:
         result = server.get_industry_overview("software-infrastructure")
 
-    assert result == payload
+    assert result == {"values": payload}
     mocked.assert_called_once_with(key="software-infrastructure")
 
 

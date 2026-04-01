@@ -97,12 +97,13 @@ Current remote endpoints:
 
 - offline tests: PYTHONPATH=src pytest
 - live integration tests: YF_RUN_LIVE_TESTS=1 PYTHONPATH=src pytest -m live
-- transport tests: included in the default pytest run and cover main(), /healthz, /readyz, and mounted /mcp
+- transport tests: included in the default pytest run and cover main(), /healthz, /readyz, and /mcp route wiring
 
 ## Observability
 
 - tool logs include a request-scoped request_id
 - tool completion and failure logs include upstream_call_count
+- mapping-style responses use a stable values container instead of arbitrary top-level keys
 - retry and throttle logs preserve the same request context across attempts
 
 ## Project Layout

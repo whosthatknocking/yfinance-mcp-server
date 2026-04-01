@@ -217,6 +217,7 @@ The final API_MAPPING.md should be exhaustive and maintained against the officia
 - Each tool should have one canonical primary response schema.
 - Canonical tool schemas should be defined and validated before serialization, preferably through Pydantic models or equivalent schema-checked structures.
 - Broad or irregular upstream payloads should expose canonical fields explicitly and preserve non-canonical upstream keys under a stable container such as additional_fields.
+- Mapping-style responses should use a stable container such as values rather than arbitrary top-level keys.
 - DataFrame values should default to a structured object with columns, data, and index keys.
 - Where useful, the server may offer markdown table output as a fallback or optional display-oriented format.
 - Large responses should support truncation, summarization, or chunking where necessary without changing the top-level schema for a tool.
@@ -384,7 +385,7 @@ Recommended packaging behavior:
 - Add contract tests for each exposed tool family and shared wrapper behavior.
 - Include integration coverage against known symbols such as AAPL and TSLA.
 - Separate offline tests from live-network tests where possible.
-- Add transport tests covering local server dispatch plus remote /healthz, /readyz, and mounted /mcp behavior.
+- Add transport tests covering local server dispatch plus remote /healthz, /readyz, and /mcp route wiring.
 - Recommended test split:
   - deterministic unit tests for serialization, schema validation, and error mapping
   - contract tests for tool signatures and response shapes

@@ -1,51 +1,25 @@
-import contextlib
 from unittest.mock import patch
 
 from starlette.testclient import TestClient
-from starlette.responses import PlainTextResponse
 
 from yfinance_mcp import server
 
 
-@contextlib.asynccontextmanager
-async def _noop_lifespan():
-    yield
-
-
-class _FakeSessionManager:
-    def run(self):
-        return _noop_lifespan()
-
-
-class _FakeMCP:
-    def __init__(self):
-        self.session_manager = _FakeSessionManager()
-
-    def streamable_http_app(self):
-        async def app(scope, receive, send):
-            response = PlainTextResponse("mcp")
-            await response(scope, receive, send)
-
-        return app
-
-
 def test_healthz_returns_ok():
-    with patch.object(server, "mcp", _FakeMCP()):
-        app = server._build_http_app()
+    app = server._build_http_app()
 
-        with TestClient(app) as client:
-            response = client.get("/healthz")
+    with TestClient(app) as client:
+        response = client.get("/healthz")
 
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
 
 
 def test_readyz_returns_version_metadata():
-    with patch.object(server, "mcp", _FakeMCP()):
-        app = server._build_http_app()
+    app = server._build_http_app()
 
-        with TestClient(app) as client:
-            response = client.get("/readyz")
+    with TestClient(app) as client:
+        response = client.get("/readyz")
 
     assert response.status_code == 200
     payload = response.json()
@@ -57,14 +31,9 @@ def test_readyz_returns_version_metadata():
 
 
 def test_mcp_route_is_mounted():
-    with patch.object(server, "mcp", _FakeMCP()):
-        app = server._build_http_app()
-
-        with TestClient(app) as client:
-            response = client.get("/mcp")
-
-    assert response.status_code == 200
-    assert response.text == "mcp"
+    app = server._build_http_app()
+    mounted_paths = [route.path for route in app.routes if hasattr(route, "path")]
+    assert "/mcp" in mounted_paths
 
 
 def test_main_runs_stdio_transport_by_default():

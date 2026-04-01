@@ -155,7 +155,9 @@ class AnalystPriceTargetsResult(StructuredExtrasModel):
 
 
 class MappingResult(BaseModel):
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="forbid")
+
+    values: Dict[str, Any]
 
 
 class TextValueResult(BaseModel):

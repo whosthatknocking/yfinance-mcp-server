@@ -144,16 +144,19 @@ async def _readyz(_request: Request) -> JSONResponse:
 
 
 def _build_http_app() -> Starlette:
+    http_mcp = _build_http_mcp()
+    streamable_http_app = http_mcp.streamable_http_app()
+
     @contextlib.asynccontextmanager
     async def lifespan(app: Starlette):
-        async with mcp.session_manager.run():
+        async with http_mcp.session_manager.run():
             yield
 
     return Starlette(
         routes=[
             Route("/healthz", _healthz, methods=["GET"]),
             Route("/readyz", _readyz, methods=["GET"]),
-            Mount("/mcp", app=mcp.streamable_http_app()),
+            Mount("/mcp", app=streamable_http_app),
         ],
         lifespan=lifespan,
     )
@@ -291,7 +294,7 @@ def get_history_metadata(symbol: str) -> Dict[str, object]:
     def operation() -> Dict[str, object]:
         request = SymbolRequest(symbol=symbol)
         result = wrapper.get_history_metadata(**request.model_dump())
-        return MappingResult.model_validate(result).model_dump()
+        return MappingResult(values=result).model_dump()
 
     return _run_tool("get_history_metadata", operation)
 
@@ -759,7 +762,7 @@ def get_fund_asset_classes(symbol: str) -> Dict[str, object]:
     def operation() -> Dict[str, object]:
         request = SymbolRequest(symbol=symbol)
         result = wrapper.get_fund_asset_classes(**request.model_dump())
-        return MappingResult.model_validate(result).model_dump()
+        return MappingResult(values=result).model_dump()
 
     return _run_tool("get_fund_asset_classes", operation)
 
@@ -783,7 +786,7 @@ def get_fund_bond_ratings(symbol: str) -> Dict[str, object]:
     def operation() -> Dict[str, object]:
         request = SymbolRequest(symbol=symbol)
         result = wrapper.get_fund_bond_ratings(**request.model_dump())
-        return MappingResult.model_validate(result).model_dump()
+        return MappingResult(values=result).model_dump()
 
     return _run_tool("get_fund_bond_ratings", operation)
 
@@ -831,7 +834,7 @@ def get_fund_overview(symbol: str) -> Dict[str, object]:
     def operation() -> Dict[str, object]:
         request = SymbolRequest(symbol=symbol)
         result = wrapper.get_fund_overview(**request.model_dump())
-        return MappingResult.model_validate(result).model_dump()
+        return MappingResult(values=result).model_dump()
 
     return _run_tool("get_fund_overview", operation)
 
@@ -843,7 +846,7 @@ def get_fund_sector_weightings(symbol: str) -> Dict[str, object]:
     def operation() -> Dict[str, object]:
         request = SymbolRequest(symbol=symbol)
         result = wrapper.get_fund_sector_weightings(**request.model_dump())
-        return MappingResult.model_validate(result).model_dump()
+        return MappingResult(values=result).model_dump()
 
     return _run_tool("get_fund_sector_weightings", operation)
 
@@ -1001,7 +1004,7 @@ def get_sector_overview(key: str) -> Dict[str, object]:
     def operation() -> Dict[str, object]:
         request = KeyRequest(key=key)
         result = wrapper.get_sector_overview(**request.model_dump())
-        return MappingResult.model_validate(result).model_dump()
+        return MappingResult(values=result).model_dump()
 
     return _run_tool("get_sector_overview", operation)
 
@@ -1049,7 +1052,7 @@ def get_sector_top_etfs(key: str) -> Dict[str, object]:
     def operation() -> Dict[str, object]:
         request = KeyRequest(key=key)
         result = wrapper.get_sector_top_etfs(**request.model_dump())
-        return MappingResult.model_validate(result).model_dump()
+        return MappingResult(values=result).model_dump()
 
     return _run_tool("get_sector_top_etfs", operation)
 
@@ -1061,7 +1064,7 @@ def get_sector_top_mutual_funds(key: str) -> Dict[str, object]:
     def operation() -> Dict[str, object]:
         request = KeyRequest(key=key)
         result = wrapper.get_sector_top_mutual_funds(**request.model_dump())
-        return MappingResult.model_validate(result).model_dump()
+        return MappingResult(values=result).model_dump()
 
     return _run_tool("get_sector_top_mutual_funds", operation)
 
@@ -1097,7 +1100,7 @@ def get_industry_overview(key: str) -> Dict[str, object]:
     def operation() -> Dict[str, object]:
         request = KeyRequest(key=key)
         result = wrapper.get_industry_overview(**request.model_dump())
-        return MappingResult.model_validate(result).model_dump()
+        return MappingResult(values=result).model_dump()
 
     return _run_tool("get_industry_overview", operation)
 
@@ -1304,6 +1307,97 @@ def lookup(query: str, count: int = 25) -> Dict[str, object]:
         return LookupResult.model_validate(result).model_dump()
 
     return _run_tool("lookup", operation)
+
+
+def _tool_functions():
+    return [
+        get_server_metadata,
+        get_info,
+        get_quote_snapshot,
+        get_batch_info,
+        get_batch_quote_snapshot,
+        get_batch_news,
+        get_history,
+        get_history_metadata,
+        get_isin,
+        download_history,
+        get_news,
+        get_option_expirations,
+        get_option_chain,
+        get_actions,
+        get_dividends,
+        get_splits,
+        get_capital_gains,
+        get_shares,
+        get_shares_full,
+        get_sec_filings,
+        get_earnings_dates,
+        get_ticker_calendar,
+        get_recommendations,
+        get_analyst_price_targets,
+        get_earnings,
+        get_recommendations_summary,
+        get_upgrades_downgrades,
+        get_earnings_estimate,
+        get_revenue_estimate,
+        get_earnings_history,
+        get_eps_trend,
+        get_eps_revisions,
+        get_growth_estimates,
+        get_sustainability,
+        get_major_holders,
+        get_institutional_holders,
+        get_mutualfund_holders,
+        get_insider_purchases,
+        get_insider_transactions,
+        get_insider_roster_holders,
+        get_funds_data,
+        get_fund_asset_classes,
+        get_fund_bond_holdings,
+        get_fund_bond_ratings,
+        get_fund_description,
+        get_fund_equity_holdings,
+        get_fund_operations,
+        get_fund_overview,
+        get_fund_sector_weightings,
+        get_fund_top_holdings,
+        get_fund_quote_type,
+        get_calendars,
+        get_earnings_calendar,
+        get_economic_events_calendar,
+        get_ipo_calendar,
+        get_splits_calendar,
+        get_sector,
+        get_sector_overview,
+        get_sector_research_reports,
+        get_sector_industries,
+        get_sector_top_companies,
+        get_sector_top_etfs,
+        get_sector_top_mutual_funds,
+        get_sector_ticker,
+        get_industry,
+        get_industry_overview,
+        get_industry_research_reports,
+        get_industry_top_companies,
+        get_industry_top_growth_companies,
+        get_industry_top_performing_companies,
+        get_industry_ticker,
+        get_income_stmt,
+        get_balance_sheet,
+        get_cashflow,
+        get_market_summary,
+        get_market,
+        get_market_status,
+        search,
+        lookup,
+    ]
+
+
+def _build_http_mcp() -> FastMCP:
+    http_mcp = FastMCP("yfinance")
+    for tool_fn in _tool_functions():
+        http_mcp.add_tool(tool_fn)
+    return http_mcp
 
 
 def main() -> None:
