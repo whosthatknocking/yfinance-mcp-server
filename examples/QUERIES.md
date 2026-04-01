@@ -4,7 +4,7 @@ These are example prompts you can use in an AI host connected to `yfinance-mcp-s
 
 ## Basic Data Retrieval
 
-- Get the latest info for TSLA stock.
+- Get the latest stock price and quote snapshot for TSLA.
 - Get the latest quote snapshot for TSLA.
 - Get a quick market snapshot for AAPL.
 - Show me 6 months of daily price history for MSFT.
@@ -14,13 +14,13 @@ These are example prompts you can use in an AI host connected to `yfinance-mcp-s
 - Get the annual income statement for AMZN.
 - Get the quarterly balance sheet for META.
 - Get the trailing cashflow data for GOOGL.
-- Get the market summary for us.
+- Get the Yahoo Finance market summary for the us market code.
 
 ## Tool Discovery Style Prompts
 
 - What tools are available for price history and quote snapshots?
 - Which tool should I use for recent news about Tesla?
-- I want the latest stock information for TSLA. Use the best matching tool.
+- I want the latest stock price for TSLA. Use the best matching tool.
 - I want options data for SPY. First find the available expirations, then get the option chain.
 - I need annual financial statement data for Amazon. Which tools should be used?
 - For a multi-ticker historical download, use the best matching tool.
