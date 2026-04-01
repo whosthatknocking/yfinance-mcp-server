@@ -40,6 +40,22 @@ def test_run_tool_logs_upstream_call_count():
     assert "elapsed_ms" in completion_call.kwargs
 
 
+def test_run_tool_logs_quote_snapshot_completion_details():
+    payload = {"lastPrice": 123.45, "currency": "USD", "additional_fields": {"symbol": "ORCL"}}
+
+    with patch.object(server, "next_request_id", return_value="req-123"):
+        with patch.object(server, "logger") as mocked_logger:
+            result = server._run_tool("get_quote_snapshot", lambda: payload)
+
+    assert result == payload
+    completion_call = mocked_logger.info.call_args_list[-1]
+    assert completion_call.args[0] == "tool_completed"
+    assert completion_call.kwargs["tool_name"] == "get_quote_snapshot"
+    assert completion_call.kwargs["last_price"] == 123.45
+    assert completion_call.kwargs["currency"] == "USD"
+    assert completion_call.kwargs["quote_symbol"] == "ORCL"
+
+
 def test_get_batch_quote_snapshot_returns_named_response_model_payload():
     payload = {
         "symbols": ["AAPL", "MSFT"],

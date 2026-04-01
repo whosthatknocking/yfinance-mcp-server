@@ -118,12 +118,24 @@ def _run_tool(tool_name: str, operation):
         clear_request_context()
         raise
     elapsed_ms = round((time.perf_counter() - started_at) * 1000, 2)
+    completion_details = {}
+    if tool_name == "get_quote_snapshot" and isinstance(result, dict):
+        completion_details = {
+            "last_price": result.get("lastPrice"),
+            "currency": result.get("currency"),
+        }
+        additional_fields = result.get("additional_fields")
+        if isinstance(additional_fields, dict):
+            symbol = additional_fields.get("symbol")
+            if symbol is not None:
+                completion_details["quote_symbol"] = symbol
     try:
         logger.info(
             "tool_completed",
             tool_name=tool_name,
             elapsed_ms=elapsed_ms,
             upstream_call_count=get_upstream_call_count(),
+            **completion_details,
         )
         return result
     finally:
