@@ -59,8 +59,6 @@ This document maps the latest supported yfinance API surface to explicit MCP too
 | Ticker.get_dividends(period='max') | method | get_dividends | alias | Canonical dividends tool. |
 | Ticker.splits | property | get_splits | planned | Split series. |
 | Ticker.get_splits(period='max') | method | get_splits | alias | Canonical splits tool. |
-| Ticker.capital_gains | property | get_capital_gains | planned | Useful for funds where available. |
-| Ticker.get_capital_gains(period='max') | method | get_capital_gains | alias | Canonical capital gains tool. |
 | Ticker.get_shares_full(start=None, end=None) | method | get_shares_full | planned | Extended share count history. |
 
 ## Ticker Financial Statements and Filings
@@ -122,9 +120,6 @@ This document maps the latest supported yfinance API surface to explicit MCP too
 | Ticker.get_eps_revisions(as_dict=False) | method | get_eps_revisions | alias | Same MCP tool as property. |
 | Ticker.growth_estimates | property | get_growth_estimates | planned | Growth estimates table. |
 | Ticker.get_growth_estimates(as_dict=False) | method | get_growth_estimates | alias | Same MCP tool as property. |
-| Ticker.sustainability | property | get_sustainability | planned | Sustainability table where available. |
-| Ticker.get_sustainability(as_dict=False) | method | get_sustainability | alias | Same MCP tool as property. |
-
 ## Ticker Holders, Insider Data, and Fund Data
 
 | Upstream API | Kind | MCP Tool | Status | Notes |
@@ -283,7 +278,6 @@ These tools should exist first because they cover the highest-value yfinance pat
 - get_actions
 - get_dividends
 - get_splits
-- get_capital_gains
 - get_shares_full
 - get_income_stmt
 - get_balance_sheet
@@ -300,7 +294,6 @@ These tools should exist first because they cover the highest-value yfinance pat
 - get_eps_trend
 - get_eps_revisions
 - get_growth_estimates
-- get_sustainability
 - get_market_summary
 - get_market
 - get_market_status

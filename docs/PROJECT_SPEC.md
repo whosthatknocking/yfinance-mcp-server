@@ -185,7 +185,6 @@ The implementation should maintain an exhaustive mapping of information-collecti
 | Ticker(symbol).news | get_news | symbol: str | list[dict] |
 | Ticker(symbol).get_sec_filings() | get_sec_filings | symbol: str | list[dict] |
 | Ticker(symbol).option_chain(...) | get_option_chain | symbol, date: str | dict |
-| Ticker(symbol).get_capital_gains(period=...) | get_capital_gains | symbol, period | dict |
 | Ticker(symbol).get_shares_full(...) | get_shares_full | symbol, start, end | dict |
 | Ticker(symbol).get_earnings_dates(...) | get_earnings_dates | symbol, limit, offset | dict |
 | Ticker(symbol).calendar | get_ticker_calendar | symbol: str | dict |
@@ -199,7 +198,6 @@ The implementation should maintain an exhaustive mapping of information-collecti
 | Ticker(symbol).eps_trend | get_eps_trend | symbol: str | dict |
 | Ticker(symbol).eps_revisions | get_eps_revisions | symbol: str | dict |
 | Ticker(symbol).growth_estimates | get_growth_estimates | symbol: str | dict |
-| Ticker(symbol).sustainability | get_sustainability | symbol: str | dict |
 | yf.Market(market) | get_market | market: str | dict |
 | yf.Market(market).summary | get_market_summary | market: str | dict |
 | yf.Market(market).status | get_market_status | market: str | dict |

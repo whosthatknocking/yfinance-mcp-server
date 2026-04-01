@@ -180,14 +180,6 @@ def test_get_splits_returns_series_payload():
     mocked.assert_called_once_with(symbol="AAPL", period="1y")
 
 
-def test_get_capital_gains_returns_series_payload():
-    with patch.object(server.wrapper, "get_capital_gains", return_value=SERIES_PAYLOAD) as mocked:
-        result = server.get_capital_gains("VTI", period="1y")
-
-    assert result == SERIES_PAYLOAD
-    mocked.assert_called_once_with(symbol="VTI", period="1y")
-
-
 def test_get_shares_full_returns_series_payload():
     with patch.object(server.wrapper, "get_shares_full", return_value=SERIES_PAYLOAD) as mocked:
         result = server.get_shares_full("AAPL", start="2025-01-01", end="2026-01-01")
@@ -309,14 +301,6 @@ def test_get_eps_revisions_returns_dataframe_payload():
 def test_get_growth_estimates_returns_dataframe_payload():
     with patch.object(server.wrapper, "get_growth_estimates", return_value=DATAFRAME_PAYLOAD) as mocked:
         result = server.get_growth_estimates("AAPL")
-
-    assert result == DATAFRAME_PAYLOAD
-    mocked.assert_called_once_with(symbol="AAPL")
-
-
-def test_get_sustainability_returns_dataframe_payload():
-    with patch.object(server.wrapper, "get_sustainability", return_value=DATAFRAME_PAYLOAD) as mocked:
-        result = server.get_sustainability("AAPL")
 
     assert result == DATAFRAME_PAYLOAD
     mocked.assert_called_once_with(symbol="AAPL")

@@ -431,18 +431,6 @@ def get_splits(symbol: str, period: str = "max") -> Dict[str, object]:
 
 
 @mcp.tool()
-def get_capital_gains(symbol: str, period: str = "max") -> Dict[str, object]:
-    """Get capital gains history for a fund ticker over a named period."""
-
-    def operation() -> Dict[str, object]:
-        request = PeriodRequest(symbol=symbol, period=period)
-        result = wrapper.get_capital_gains(**request.model_dump())
-        return ActionSeriesResult.model_validate(result).model_dump()
-
-    return _run_tool("get_capital_gains", operation)
-
-
-@mcp.tool()
 def get_shares_full(symbol: str, start: Optional[str] = None, end: Optional[str] = None) -> Dict[str, object]:
     """Get extended share-count history for a ticker."""
 
@@ -632,18 +620,6 @@ def get_growth_estimates(symbol: str) -> Dict[str, object]:
         return AnalysisTableResult.model_validate(result).model_dump()
 
     return _run_tool("get_growth_estimates", operation)
-
-
-@mcp.tool()
-def get_sustainability(symbol: str) -> Dict[str, object]:
-    """Get sustainability and ESG-related data for a ticker when available."""
-
-    def operation() -> Dict[str, object]:
-        request = SymbolRequest(symbol=symbol)
-        result = wrapper.get_sustainability(**request.model_dump())
-        return AnalysisTableResult.model_validate(result).model_dump()
-
-    return _run_tool("get_sustainability", operation)
 
 
 @mcp.tool()
@@ -1302,7 +1278,6 @@ def _tool_functions():
         get_actions,
         get_dividends,
         get_splits,
-        get_capital_gains,
         get_shares_full,
         get_sec_filings,
         get_earnings_dates,
@@ -1317,7 +1292,6 @@ def _tool_functions():
         get_eps_trend,
         get_eps_revisions,
         get_growth_estimates,
-        get_sustainability,
         get_major_holders,
         get_institutional_holders,
         get_mutualfund_holders,

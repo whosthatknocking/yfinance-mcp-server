@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-import os
 import runpy
 import warnings
 from datetime import date, datetime
@@ -186,8 +185,10 @@ def test_server_module_executes_main_when_run_as_script(monkeypatch):
 def test_removed_tools_are_not_in_public_tool_list():
     tool_names = {tool.__name__ for tool in server._tool_functions()}
 
+    assert "get_capital_gains" not in tool_names
     assert "get_shares" not in tool_names
     assert "get_earnings" not in tool_names
+    assert "get_sustainability" not in tool_names
 
 
 def test_wrapper_direct_helpers_cover_remaining_branches():
@@ -218,8 +219,8 @@ def test_wrapper_extract_lookup_matches_handles_invalid_rows():
         }
     ]
 
-    assert YFinanceWrapper._extract_lookup_matches({"columns": [], "data": [], "index": "bad"}) == []
-    assert YFinanceWrapper._extract_lookup_matches({"columns": [], "data": "bad", "index": []}) == []
+    assert not YFinanceWrapper._extract_lookup_matches({"columns": [], "data": [], "index": "bad"})
+    assert not YFinanceWrapper._extract_lookup_matches({"columns": [], "data": "bad", "index": []})
 
     minimal_matches = YFinanceWrapper._extract_lookup_matches(
         {"columns": [], "data": [[]], "index": ["GOOG"]}
