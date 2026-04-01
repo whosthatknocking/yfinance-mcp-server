@@ -1,10 +1,10 @@
 # yfinance-mcp-server
 
-`yfinance-mcp-server` is a Python MCP server that exposes the information-collection parts of the `yfinance` library as discoverable, type-safe tools for AI hosts.
+yfinance-mcp-server is a Python MCP server that exposes the information-collection parts of the yfinance library as discoverable, type-safe tools for AI hosts.
 
 ## Objectives
 
-- expose supported `yfinance` information APIs as explicit MCP tools
+- expose supported yfinance information APIs as explicit MCP tools
 - provide typed request models and validated JSON responses for AI hosts
 - support both local stdio mode and remote streamable HTTP mode
 - include caching, retry, and rate-limit-aware wrapper behavior
@@ -15,26 +15,26 @@
 - typed request models and validated JSON-serializable responses
 - backend-agnostic caching with an in-memory implementation for v1
 - retry, timeout, and concurrency controls around upstream calls
-- support for both local `stdio` mode and remote `streamable-http` mode
+- support for both local stdio mode and remote streamable-http mode
 - project docs covering scope, API mapping, and user setup
 
 ## Requirements
 
-- Python `3.11+`
-- `uv` recommended, or `pip`
+- Python 3.11+
+- uv recommended, or pip
 
 ## Installation
 
 Using uv:
 
-1. Create a virtual environment with `uv venv`.
-2. Activate it with `source .venv/bin/activate`.
+1. Create a virtual environment with uv venv.
+2. Activate it with source .venv/bin/activate.
 3. Install the project with uv pip install -e .
 
 Using pip:
 
-1. Create a virtual environment with `python3 -m venv .venv`.
-2. Activate it with `source .venv/bin/activate`.
+1. Create a virtual environment with python3 -m venv .venv.
+2. Activate it with source .venv/bin/activate.
 3. Install the project with python3 -m pip install -e .
 
 ## Quick Start
@@ -51,89 +51,9 @@ Remote HTTP mode:
 
 ## Current Status
 
-The initial implementation scaffolds the package, abstract cache layer, serialization utilities, MCP entrypoint, and a first working tool slice:
+The current implementation includes the core information-retrieval surface for yfinance, including quote and company metadata, history, statements, news, options, earnings and analyst data, holders and insider data, fund data, calendars, market endpoints, sector and industry endpoints, and discovery tools such as search and lookup.
 
-- `get_server_metadata`
-- `get_info`
-- `get_quote_snapshot`
-- `get_batch_info`
-- `get_batch_quote_snapshot`
-- `get_batch_news`
-- `get_history`
-- `get_history_metadata`
-- `get_isin`
-- `download_history`
-- `get_news`
-- `get_option_expirations`
-- `get_option_chain`
-- `get_actions`
-- `get_dividends`
-- `get_splits`
-- `get_capital_gains`
-- `get_shares`
-- `get_shares_full`
-- `get_income_stmt`
-- `get_balance_sheet`
-- `get_cashflow`
-- `get_earnings_dates`
-- `get_ticker_calendar`
-- `get_earnings`
-- `get_recommendations`
-- `get_recommendations_summary`
-- `get_upgrades_downgrades`
-- `get_analyst_price_targets`
-- `get_earnings_estimate`
-- `get_revenue_estimate`
-- `get_earnings_history`
-- `get_eps_trend`
-- `get_eps_revisions`
-- `get_growth_estimates`
-- `get_sustainability`
-- `get_major_holders`
-- `get_institutional_holders`
-- `get_mutualfund_holders`
-- `get_insider_purchases`
-- `get_insider_transactions`
-- `get_insider_roster_holders`
-- `get_funds_data`
-- `get_fund_asset_classes`
-- `get_fund_bond_holdings`
-- `get_fund_bond_ratings`
-- `get_fund_description`
-- `get_fund_equity_holdings`
-- `get_fund_operations`
-- `get_fund_overview`
-- `get_fund_sector_weightings`
-- `get_fund_top_holdings`
-- `get_fund_quote_type`
-- `get_market`
-- `get_market_status`
-- `get_sec_filings`
-- `get_calendars`
-- `get_earnings_calendar`
-- `get_economic_events_calendar`
-- `get_ipo_calendar`
-- `get_splits_calendar`
-- `get_sector`
-- `get_sector_overview`
-- `get_sector_research_reports`
-- `get_sector_industries`
-- `get_sector_top_companies`
-- `get_sector_top_etfs`
-- `get_sector_top_mutual_funds`
-- `get_sector_ticker`
-- `get_industry`
-- `get_industry_overview`
-- `get_industry_research_reports`
-- `get_industry_top_companies`
-- `get_industry_top_growth_companies`
-- `get_industry_top_performing_companies`
-- `get_industry_ticker`
-- `get_market_summary`
-- `search`
-- `lookup`
-
-The current slice uses typed request models and validated JSON-safe outputs. History, download, statement, option chain, list-style outputs, and the current metadata, info, quote snapshot, and market summary tools all use named response models. For broader or less stable upstream payloads, canonical fields are exposed explicitly and non-canonical upstream fields are preserved under an `additional_fields` container.
+Tool requests use typed request models and validated JSON-safe outputs. Detailed tool coverage and the upstream-to-MCP mapping live in docs/API_MAPPING.md, and the full contract and scope live in docs/PROJECT_SPEC.md.
 
 ## Configuration
 
@@ -165,24 +85,24 @@ Common settings:
 
 ## Remote Mode
 
-Remote `streamable-http` transport is available in the current slice with basic health and readiness support.
+Remote streamable-http transport is available in the current slice with basic health and readiness support.
 
 Current remote endpoints:
 
-- `/mcp` for streamable HTTP MCP traffic
-- `/healthz` for basic liveness
-- `/readyz` for basic readiness and version metadata
+- /mcp for streamable HTTP MCP traffic
+- /healthz for basic liveness
+- /readyz for basic readiness and version metadata
 
 ## Testing
 
-- offline tests: `PYTHONPATH=src pytest`
-- live integration tests: `YF_RUN_LIVE_TESTS=1 PYTHONPATH=src pytest -m live`
-- transport tests: included in the default pytest run and cover `main()`, `/healthz`, `/readyz`, and mounted `/mcp`
+- offline tests: PYTHONPATH=src pytest
+- live integration tests: YF_RUN_LIVE_TESTS=1 PYTHONPATH=src pytest -m live
+- transport tests: included in the default pytest run and cover main(), /healthz, /readyz, and mounted /mcp
 
 ## Observability
 
-- tool logs include a request-scoped `request_id`
-- tool completion and failure logs include `upstream_call_count`
+- tool logs include a request-scoped request_id
+- tool completion and failure logs include upstream_call_count
 - retry and throttle logs preserve the same request context across attempts
 
 ## Project Layout
