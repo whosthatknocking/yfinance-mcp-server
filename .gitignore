@@ -41,4 +41,3 @@ htmlcov/
 .vscode/
 
 # Project-specific lockfiles and local state
-uv.lock
