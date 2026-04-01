@@ -87,7 +87,7 @@ The authoritative source for scope is the latest supported upstream `yfinance` d
 - Data library: `yfinance` (latest stable version available at implementation time)
 - Data handling: `pandas`
 - Caching: backend-agnostic cache layer with pluggable implementations
-- HTTP transport: `FastAPI` plus MCP `streamable-http` support
+- HTTP transport: `Starlette`/`uvicorn` plus MCP `streamable-http` support
 - Packaging: `uv` preferred, `pip` acceptable
 - Testing: `pytest` and MCP CLI via `mcp dev`
 - Logging: `structlog`
@@ -96,6 +96,7 @@ The authoritative source for scope is the latest supported upstream `yfinance` d
 ## Proposed Folder Structure
 
 - `pyproject.toml`
+- `uv.lock`
 - `README.md`
 - `LICENSE`
 - `.env.example`
@@ -119,11 +120,12 @@ The authoritative source for scope is the latest supported upstream `yfinance` d
 - Instantiate a shared `YFinanceWrapper` for caching, serialization, and error handling.
 - Support both `stdio` and `streamable-http` execution modes.
 - Expose metadata about the server version and supported `yfinance` version.
+- In remote mode, expose MCP traffic and service-health endpoints from one HTTP app.
 - Example structure:
   - instantiate `FastMCP` with a server name such as `yfinance`
   - create a shared wrapper instance
   - register explicit tools such as `get_info(symbol: str) -> dict`
-  - start the server with either `stdio` or `streamable-http` transport
+  - start the server with either `stdio` or a mounted `streamable-http` application
 
 ### `wrapper.py`
 
@@ -147,6 +149,7 @@ The authoritative source for scope is the latest supported upstream `yfinance` d
 - Use models for complex payloads such as options chains, market summaries, search results, screeners, and aggregate tool responses.
 - Prefer explicit typed response models over unstructured dictionaries for stable MCP contracts.
 - Serialize MCP responses from validated model instances or schema-checked structures rather than ad hoc dictionaries.
+- Where upstream payloads are broad or unstable, use named response models with documented canonical fields and controlled allowance for additional upstream fields.
 
 ### Tool Naming and Contract Recommendations
 
@@ -188,7 +191,6 @@ The final `API_MAPPING.md` should be exhaustive and maintained against the offic
 - Each tool should have one canonical primary response schema.
 - Canonical tool schemas should be defined and validated before serialization, preferably through Pydantic models or equivalent schema-checked structures.
 - `DataFrame` values should default to a structured object with `columns`, `data`, and `index` keys.
-
 - Where useful, the server may offer markdown table output as a fallback or optional display-oriented format.
 - Large responses should support truncation, summarization, or chunking where necessary without changing the top-level schema for a tool.
 - Recommended conventions:
@@ -196,6 +198,7 @@ The final `API_MAPPING.md` should be exhaustive and maintained against the offic
   - preserve timezone information where available
   - represent missing numeric data as `null`
   - include paging or truncation metadata when a payload is intentionally limited
+  - prefer named response models even when some tools need to allow extra upstream fields
 
 ## Concurrency and Resource Limits
 
@@ -302,6 +305,7 @@ The final `API_MAPPING.md` should be exhaustive and maintained against the offic
   - cache hit or miss status
   - error category
   - transport mode
+  - timeout and deadline-exceeded events for tool and upstream execution paths
 
 ## Setup and Run
 
@@ -318,6 +322,7 @@ Recommended packaging behavior:
 - Use a `src/` layout with a proper console entry point or module entry point.
 - Prefer `uv run python -m yfinance_mcp.server` over direct path execution to avoid import issues.
 - Document both local `stdio` startup and remote `streamable-http` startup commands.
+- Track and commit `uv.lock` for reproducible server and host integration behavior.
 - Ensure user-facing documentation includes step-by-step instructions for installing dependencies, starting the server locally, and running the remote HTTP mode.
 
 ## Testing Strategy
@@ -343,6 +348,10 @@ Recommended packaging behavior:
 ### Remote
 
 - Transport: `streamable-http`
+- Recommended mounted routes:
+  - `/mcp` for MCP traffic
+  - `/healthz` for liveness
+  - `/readyz` for readiness and basic version metadata
 - Candidate platforms:
   - Fly.io
   - Railway
@@ -361,6 +370,7 @@ Recommended packaging behavior:
 - Health and readiness endpoints should avoid leaking sensitive runtime details.
 - Proxy and forwarded-header handling should be explicit when deployed behind load balancers or ingress layers.
 - If cross-origin browser access is supported, CORS behavior should be configured deliberately rather than left open by default.
+- A minimal readiness response may include server version, supported `yfinance` version, and cache backend without depending on live Yahoo reachability.
 
 ## Risks and Mitigations
 
@@ -400,6 +410,7 @@ Recommended packaging behavior:
 - Caching and rate-limit mitigation are built into the wrapper layer.
 - Concurrency, timeout, and retry behavior are defined and enforced.
 - Structured logging and basic health or readiness support exist for remote operation.
+- `uv.lock` is tracked in the repository for reproducible dependency resolution.
 - The repository includes tests, examples, and API mapping documentation.
 - The repository includes user documentation with clear run instructions for the server.
 - The repository documents the supported `yfinance` version and how MCP versioning maps to it.

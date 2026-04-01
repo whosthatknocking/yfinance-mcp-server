@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 import os
 import time
 from typing import Dict, List, Optional
@@ -7,6 +8,11 @@ from typing import Dict, List, Optional
 import structlog
 import yfinance as yf
 from pydantic import ValidationError
+from starlette.applications import Starlette
+from starlette.requests import Request
+from starlette.responses import JSONResponse
+from starlette.routing import Mount, Route
+import uvicorn
 
 from . import __version__
 from .logging_utils import configure_logging
@@ -62,6 +68,38 @@ def _run_tool(tool_name: str, operation):
     elapsed_ms = round((time.perf_counter() - started_at) * 1000, 2)
     logger.info("tool_completed", tool_name=tool_name, elapsed_ms=elapsed_ms)
     return result
+
+
+async def _healthz(_request: Request) -> JSONResponse:
+    return JSONResponse({"status": "ok"})
+
+
+async def _readyz(_request: Request) -> JSONResponse:
+    return JSONResponse(
+        {
+            "status": "ready",
+            "server_name": "yfinance",
+            "server_version": __version__,
+            "supported_yfinance_version": getattr(yf, "__version__", "unknown"),
+            "cache_backend": wrapper.cache_backend_name,
+        }
+    )
+
+
+def _build_http_app() -> Starlette:
+    @contextlib.asynccontextmanager
+    async def lifespan(app: Starlette):
+        async with mcp.session_manager.run():
+            yield
+
+    return Starlette(
+        routes=[
+            Route("/healthz", _healthz, methods=["GET"]),
+            Route("/readyz", _readyz, methods=["GET"]),
+            Mount("/", app=mcp.streamable_http_app()),
+        ],
+        lifespan=lifespan,
+    )
 
 
 @mcp.tool()
@@ -284,10 +322,12 @@ def main() -> None:
         yfinance_version=getattr(yf, "__version__", "unknown"),
     )
     if transport == "streamable-http":
-        mcp.run(
-            transport="streamable-http",
+        app = _build_http_app()
+        uvicorn.run(
+            app,
             host=os.getenv("YF_HTTP_HOST", "127.0.0.1"),
             port=int(os.getenv("YF_HTTP_PORT", "8000")),
+            log_level=os.getenv("YF_UVICORN_LOG_LEVEL", "info").lower(),
         )
         return
     mcp.run(transport="stdio")

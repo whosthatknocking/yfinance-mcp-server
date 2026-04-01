@@ -95,6 +95,12 @@ Common settings:
 
 Remote `streamable-http` transport is available in the current slice. Production-focused health and readiness support described in the project spec is still planned work.
 
+Current remote endpoints:
+
+- `/mcp` for streamable HTTP MCP traffic
+- `/healthz` for basic liveness
+- `/readyz` for basic readiness and version metadata
+
 ## Project Layout
 
 - [src/yfinance_mcp/server.py](/Users/emt/Workspace/yfinance-mcp-server/src/yfinance_mcp/server.py) contains the MCP server entrypoint and tool registration.

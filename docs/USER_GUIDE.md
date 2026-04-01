@@ -75,7 +75,8 @@ After starting the server:
 
 - local mode should start without errors and wait on stdio
 - remote mode should start an HTTP listener on the configured host and port
-- remote mode in the current implementation does not yet expose dedicated health or readiness endpoints
+- remote mode exposes `/healthz` for liveness and `/readyz` for readiness
+- MCP streamable HTTP traffic is served at `/mcp`
 
 ## Notes
 
