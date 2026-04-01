@@ -1344,7 +1344,7 @@ class YFinanceWrapper:
                         **error_context,
                     )
                 if category in {"invalid_input", "upstream_permanent", "internal_error"}:
-                    raise YFinanceError(category, str(exc), error_context)
+                    raise YFinanceError(category, str(exc), error_context) from exc
                 if throttled:
                     self._record_throttle_failure(error_context)
                 else:

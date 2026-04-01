@@ -783,6 +783,7 @@ def test_lookup_returns_named_response_model_payload():
 
 
 def test_get_history_rejects_invalid_request():
+    message = ""
     try:
         server.get_history("", period="1mo")
     except ValueError as exc:

@@ -1,7 +1,13 @@
 import pandas as pd
 import numpy as np
 
-from yfinance_mcp.utils import dataframe_to_payload, normalize_period, normalize_symbols, serialize_value
+from yfinance_mcp.utils import (
+    dataframe_to_payload,
+    normalize_period,
+    normalize_symbol,
+    normalize_symbols,
+    serialize_value,
+)
 
 
 def test_dataframe_to_payload_preserves_shape():
@@ -31,8 +37,6 @@ def test_serialize_value_handles_array_like_values():
 
 
 def test_normalize_symbol_strips_trailing_punctuation():
-    from yfinance_mcp.utils import normalize_symbol
-
     assert normalize_symbol(" msft. ") == "MSFT"
     assert normalize_symbol("$aapl!") == "AAPL"
 

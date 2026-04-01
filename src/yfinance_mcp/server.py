@@ -7,6 +7,7 @@ from typing import Dict, List, Optional
 
 import structlog
 import yfinance as yf
+from mcp.server.fastmcp import FastMCP
 from pydantic import ValidationError
 from starlette.applications import Starlette
 from starlette.requests import Request
@@ -66,25 +67,14 @@ from .schemas import (
     ToolMetadata,
     IndustryResult,
 )
-from mcp.server.fastmcp import FastMCP
+from .wrapper import YFinanceError, YFinanceWrapper
 
 configure_logging()
 logger = structlog.get_logger(__name__)
 
-from .wrapper import YFinanceError, YFinanceWrapper
-
 
 wrapper = YFinanceWrapper()
 mcp = FastMCP("yfinance")
-
-
-def _handle_error(exc: Exception) -> None:
-    if isinstance(exc, ValidationError):
-        raise ValueError(exc.errors()) from exc
-    if isinstance(exc, YFinanceError):
-        raise ValueError({"category": exc.category, "message": str(exc), "details": exc.details}) from exc
-    raise
-
 
 def _run_tool(tool_name: str, operation):
     request_id = next_request_id()
@@ -92,9 +82,20 @@ def _run_tool(tool_name: str, operation):
     started_at = time.perf_counter()
     try:
         result = operation()
-    except Exception as exc:
+    except ValidationError as exc:
         elapsed_ms = round((time.perf_counter() - started_at) * 1000, 2)
-        if isinstance(exc, YFinanceError) and exc.category == "timeout":
+        logger.warning(
+            "tool_failed",
+            tool_name=tool_name,
+            elapsed_ms=elapsed_ms,
+            upstream_call_count=get_upstream_call_count(),
+            error_type=type(exc).__name__,
+        )
+        clear_request_context()
+        raise ValueError(exc.errors()) from exc
+    except YFinanceError as exc:
+        elapsed_ms = round((time.perf_counter() - started_at) * 1000, 2)
+        if exc.category == "timeout":
             logger.warning(
                 "tool_timeout",
                 tool_name=tool_name,
@@ -110,10 +111,13 @@ def _run_tool(tool_name: str, operation):
                 upstream_call_count=get_upstream_call_count(),
                 error_type=type(exc).__name__,
             )
-        try:
-            _handle_error(exc)
-        finally:
-            clear_request_context()
+        clear_request_context()
+        raise ValueError(
+            {"category": exc.category, "message": str(exc), "details": exc.details}
+        ) from exc
+    except Exception:
+        clear_request_context()
+        raise
     elapsed_ms = round((time.perf_counter() - started_at) * 1000, 2)
     try:
         logger.info(
