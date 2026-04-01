@@ -27,6 +27,19 @@ def test_get_quote_snapshot_returns_wrapper_payload():
     mocked.assert_called_once_with("TSLA")
 
 
+def test_run_tool_logs_upstream_call_count():
+    with patch.object(server, "next_request_id", return_value="req-123"):
+        with patch.object(server, "logger") as mocked_logger:
+            result = server._run_tool("test_tool", lambda: "ok")
+
+    assert result == "ok"
+    completion_call = mocked_logger.info.call_args_list[-1]
+    assert completion_call.args[0] == "tool_completed"
+    assert completion_call.kwargs["tool_name"] == "test_tool"
+    assert completion_call.kwargs["upstream_call_count"] == 0
+    assert "elapsed_ms" in completion_call.kwargs
+
+
 def test_get_batch_quote_snapshot_returns_named_response_model_payload():
     payload = {
         "symbols": ["AAPL", "MSFT"],
@@ -196,7 +209,7 @@ def test_get_sec_filings_returns_list_payload():
     with patch.object(server.wrapper, "get_sec_filings", return_value=payload) as mocked:
         result = server.get_sec_filings("AAPL")
 
-    assert result == payload
+    assert result == [{"type": "8-K", "additional_fields": {"date": "2026-02-24"}}]
     mocked.assert_called_once_with(symbol="AAPL")
 
 
@@ -226,7 +239,7 @@ def test_get_recommendations_returns_dataframe_payload():
         result = server.get_recommendations("AAPL")
 
     assert result == DATAFRAME_PAYLOAD
-    mocked.assert_called_once_with("AAPL")
+    mocked.assert_called_once_with(symbol="AAPL")
 
 
 def test_get_analyst_price_targets_returns_payload():

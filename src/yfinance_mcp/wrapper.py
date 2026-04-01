@@ -15,7 +15,7 @@ import pandas as pd
 
 from . import __version__
 from .cache import CacheBackend, InMemoryTTLCache
-from .logging_utils import configure_logging
+from .logging_utils import configure_logging, increment_upstream_call_count
 from .utils import normalize_symbol, normalize_symbols, serialize_value
 
 configure_logging()
@@ -1306,8 +1306,15 @@ class YFinanceWrapper:
             try:
                 self._wait_for_throttle_cooldown(start=start, error_context=error_context)
                 with self.limiter:
+                    attempt_count = increment_upstream_call_count()
                     result = operation()
                 self._clear_throttle_state()
+                logger.info(
+                    "upstream_call_completed",
+                    attempt=attempt_count,
+                    elapsed_seconds=round(time.time() - start, 3),
+                    **error_context,
+                )
                 return result
             except YFinanceError:
                 raise

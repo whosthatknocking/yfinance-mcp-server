@@ -384,6 +384,7 @@ Recommended packaging behavior:
 - Add contract tests for each exposed tool family and shared wrapper behavior.
 - Include integration coverage against known symbols such as `AAPL` and `TSLA`.
 - Separate offline tests from live-network tests where possible.
+- Add transport tests covering local server dispatch plus remote `/healthz`, `/readyz`, and mounted `/mcp` behavior.
 - Recommended test split:
   - deterministic unit tests for serialization, schema validation, and error mapping
   - contract tests for tool signatures and response shapes

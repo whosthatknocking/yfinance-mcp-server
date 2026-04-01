@@ -2,6 +2,7 @@ from unittest.mock import patch
 import pandas as pd
 
 from yfinance_mcp.cache import InMemoryTTLCache
+from yfinance_mcp.logging_utils import bind_request_context, clear_request_context, get_upstream_call_count
 from yfinance_mcp.wrapper import YFinanceError, YFinanceWrapper
 
 
@@ -82,6 +83,21 @@ def test_retry_returns_stale_cache_for_transient_failures():
     )
 
     assert result == {"cached": True}
+
+
+def test_retry_increments_upstream_call_count_in_request_context():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+    bind_request_context(request_id="req-1", tool_name="test_tool")
+
+    try:
+        result = wrapper._run_with_retry(
+            operation=lambda: {"ok": True},
+            error_context={"symbol": "AAPL"},
+        )
+        assert result == {"ok": True}
+        assert get_upstream_call_count() == 1
+    finally:
+        clear_request_context()
 
 
 def test_get_batch_info_returns_payload_keyed_by_symbol():

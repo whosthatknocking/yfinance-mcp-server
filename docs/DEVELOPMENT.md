@@ -25,6 +25,7 @@ Recommended setup:
 
 - run tests with PYTHONPATH=src pytest
 - run live integration tests with `YF_RUN_LIVE_TESTS=1 PYTHONPATH=src pytest -m live`
+- transport tests run with the default pytest suite and cover the HTTP app plus `main()` transport dispatch
 - keep direct tests around public server tool functions in addition to wrapper and serialization tests
 - for local smoke checks, validate imports and basic wrapper behavior before opening a PR
 

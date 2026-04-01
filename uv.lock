@@ -1513,11 +1513,13 @@ dependencies = [
 
 [package.optional-dependencies]
 dev = [
+    { name = "httpx" },
     { name = "pytest" },
 ]
 
 [package.metadata]
 requires-dist = [
+    { name = "httpx", marker = "extra == 'dev'", specifier = ">=0.28" },
     { name = "lxml", specifier = ">=5.3" },
     { name = "modelcontextprotocol", specifier = ">=1.0.1" },
     { name = "pandas", specifier = ">=2.2" },

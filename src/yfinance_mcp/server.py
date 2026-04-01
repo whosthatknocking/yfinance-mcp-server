@@ -15,7 +15,13 @@ from starlette.routing import Mount, Route
 import uvicorn
 
 from . import __version__
-from .logging_utils import configure_logging
+from .logging_utils import (
+    bind_request_context,
+    clear_request_context,
+    configure_logging,
+    get_upstream_call_count,
+    next_request_id,
+)
 from .schemas import (
     DownloadHistoryResult,
     DownloadRequest,
@@ -81,19 +87,44 @@ def _handle_error(exc: Exception) -> None:
 
 
 def _run_tool(tool_name: str, operation):
+    request_id = next_request_id()
+    bind_request_context(request_id=request_id, tool_name=tool_name)
     started_at = time.perf_counter()
     try:
         result = operation()
     except Exception as exc:
         elapsed_ms = round((time.perf_counter() - started_at) * 1000, 2)
         if isinstance(exc, YFinanceError) and exc.category == "timeout":
-            logger.warning("tool_timeout", tool_name=tool_name, elapsed_ms=elapsed_ms, details=exc.details)
+            logger.warning(
+                "tool_timeout",
+                tool_name=tool_name,
+                elapsed_ms=elapsed_ms,
+                upstream_call_count=get_upstream_call_count(),
+                details=exc.details,
+            )
         else:
-            logger.warning("tool_failed", tool_name=tool_name, elapsed_ms=elapsed_ms, error_type=type(exc).__name__)
-        _handle_error(exc)
+            logger.warning(
+                "tool_failed",
+                tool_name=tool_name,
+                elapsed_ms=elapsed_ms,
+                upstream_call_count=get_upstream_call_count(),
+                error_type=type(exc).__name__,
+            )
+        try:
+            _handle_error(exc)
+        finally:
+            clear_request_context()
     elapsed_ms = round((time.perf_counter() - started_at) * 1000, 2)
-    logger.info("tool_completed", tool_name=tool_name, elapsed_ms=elapsed_ms)
-    return result
+    try:
+        logger.info(
+            "tool_completed",
+            tool_name=tool_name,
+            elapsed_ms=elapsed_ms,
+            upstream_call_count=get_upstream_call_count(),
+        )
+        return result
+    finally:
+        clear_request_context()
 
 
 async def _healthz(_request: Request) -> JSONResponse:

@@ -53,3 +53,20 @@ def test_live_search_returns_quote_matches():
     assert isinstance(result, dict)
     assert "quotes" in result
     assert isinstance(result["quotes"], list)
+
+
+def test_live_get_option_expirations_returns_list():
+    wrapper = YFinanceWrapper()
+
+    result = wrapper.get_option_expirations("SPY")
+
+    assert isinstance(result, list)
+
+
+def test_live_get_market_status_returns_market_payload():
+    wrapper = YFinanceWrapper()
+
+    result = wrapper.get_market_status("us")
+
+    assert result["market"] == "us"
+    assert "status" in result
