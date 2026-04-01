@@ -1,11 +1,11 @@
 # User Guide
 
-This guide explains how to install and run `yfinance-mcp-server`.
+This guide explains how to install and run yfinance-mcp-server.
 
 ## Requirements
 
-- Python `3.11+`
-- `uv` recommended, or `pip`
+- Python 3.11+
+- uv recommended, or pip
 
 ## Install
 
@@ -61,11 +61,11 @@ To bind a host and port explicitly:
 Configuration and prompt examples are available in:
 
 - [examples/claude_config.json.example](/Users/emt/Workspace/yfinance-mcp-server/examples/claude_config.json.example) for Claude Desktop
-- [examples/lmstudio_config.json.example](/Users/emt/Workspace/yfinance-mcp-server/examples/lmstudio_config.json.example) for LM Studio with `uv`
+- [examples/lmstudio_config.json.example](/Users/emt/Workspace/yfinance-mcp-server/examples/lmstudio_config.json.example) for LM Studio with uv
 - [examples/lmstudio_config.venv.json.example](/Users/emt/Workspace/yfinance-mcp-server/examples/lmstudio_config.venv.json.example) for LM Studio with an explicit virtualenv Python path
 - [examples/QUERIES.md](/Users/emt/Workspace/yfinance-mcp-server/examples/QUERIES.md) for example prompts and tool-oriented queries
 
-For LM Studio, make sure the config uses the project directory as `cwd`. If LM Studio launches the system Python without the project environment, it will fail to import `yfinance_mcp`.
+For LM Studio, make sure the config uses the project directory as cwd. If LM Studio launches the system Python without the project environment, it will fail to import yfinance_mcp.
 
 ## Verify
 
@@ -73,10 +73,10 @@ After starting the server:
 
 - local mode should start without errors and wait on stdio
 - remote mode should start an HTTP listener on the configured host and port
-- remote mode exposes `/healthz` for liveness and `/readyz` for readiness
-- MCP streamable HTTP traffic is served at `/mcp`
+- remote mode exposes /healthz for liveness and /readyz for readiness
+- MCP streamable HTTP traffic is served at /mcp
 
 ## Notes
 
-- The package expects Python `3.11+`, even if some local smoke checks were done with an older interpreter.
-- If dependencies such as the MCP SDK are missing, install the project again in a fresh Python `3.11+` environment.
+- The package expects Python 3.11+, even if some local smoke checks were done with an older interpreter.
+- If dependencies such as the MCP SDK are missing, install the project again in a fresh Python 3.11+ environment.

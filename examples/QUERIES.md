@@ -1,6 +1,6 @@
 # Example Queries
 
-These are example prompts you can use in an AI host connected to `yfinance-mcp-server`.
+These are example prompts you can use in an AI host connected to yfinance-mcp-server.
 
 ## Basic Data Retrieval
 
@@ -39,4 +39,4 @@ These are example prompts you can use in an AI host connected to `yfinance-mcp-s
 - Get Apple's latest quote snapshot, 3 months of price history, and recent news, then summarize the overall picture.
 - Get Tesla's latest quote snapshot and explain the key fields briefly.
 - Show Microsoft's quarterly balance sheet and yearly income statement, then highlight any notable changes.
-- For Apple, decide whether `get_info` or `get_quote_snapshot` is more appropriate for a quick ticker quote request and explain why.
+- For Apple, decide whether get_info or get_quote_snapshot is more appropriate for a quick ticker quote request and explain why.
