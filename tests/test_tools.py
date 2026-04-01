@@ -283,6 +283,112 @@ def test_get_insider_roster_holders_returns_dataframe_payload():
     mocked.assert_called_once_with(symbol="AAPL")
 
 
+def test_get_funds_data_returns_named_response_model_payload():
+    payload = {
+        "quote_type": "ETF",
+        "description": "Example fund",
+        "asset_classes": {"stockPosition": 99.0},
+        "bond_holdings": DATAFRAME_PAYLOAD,
+        "bond_ratings": {"aaa": 10.0},
+        "equity_holdings": DATAFRAME_PAYLOAD,
+        "fund_operations": DATAFRAME_PAYLOAD,
+        "fund_overview": {"family": "Example"},
+        "sector_weightings": {"technology": 30.0},
+        "top_holdings": DATAFRAME_PAYLOAD,
+    }
+    with patch.object(server.wrapper, "get_funds_data", return_value=payload) as mocked:
+        result = server.get_funds_data("SPY")
+
+    assert result == payload
+    mocked.assert_called_once_with(symbol="SPY")
+
+
+def test_get_fund_asset_classes_returns_mapping_payload():
+    payload = {"stockPosition": 99.0}
+    with patch.object(server.wrapper, "get_fund_asset_classes", return_value=payload) as mocked:
+        result = server.get_fund_asset_classes("SPY")
+
+    assert result == payload
+    mocked.assert_called_once_with(symbol="SPY")
+
+
+def test_get_fund_bond_holdings_returns_dataframe_payload():
+    with patch.object(server.wrapper, "get_fund_bond_holdings", return_value=DATAFRAME_PAYLOAD) as mocked:
+        result = server.get_fund_bond_holdings("SPY")
+
+    assert result == DATAFRAME_PAYLOAD
+    mocked.assert_called_once_with(symbol="SPY")
+
+
+def test_get_fund_bond_ratings_returns_mapping_payload():
+    payload = {"aaa": 10.0}
+    with patch.object(server.wrapper, "get_fund_bond_ratings", return_value=payload) as mocked:
+        result = server.get_fund_bond_ratings("SPY")
+
+    assert result == payload
+    mocked.assert_called_once_with(symbol="SPY")
+
+
+def test_get_fund_description_returns_text_payload():
+    payload = {"value": "Example fund"}
+    with patch.object(server.wrapper, "get_fund_description", return_value=payload) as mocked:
+        result = server.get_fund_description("SPY")
+
+    assert result == payload
+    mocked.assert_called_once_with(symbol="SPY")
+
+
+def test_get_fund_equity_holdings_returns_dataframe_payload():
+    with patch.object(server.wrapper, "get_fund_equity_holdings", return_value=DATAFRAME_PAYLOAD) as mocked:
+        result = server.get_fund_equity_holdings("SPY")
+
+    assert result == DATAFRAME_PAYLOAD
+    mocked.assert_called_once_with(symbol="SPY")
+
+
+def test_get_fund_operations_returns_dataframe_payload():
+    with patch.object(server.wrapper, "get_fund_operations", return_value=DATAFRAME_PAYLOAD) as mocked:
+        result = server.get_fund_operations("SPY")
+
+    assert result == DATAFRAME_PAYLOAD
+    mocked.assert_called_once_with(symbol="SPY")
+
+
+def test_get_fund_overview_returns_mapping_payload():
+    payload = {"family": "Example"}
+    with patch.object(server.wrapper, "get_fund_overview", return_value=payload) as mocked:
+        result = server.get_fund_overview("SPY")
+
+    assert result == payload
+    mocked.assert_called_once_with(symbol="SPY")
+
+
+def test_get_fund_sector_weightings_returns_mapping_payload():
+    payload = {"technology": 30.0}
+    with patch.object(server.wrapper, "get_fund_sector_weightings", return_value=payload) as mocked:
+        result = server.get_fund_sector_weightings("SPY")
+
+    assert result == payload
+    mocked.assert_called_once_with(symbol="SPY")
+
+
+def test_get_fund_top_holdings_returns_dataframe_payload():
+    with patch.object(server.wrapper, "get_fund_top_holdings", return_value=DATAFRAME_PAYLOAD) as mocked:
+        result = server.get_fund_top_holdings("SPY")
+
+    assert result == DATAFRAME_PAYLOAD
+    mocked.assert_called_once_with(symbol="SPY")
+
+
+def test_get_fund_quote_type_returns_text_payload():
+    payload = {"value": "ETF"}
+    with patch.object(server.wrapper, "get_fund_quote_type", return_value=payload) as mocked:
+        result = server.get_fund_quote_type("SPY")
+
+    assert result == payload
+    mocked.assert_called_once_with(symbol="SPY")
+
+
 def test_get_income_stmt_returns_statement_payload():
     with patch.object(server.wrapper, "get_income_stmt", return_value=DATAFRAME_PAYLOAD) as mocked:
         result = server.get_income_stmt("AMZN", freq="yearly")

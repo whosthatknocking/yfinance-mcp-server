@@ -585,6 +585,86 @@ class YFinanceWrapper:
             empty_message="No insider roster holders data was returned for the requested symbol.",
         )
 
+    def get_funds_data(self, symbol: str) -> Dict[str, Any]:
+        normalized = normalize_symbol(symbol)
+
+        def operation() -> Dict[str, Any]:
+            funds_data = self._get_funds_data_object(normalized)
+            return {
+                "quote_type": serialize_value(funds_data.quote_type()),
+                "description": serialize_value(funds_data.description),
+                "asset_classes": serialize_value(funds_data.asset_classes),
+                "bond_holdings": serialize_value(funds_data.bond_holdings),
+                "bond_ratings": serialize_value(funds_data.bond_ratings),
+                "equity_holdings": serialize_value(funds_data.equity_holdings),
+                "fund_operations": serialize_value(funds_data.fund_operations),
+                "fund_overview": serialize_value(funds_data.fund_overview),
+                "sector_weightings": serialize_value(funds_data.sector_weightings),
+                "top_holdings": serialize_value(funds_data.top_holdings),
+            }
+
+        return self._cached_call(
+            key=f"funds_data:{normalized}",
+            ttl=self.reference_ttl,
+            operation=operation,
+            error_context={"symbol": normalized},
+            allow_stale=True,
+        )
+
+    def get_fund_asset_classes(self, symbol: str) -> Dict[str, Any]:
+        return self._funds_data_field_call(symbol, "fund_asset_classes", "asset_classes")
+
+    def get_fund_bond_holdings(self, symbol: str) -> Dict[str, Any]:
+        return self._funds_data_field_call(symbol, "fund_bond_holdings", "bond_holdings")
+
+    def get_fund_bond_ratings(self, symbol: str) -> Dict[str, Any]:
+        return self._funds_data_field_call(symbol, "fund_bond_ratings", "bond_ratings")
+
+    def get_fund_description(self, symbol: str) -> Dict[str, Any]:
+        normalized = normalize_symbol(symbol)
+
+        def operation() -> Dict[str, Any]:
+            funds_data = self._get_funds_data_object(normalized)
+            return {"value": serialize_value(funds_data.description)}
+
+        return self._cached_call(
+            key=f"fund_description:{normalized}",
+            ttl=self.reference_ttl,
+            operation=operation,
+            error_context={"symbol": normalized},
+            allow_stale=True,
+        )
+
+    def get_fund_equity_holdings(self, symbol: str) -> Dict[str, Any]:
+        return self._funds_data_field_call(symbol, "fund_equity_holdings", "equity_holdings")
+
+    def get_fund_operations(self, symbol: str) -> Dict[str, Any]:
+        return self._funds_data_field_call(symbol, "fund_operations", "fund_operations")
+
+    def get_fund_overview(self, symbol: str) -> Dict[str, Any]:
+        return self._funds_data_field_call(symbol, "fund_overview", "fund_overview")
+
+    def get_fund_sector_weightings(self, symbol: str) -> Dict[str, Any]:
+        return self._funds_data_field_call(symbol, "fund_sector_weightings", "sector_weightings")
+
+    def get_fund_top_holdings(self, symbol: str) -> Dict[str, Any]:
+        return self._funds_data_field_call(symbol, "fund_top_holdings", "top_holdings")
+
+    def get_fund_quote_type(self, symbol: str) -> Dict[str, Any]:
+        normalized = normalize_symbol(symbol)
+
+        def operation() -> Dict[str, Any]:
+            funds_data = self._get_funds_data_object(normalized)
+            return {"value": serialize_value(funds_data.quote_type())}
+
+        return self._cached_call(
+            key=f"fund_quote_type:{normalized}",
+            ttl=self.reference_ttl,
+            operation=operation,
+            error_context={"symbol": normalized},
+            allow_stale=True,
+        )
+
     def _statement_call(self, symbol: str, statement_name: str, freq: str, pretty: bool) -> Dict[str, Any]:
         normalized = normalize_symbol(symbol)
         allowed = {"yearly", "quarterly", "trailing"}
@@ -675,6 +755,32 @@ class YFinanceWrapper:
             error_context={"symbol": normalized, "getter": getter_name},
             allow_stale=True,
         )
+
+    def _funds_data_field_call(self, symbol: str, cache_key_prefix: str, field_name: str) -> Dict[str, Any]:
+        normalized = normalize_symbol(symbol)
+
+        def operation() -> Dict[str, Any]:
+            funds_data = self._get_funds_data_object(normalized)
+            value = getattr(funds_data, field_name)
+            return serialize_value(value)
+
+        return self._cached_call(
+            key=f"{cache_key_prefix}:{normalized}",
+            ttl=self.reference_ttl,
+            operation=operation,
+            error_context={"symbol": normalized, "field": field_name},
+            allow_stale=True,
+        )
+
+    def _get_funds_data_object(self, symbol: str):
+        funds_data = self._ticker(symbol).get_funds_data()
+        if funds_data is None:
+            raise YFinanceError(
+                "invalid_input",
+                "No funds data was returned for the requested symbol.",
+                {"symbol": symbol},
+            )
+        return funds_data
 
     def _cached_call(
         self,

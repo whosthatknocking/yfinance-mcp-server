@@ -89,6 +89,17 @@ The initial implementation scaffolds the package, abstract cache layer, serializ
 - `get_insider_purchases`
 - `get_insider_transactions`
 - `get_insider_roster_holders`
+- `get_funds_data`
+- `get_fund_asset_classes`
+- `get_fund_bond_holdings`
+- `get_fund_bond_ratings`
+- `get_fund_description`
+- `get_fund_equity_holdings`
+- `get_fund_operations`
+- `get_fund_overview`
+- `get_fund_sector_weightings`
+- `get_fund_top_holdings`
+- `get_fund_quote_type`
 - `get_market_summary`
 - `search`
 - `lookup`

@@ -341,3 +341,132 @@ def test_get_insider_roster_holders_returns_dataframe_payload():
         result = wrapper.get_insider_roster_holders("AAPL")
 
     assert result == {"columns": ["Position"], "data": [["Director"]], "index": ["Example Insider"]}
+
+
+class _FakeFundsData:
+    def __init__(self):
+        self.asset_classes = {"stockPosition": 99.0}
+        self.bond_holdings = pd.DataFrame({"SPY": [1.0]}, index=["Maturity"])
+        self.bond_ratings = {"aaa": 10.0}
+        self.description = "Example fund"
+        self.equity_holdings = pd.DataFrame({"SPY": [5.0]}, index=["Price/Book"])
+        self.fund_operations = pd.DataFrame({"SPY": [0.09]}, index=["Annual Report Expense Ratio"])
+        self.fund_overview = {"family": "Example"}
+        self.sector_weightings = {"technology": 30.0}
+        self.top_holdings = pd.DataFrame({"Name": ["Apple"], "Holding Percent": [7.0]})
+
+    def quote_type(self):
+        return "ETF"
+
+
+def test_get_funds_data_returns_aggregate_payload():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+
+    with patch("yfinance_mcp.wrapper.yf.Ticker") as mocked_ticker:
+        mocked_ticker.return_value.get_funds_data.return_value = _FakeFundsData()
+        result = wrapper.get_funds_data("SPY")
+
+    assert result["quote_type"] == "ETF"
+    assert result["description"] == "Example fund"
+    assert result["asset_classes"] == {"stockPosition": 99.0}
+    assert result["bond_ratings"] == {"aaa": 10.0}
+
+
+def test_get_fund_asset_classes_returns_mapping_payload():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+
+    with patch("yfinance_mcp.wrapper.yf.Ticker") as mocked_ticker:
+        mocked_ticker.return_value.get_funds_data.return_value = _FakeFundsData()
+        result = wrapper.get_fund_asset_classes("SPY")
+
+    assert result == {"stockPosition": 99.0}
+
+
+def test_get_fund_bond_holdings_returns_dataframe_payload():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+
+    with patch("yfinance_mcp.wrapper.yf.Ticker") as mocked_ticker:
+        mocked_ticker.return_value.get_funds_data.return_value = _FakeFundsData()
+        result = wrapper.get_fund_bond_holdings("SPY")
+
+    assert result == {"columns": ["SPY"], "data": [[1.0]], "index": ["Maturity"]}
+
+
+def test_get_fund_bond_ratings_returns_mapping_payload():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+
+    with patch("yfinance_mcp.wrapper.yf.Ticker") as mocked_ticker:
+        mocked_ticker.return_value.get_funds_data.return_value = _FakeFundsData()
+        result = wrapper.get_fund_bond_ratings("SPY")
+
+    assert result == {"aaa": 10.0}
+
+
+def test_get_fund_description_returns_text_payload():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+
+    with patch("yfinance_mcp.wrapper.yf.Ticker") as mocked_ticker:
+        mocked_ticker.return_value.get_funds_data.return_value = _FakeFundsData()
+        result = wrapper.get_fund_description("SPY")
+
+    assert result == {"value": "Example fund"}
+
+
+def test_get_fund_equity_holdings_returns_dataframe_payload():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+
+    with patch("yfinance_mcp.wrapper.yf.Ticker") as mocked_ticker:
+        mocked_ticker.return_value.get_funds_data.return_value = _FakeFundsData()
+        result = wrapper.get_fund_equity_holdings("SPY")
+
+    assert result == {"columns": ["SPY"], "data": [[5.0]], "index": ["Price/Book"]}
+
+
+def test_get_fund_operations_returns_dataframe_payload():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+
+    with patch("yfinance_mcp.wrapper.yf.Ticker") as mocked_ticker:
+        mocked_ticker.return_value.get_funds_data.return_value = _FakeFundsData()
+        result = wrapper.get_fund_operations("SPY")
+
+    assert result == {"columns": ["SPY"], "data": [[0.09]], "index": ["Annual Report Expense Ratio"]}
+
+
+def test_get_fund_overview_returns_mapping_payload():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+
+    with patch("yfinance_mcp.wrapper.yf.Ticker") as mocked_ticker:
+        mocked_ticker.return_value.get_funds_data.return_value = _FakeFundsData()
+        result = wrapper.get_fund_overview("SPY")
+
+    assert result == {"family": "Example"}
+
+
+def test_get_fund_sector_weightings_returns_mapping_payload():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+
+    with patch("yfinance_mcp.wrapper.yf.Ticker") as mocked_ticker:
+        mocked_ticker.return_value.get_funds_data.return_value = _FakeFundsData()
+        result = wrapper.get_fund_sector_weightings("SPY")
+
+    assert result == {"technology": 30.0}
+
+
+def test_get_fund_top_holdings_returns_dataframe_payload():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+
+    with patch("yfinance_mcp.wrapper.yf.Ticker") as mocked_ticker:
+        mocked_ticker.return_value.get_funds_data.return_value = _FakeFundsData()
+        result = wrapper.get_fund_top_holdings("SPY")
+
+    assert result == {"columns": ["Name", "Holding Percent"], "data": [["Apple", 7.0]], "index": [0]}
+
+
+def test_get_fund_quote_type_returns_text_payload():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+
+    with patch("yfinance_mcp.wrapper.yf.Ticker") as mocked_ticker:
+        mocked_ticker.return_value.get_funds_data.return_value = _FakeFundsData()
+        result = wrapper.get_fund_quote_type("SPY")
+
+    assert result == {"value": "ETF"}

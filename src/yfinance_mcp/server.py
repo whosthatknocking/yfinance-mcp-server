@@ -27,6 +27,7 @@ from .schemas import (
     CalendarResult,
     EarningsRequest,
     EarningsDatesRequest,
+    FundsDataResult,
     HistoryRequest,
     HistoryResult,
     InfoResult,
@@ -34,6 +35,7 @@ from .schemas import (
     LookupResult,
     MarketRequest,
     MarketSummaryResult,
+    MappingResult,
     NewsListResult,
     NewsRequest,
     OptionChainResult,
@@ -47,6 +49,7 @@ from .schemas import (
     StringListResult,
     SymbolRequest,
     SymbolsRequest,
+    TextValueResult,
     ToolMetadata,
 )
 from mcp.server.fastmcp import FastMCP
@@ -612,6 +615,138 @@ def get_insider_roster_holders(symbol: str) -> Dict[str, object]:
         return AnalysisTableResult.model_validate(result).model_dump()
 
     return _run_tool("get_insider_roster_holders", operation)
+
+
+@mcp.tool()
+def get_funds_data(symbol: str) -> Dict[str, object]:
+    """Get the aggregate funds-data bundle for an ETF or fund ticker."""
+
+    def operation() -> Dict[str, object]:
+        request = SymbolRequest(symbol=symbol)
+        result = wrapper.get_funds_data(**request.model_dump())
+        return FundsDataResult.model_validate(result).model_dump()
+
+    return _run_tool("get_funds_data", operation)
+
+
+@mcp.tool()
+def get_fund_asset_classes(symbol: str) -> Dict[str, object]:
+    """Get fund asset-class allocations for an ETF or fund ticker."""
+
+    def operation() -> Dict[str, object]:
+        request = SymbolRequest(symbol=symbol)
+        result = wrapper.get_fund_asset_classes(**request.model_dump())
+        return MappingResult.model_validate(result).model_dump()
+
+    return _run_tool("get_fund_asset_classes", operation)
+
+
+@mcp.tool()
+def get_fund_bond_holdings(symbol: str) -> Dict[str, object]:
+    """Get bond holdings summary data for an ETF or fund ticker."""
+
+    def operation() -> Dict[str, object]:
+        request = SymbolRequest(symbol=symbol)
+        result = wrapper.get_fund_bond_holdings(**request.model_dump())
+        return AnalysisTableResult.model_validate(result).model_dump()
+
+    return _run_tool("get_fund_bond_holdings", operation)
+
+
+@mcp.tool()
+def get_fund_bond_ratings(symbol: str) -> Dict[str, object]:
+    """Get bond ratings allocations for an ETF or fund ticker."""
+
+    def operation() -> Dict[str, object]:
+        request = SymbolRequest(symbol=symbol)
+        result = wrapper.get_fund_bond_ratings(**request.model_dump())
+        return MappingResult.model_validate(result).model_dump()
+
+    return _run_tool("get_fund_bond_ratings", operation)
+
+
+@mcp.tool()
+def get_fund_description(symbol: str) -> Dict[str, object]:
+    """Get descriptive text for an ETF or fund ticker."""
+
+    def operation() -> Dict[str, object]:
+        request = SymbolRequest(symbol=symbol)
+        result = wrapper.get_fund_description(**request.model_dump())
+        return TextValueResult.model_validate(result).model_dump()
+
+    return _run_tool("get_fund_description", operation)
+
+
+@mcp.tool()
+def get_fund_equity_holdings(symbol: str) -> Dict[str, object]:
+    """Get equity holdings summary data for an ETF or fund ticker."""
+
+    def operation() -> Dict[str, object]:
+        request = SymbolRequest(symbol=symbol)
+        result = wrapper.get_fund_equity_holdings(**request.model_dump())
+        return AnalysisTableResult.model_validate(result).model_dump()
+
+    return _run_tool("get_fund_equity_holdings", operation)
+
+
+@mcp.tool()
+def get_fund_operations(symbol: str) -> Dict[str, object]:
+    """Get fund operations summary data for an ETF or fund ticker."""
+
+    def operation() -> Dict[str, object]:
+        request = SymbolRequest(symbol=symbol)
+        result = wrapper.get_fund_operations(**request.model_dump())
+        return AnalysisTableResult.model_validate(result).model_dump()
+
+    return _run_tool("get_fund_operations", operation)
+
+
+@mcp.tool()
+def get_fund_overview(symbol: str) -> Dict[str, object]:
+    """Get high-level overview metadata for an ETF or fund ticker."""
+
+    def operation() -> Dict[str, object]:
+        request = SymbolRequest(symbol=symbol)
+        result = wrapper.get_fund_overview(**request.model_dump())
+        return MappingResult.model_validate(result).model_dump()
+
+    return _run_tool("get_fund_overview", operation)
+
+
+@mcp.tool()
+def get_fund_sector_weightings(symbol: str) -> Dict[str, object]:
+    """Get sector weightings for an ETF or fund ticker."""
+
+    def operation() -> Dict[str, object]:
+        request = SymbolRequest(symbol=symbol)
+        result = wrapper.get_fund_sector_weightings(**request.model_dump())
+        return MappingResult.model_validate(result).model_dump()
+
+    return _run_tool("get_fund_sector_weightings", operation)
+
+
+@mcp.tool()
+def get_fund_top_holdings(symbol: str) -> Dict[str, object]:
+    """Get top holdings for an ETF or fund ticker."""
+
+    def operation() -> Dict[str, object]:
+        request = SymbolRequest(symbol=symbol)
+        result = wrapper.get_fund_top_holdings(**request.model_dump())
+        return AnalysisTableResult.model_validate(result).model_dump()
+
+    return _run_tool("get_fund_top_holdings", operation)
+
+
+@mcp.tool()
+def get_fund_quote_type(symbol: str) -> Dict[str, object]:
+    """Get the fund quote type classification for an ETF or fund ticker."""
+
+    def operation() -> Dict[str, object]:
+        request = SymbolRequest(symbol=symbol)
+        result = wrapper.get_fund_quote_type(**request.model_dump())
+        return TextValueResult.model_validate(result).model_dump()
+
+    return _run_tool("get_fund_quote_type", operation)
 
 
 @mcp.tool()

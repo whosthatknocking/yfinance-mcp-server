@@ -132,6 +132,31 @@ class AnalystPriceTargetsResult(BaseModel):
     median: Optional[Any] = None
 
 
+class MappingResult(BaseModel):
+    model_config = ConfigDict(extra="allow")
+
+
+class TextValueResult(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    value: Optional[str]
+
+
+class FundsDataResult(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    quote_type: Optional[str]
+    description: Optional[str]
+    asset_classes: Dict[str, Any]
+    bond_holdings: DataFramePayload
+    bond_ratings: Dict[str, Any]
+    equity_holdings: DataFramePayload
+    fund_operations: DataFramePayload
+    fund_overview: Dict[str, Any]
+    sector_weightings: Dict[str, Any]
+    top_holdings: DataFramePayload
+
+
 class ToolMetadata(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
