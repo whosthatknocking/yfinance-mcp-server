@@ -299,6 +299,35 @@ class YFinanceWrapper:
             allow_stale=False,
         )
 
+    def get_market(self, market: str) -> Dict[str, Any]:
+        return self.get_market_summary(market)
+
+    def get_market_status(self, market: str) -> Dict[str, Any]:
+        normalized = market.strip().lower()
+
+        def operation() -> Dict[str, Any]:
+            market_obj = yf.Market(normalized, timeout=self.timeout)
+            status = market_obj.status
+            market_error = self._extract_market_error(status)
+            if market_error is not None:
+                raise YFinanceError(
+                    "invalid_input",
+                    market_error.get("description", "Invalid market code."),
+                    {"market": normalized, "upstream_error": market_error},
+                )
+            return {
+                "market": normalized,
+                "status": serialize_value(status),
+            }
+
+        return self._cached_call(
+            key=f"market_status:{normalized}",
+            ttl=self.quote_ttl,
+            operation=operation,
+            error_context={"market": normalized},
+            allow_stale=False,
+        )
+
     def search(
         self,
         query: str,

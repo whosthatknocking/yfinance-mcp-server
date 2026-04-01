@@ -104,6 +104,19 @@ def test_get_market_summary_raises_invalid_input_for_bad_market_code():
             raise AssertionError("Expected YFinanceError for invalid market code")
 
 
+def test_get_market_status_returns_normalized_payload():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+
+    class FakeMarket:
+        def __init__(self, market: str, timeout: int):
+            self.status = {"status": "open"}
+
+    with patch("yfinance_mcp.wrapper.yf.Market", FakeMarket):
+        result = wrapper.get_market_status("us")
+
+    assert result == {"market": "us", "status": {"status": "open"}}
+
+
 def test_get_history_raises_invalid_input_for_empty_dataframe():
     wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
 

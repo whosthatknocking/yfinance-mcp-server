@@ -166,6 +166,19 @@ class CalendarsResult(BaseModel):
     splits_calendar: DataFramePayload
 
 
+class MarketStatusResult(BaseModel):
+    model_config = ConfigDict(extra="allow")
+
+    market: Optional[str] = Field(
+        default=None,
+        description="Requested market code when included in the payload.",
+    )
+    status: Optional[Any] = Field(
+        default=None,
+        description="Market status payload when available.",
+    )
+
+
 class ToolMetadata(BaseModel):
     model_config = ConfigDict(extra="forbid")
 

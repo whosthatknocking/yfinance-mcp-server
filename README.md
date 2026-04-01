@@ -100,6 +100,8 @@ The initial implementation scaffolds the package, abstract cache layer, serializ
 - `get_fund_sector_weightings`
 - `get_fund_top_holdings`
 - `get_fund_quote_type`
+- `get_market`
+- `get_market_status`
 - `get_calendars`
 - `get_earnings_calendar`
 - `get_economic_events_calendar`

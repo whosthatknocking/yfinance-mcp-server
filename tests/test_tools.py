@@ -468,6 +468,24 @@ def test_get_market_summary_returns_named_response_model_payload():
     mocked.assert_called_once_with(market="us")
 
 
+def test_get_market_returns_named_response_model_payload():
+    payload = {"market": "us", "status": {"status": "open"}, "summary": [{"symbol": "^GSPC"}]}
+    with patch.object(server.wrapper, "get_market", return_value=payload) as mocked:
+        result = server.get_market("us")
+
+    assert result == payload
+    mocked.assert_called_once_with(market="us")
+
+
+def test_get_market_status_returns_named_response_model_payload():
+    payload = {"market": "us", "status": {"status": "open"}}
+    with patch.object(server.wrapper, "get_market_status", return_value=payload) as mocked:
+        result = server.get_market_status("us")
+
+    assert result == payload
+    mocked.assert_called_once_with(market="us")
+
+
 def test_search_returns_named_response_model_payload():
     payload = {"quotes": [{"symbol": "MSFT"}], "news": [], "lists": [], "research": [], "nav": []}
     with patch.object(server.wrapper, "search", return_value=payload) as mocked:

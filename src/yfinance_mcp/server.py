@@ -36,6 +36,7 @@ from .schemas import (
     InfoResult,
     LookupRequest,
     LookupResult,
+    MarketStatusResult,
     MarketRequest,
     MarketSummaryResult,
     MappingResult,
@@ -919,6 +920,34 @@ def get_market_summary(market: str) -> Dict[str, object]:
         result = wrapper.get_market_summary(**request.model_dump())
         return MarketSummaryResult.model_validate(result).model_dump()
     return _run_tool("get_market_summary", operation)
+
+
+@mcp.tool()
+def get_market(market: str) -> Dict[str, object]:
+    """Get Yahoo Finance market summary and status data for a market code.
+
+    Use this tool when you want the combined market-level payload in one call.
+    For status-only requests, use `get_market_status`.
+    """
+
+    def operation() -> Dict[str, object]:
+        request = MarketRequest(market=market)
+        result = wrapper.get_market(**request.model_dump())
+        return MarketSummaryResult.model_validate(result).model_dump()
+
+    return _run_tool("get_market", operation)
+
+
+@mcp.tool()
+def get_market_status(market: str) -> Dict[str, object]:
+    """Get Yahoo Finance market status data for a market code."""
+
+    def operation() -> Dict[str, object]:
+        request = MarketRequest(market=market)
+        result = wrapper.get_market_status(**request.model_dump())
+        return MarketStatusResult.model_validate(result).model_dump()
+
+    return _run_tool("get_market_status", operation)
 
 
 @mcp.tool()
