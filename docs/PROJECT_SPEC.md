@@ -268,6 +268,9 @@ The final `API_MAPPING.md` should be exhaustive and maintained against the offic
   - treat rate-limit and throttling responses as first-class error conditions with dedicated handling rules
   - honor upstream retry hints such as `Retry-After` when available
   - avoid retry storms by combining backoff with concurrency controls and temporary cool-down behavior
+  - log tool-level failures, timeout events, and deadline exhaustion in structured form
+  - normalize common host-generated input artifacts before upstream calls, such as trailing ticker punctuation or common period aliases
+  - treat empty upstream history responses as explicit invalid or unavailable-data errors rather than silent success payloads
 
 ## Rate Limiting and Throttling Protection
 
@@ -318,13 +321,15 @@ The final `API_MAPPING.md` should be exhaustive and maintained against the offic
   - error category
   - transport mode
   - timeout and deadline-exceeded events for tool and upstream execution paths
+  - invalid-input events caused by host-generated request normalization issues
 
 ## Setup and Run
 
 Example developer workflow:
 
 - initialize the project with `uv init yfinance-mcp-server`
-- add dependencies including `mcp[cli]`, `yfinance`, `pandas`, `cachetools`, and `structlog`
+- add runtime dependencies including `modelcontextprotocol`, `yfinance`, `pandas`, `pydantic`, `structlog`, `starlette`, and `uvicorn`
+- install the project in editable mode with `uv pip install -e .` or the equivalent `pip install -e .`
 - run the server with `uv run python -m yfinance_mcp.server`
 
 For Claude Desktop or similar MCP hosts, provide an example config using `uv run` or an absolute Python path in `examples/claude_config.json.example`.
@@ -335,6 +340,8 @@ Recommended packaging behavior:
 - Prefer `uv run python -m yfinance_mcp.server` over direct path execution to avoid import issues.
 - Document both local `stdio` startup and remote `streamable-http` startup commands.
 - Track and commit `uv.lock` for reproducible server and host integration behavior.
+- Document the remote mounted routes and transport behavior, including `/mcp`, `/healthz`, and `/readyz`.
+- Prefer a direct virtualenv Python path for long-lived desktop host integrations when avoiding repeated `uv run` build chatter is important.
 - Ensure user-facing documentation includes step-by-step instructions for installing dependencies, starting the server locally, and running the remote HTTP mode.
 
 ## Testing Strategy
