@@ -155,6 +155,86 @@ def test_get_analyst_price_targets_returns_payload():
     mocked.assert_called_once_with("AAPL")
 
 
+def test_get_earnings_returns_dataframe_payload():
+    with patch.object(server.wrapper, "get_earnings", return_value=DATAFRAME_PAYLOAD) as mocked:
+        result = server.get_earnings("AAPL", freq="quarterly")
+
+    assert result == DATAFRAME_PAYLOAD
+    mocked.assert_called_once_with(symbol="AAPL", freq="quarterly")
+
+
+def test_get_recommendations_summary_returns_dataframe_payload():
+    with patch.object(server.wrapper, "get_recommendations_summary", return_value=DATAFRAME_PAYLOAD) as mocked:
+        result = server.get_recommendations_summary("AAPL")
+
+    assert result == DATAFRAME_PAYLOAD
+    mocked.assert_called_once_with(symbol="AAPL")
+
+
+def test_get_upgrades_downgrades_returns_dataframe_payload():
+    with patch.object(server.wrapper, "get_upgrades_downgrades", return_value=DATAFRAME_PAYLOAD) as mocked:
+        result = server.get_upgrades_downgrades("AAPL")
+
+    assert result == DATAFRAME_PAYLOAD
+    mocked.assert_called_once_with(symbol="AAPL")
+
+
+def test_get_earnings_estimate_returns_dataframe_payload():
+    with patch.object(server.wrapper, "get_earnings_estimate", return_value=DATAFRAME_PAYLOAD) as mocked:
+        result = server.get_earnings_estimate("AAPL")
+
+    assert result == DATAFRAME_PAYLOAD
+    mocked.assert_called_once_with(symbol="AAPL")
+
+
+def test_get_revenue_estimate_returns_dataframe_payload():
+    with patch.object(server.wrapper, "get_revenue_estimate", return_value=DATAFRAME_PAYLOAD) as mocked:
+        result = server.get_revenue_estimate("AAPL")
+
+    assert result == DATAFRAME_PAYLOAD
+    mocked.assert_called_once_with(symbol="AAPL")
+
+
+def test_get_earnings_history_returns_dataframe_payload():
+    with patch.object(server.wrapper, "get_earnings_history", return_value=DATAFRAME_PAYLOAD) as mocked:
+        result = server.get_earnings_history("AAPL")
+
+    assert result == DATAFRAME_PAYLOAD
+    mocked.assert_called_once_with(symbol="AAPL")
+
+
+def test_get_eps_trend_returns_dataframe_payload():
+    with patch.object(server.wrapper, "get_eps_trend", return_value=DATAFRAME_PAYLOAD) as mocked:
+        result = server.get_eps_trend("AAPL")
+
+    assert result == DATAFRAME_PAYLOAD
+    mocked.assert_called_once_with(symbol="AAPL")
+
+
+def test_get_eps_revisions_returns_dataframe_payload():
+    with patch.object(server.wrapper, "get_eps_revisions", return_value=DATAFRAME_PAYLOAD) as mocked:
+        result = server.get_eps_revisions("AAPL")
+
+    assert result == DATAFRAME_PAYLOAD
+    mocked.assert_called_once_with(symbol="AAPL")
+
+
+def test_get_growth_estimates_returns_dataframe_payload():
+    with patch.object(server.wrapper, "get_growth_estimates", return_value=DATAFRAME_PAYLOAD) as mocked:
+        result = server.get_growth_estimates("AAPL")
+
+    assert result == DATAFRAME_PAYLOAD
+    mocked.assert_called_once_with(symbol="AAPL")
+
+
+def test_get_sustainability_returns_dataframe_payload():
+    with patch.object(server.wrapper, "get_sustainability", return_value=DATAFRAME_PAYLOAD) as mocked:
+        result = server.get_sustainability("AAPL")
+
+    assert result == DATAFRAME_PAYLOAD
+    mocked.assert_called_once_with(symbol="AAPL")
+
+
 def test_get_income_stmt_returns_statement_payload():
     with patch.object(server.wrapper, "get_income_stmt", return_value=DATAFRAME_PAYLOAD) as mocked:
         result = server.get_income_stmt("AMZN", freq="yearly")

@@ -441,6 +441,102 @@ class YFinanceWrapper:
             allow_stale=True,
         )
 
+    def get_earnings(self, symbol: str, freq: str = "yearly") -> Dict[str, Any]:
+        normalized = normalize_symbol(symbol)
+        if freq not in {"yearly", "quarterly"}:
+            raise YFinanceError("invalid_input", "freq must be one of yearly or quarterly.", {"freq": freq})
+
+        def operation() -> Dict[str, Any]:
+            ticker = self._ticker(normalized)
+            result = ticker.get_earnings(freq=freq)
+            if isinstance(result, pd.DataFrame) and result.empty:
+                raise YFinanceError(
+                    "invalid_input",
+                    "No earnings data was returned for the requested symbol.",
+                    {"symbol": normalized, "freq": freq},
+                )
+            return serialize_value(result)
+
+        return self._cached_call(
+            key=f"earnings:{normalized}:{freq}",
+            ttl=self.reference_ttl,
+            operation=operation,
+            error_context={"symbol": normalized, "freq": freq},
+            allow_stale=True,
+        )
+
+    def get_recommendations_summary(self, symbol: str) -> Dict[str, Any]:
+        return self._table_getter_call(
+            symbol,
+            cache_key_prefix="recommendations_summary",
+            getter_name="get_recommendations_summary",
+            empty_message="No recommendation summary data was returned for the requested symbol.",
+        )
+
+    def get_upgrades_downgrades(self, symbol: str) -> Dict[str, Any]:
+        return self._table_getter_call(
+            symbol,
+            cache_key_prefix="upgrades_downgrades",
+            getter_name="get_upgrades_downgrades",
+            empty_message="No upgrades or downgrades data was returned for the requested symbol.",
+        )
+
+    def get_earnings_estimate(self, symbol: str) -> Dict[str, Any]:
+        return self._table_getter_call(
+            symbol,
+            cache_key_prefix="earnings_estimate",
+            getter_name="get_earnings_estimate",
+            empty_message="No earnings estimate data was returned for the requested symbol.",
+        )
+
+    def get_revenue_estimate(self, symbol: str) -> Dict[str, Any]:
+        return self._table_getter_call(
+            symbol,
+            cache_key_prefix="revenue_estimate",
+            getter_name="get_revenue_estimate",
+            empty_message="No revenue estimate data was returned for the requested symbol.",
+        )
+
+    def get_earnings_history(self, symbol: str) -> Dict[str, Any]:
+        return self._table_getter_call(
+            symbol,
+            cache_key_prefix="earnings_history",
+            getter_name="get_earnings_history",
+            empty_message="No earnings history data was returned for the requested symbol.",
+        )
+
+    def get_eps_trend(self, symbol: str) -> Dict[str, Any]:
+        return self._table_getter_call(
+            symbol,
+            cache_key_prefix="eps_trend",
+            getter_name="get_eps_trend",
+            empty_message="No EPS trend data was returned for the requested symbol.",
+        )
+
+    def get_eps_revisions(self, symbol: str) -> Dict[str, Any]:
+        return self._table_getter_call(
+            symbol,
+            cache_key_prefix="eps_revisions",
+            getter_name="get_eps_revisions",
+            empty_message="No EPS revisions data was returned for the requested symbol.",
+        )
+
+    def get_growth_estimates(self, symbol: str) -> Dict[str, Any]:
+        return self._table_getter_call(
+            symbol,
+            cache_key_prefix="growth_estimates",
+            getter_name="get_growth_estimates",
+            empty_message="No growth estimates data was returned for the requested symbol.",
+        )
+
+    def get_sustainability(self, symbol: str) -> Dict[str, Any]:
+        return self._table_getter_call(
+            symbol,
+            cache_key_prefix="sustainability",
+            getter_name="get_sustainability",
+            empty_message="No sustainability data was returned for the requested symbol.",
+        )
+
     def _statement_call(self, symbol: str, statement_name: str, freq: str, pretty: bool) -> Dict[str, Any]:
         normalized = normalize_symbol(symbol)
         allowed = {"yearly", "quarterly", "trailing"}
@@ -500,6 +596,35 @@ class YFinanceWrapper:
             ttl=self.reference_ttl,
             operation=lambda: serialize_value(operation()),
             error_context={"symbol": normalized, "series": series_name, "period": period},
+            allow_stale=True,
+        )
+
+    def _table_getter_call(
+        self,
+        symbol: str,
+        cache_key_prefix: str,
+        getter_name: str,
+        empty_message: str,
+    ) -> Dict[str, Any]:
+        normalized = normalize_symbol(symbol)
+
+        def operation() -> Any:
+            ticker = self._ticker(normalized)
+            getter = getattr(ticker, getter_name)
+            result = getter()
+            if isinstance(result, pd.DataFrame) and result.empty:
+                raise YFinanceError(
+                    "invalid_input",
+                    empty_message,
+                    {"symbol": normalized, "getter": getter_name},
+                )
+            return serialize_value(result)
+
+        return self._cached_call(
+            key=f"{cache_key_prefix}:{normalized}",
+            ttl=self.reference_ttl,
+            operation=operation,
+            error_context={"symbol": normalized, "getter": getter_name},
             allow_stale=True,
         )
 

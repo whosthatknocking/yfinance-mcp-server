@@ -181,7 +181,23 @@ The implementation should maintain an exhaustive mapping of information-collecti
 | `yf.Tickers(...).tickers[...].info` | `get_batch_info` | `symbols: list[str]` | `dict` |
 | `Ticker(symbol).news` | `get_news` | `symbol: str` | `list[dict]` |
 | `Ticker(symbol).option_chain(...)` | `get_option_chain` | `symbol`, `date: str` | `dict` |
+| `Ticker(symbol).get_earnings_dates(...)` | `get_earnings_dates` | `symbol`, `limit`, `offset` | `dict` |
+| `Ticker(symbol).calendar` | `get_ticker_calendar` | `symbol: str` | `dict` |
+| `Ticker(symbol).earnings` | `get_earnings` | `symbol`, `freq` | `dict` |
+| `Ticker(symbol).recommendations` | `get_recommendations` | `symbol: str` | `dict` |
+| `Ticker(symbol).recommendations_summary` | `get_recommendations_summary` | `symbol: str` | `dict` |
+| `Ticker(symbol).upgrades_downgrades` | `get_upgrades_downgrades` | `symbol: str` | `dict` |
+| `Ticker(symbol).analyst_price_targets` | `get_analyst_price_targets` | `symbol: str` | `dict` |
+| `Ticker(symbol).earnings_estimate` | `get_earnings_estimate` | `symbol: str` | `dict` |
+| `Ticker(symbol).revenue_estimate` | `get_revenue_estimate` | `symbol: str` | `dict` |
+| `Ticker(symbol).earnings_history` | `get_earnings_history` | `symbol: str` | `dict` |
+| `Ticker(symbol).eps_trend` | `get_eps_trend` | `symbol: str` | `dict` |
+| `Ticker(symbol).eps_revisions` | `get_eps_revisions` | `symbol: str` | `dict` |
+| `Ticker(symbol).growth_estimates` | `get_growth_estimates` | `symbol: str` | `dict` |
+| `Ticker(symbol).sustainability` | `get_sustainability` | `symbol: str` | `dict` |
 | `yf.Market(market).summary` | `get_market_summary` | `market: str` | `dict` |
+| `yf.Search(...)` | `search` | `query`, result and view controls | `dict` |
+| `yf.Lookup(...)` | `lookup` | `query`, `count` | `dict` |
 | `yf.screen(query, ...)` | `screen` | `query`, `count`, `offset` | `dict` |
 
 The final `API_MAPPING.md` should be exhaustive and maintained against the official `yfinance` reference.

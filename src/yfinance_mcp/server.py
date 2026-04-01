@@ -20,10 +20,12 @@ from .schemas import (
     DownloadHistoryResult,
     DownloadRequest,
     ActionSeriesResult,
+    AnalysisTableResult,
     AnalystPriceTargetsResult,
     BatchInfoResult,
     BatchQuoteSnapshotResult,
     CalendarResult,
+    EarningsRequest,
     EarningsDatesRequest,
     HistoryRequest,
     HistoryResult,
@@ -406,6 +408,138 @@ def get_analyst_price_targets(symbol: str) -> Dict[str, object]:
         return AnalystPriceTargetsResult.model_validate(result).model_dump()
 
     return _run_tool("get_analyst_price_targets", operation)
+
+
+@mcp.tool()
+def get_earnings(symbol: str, freq: str = "yearly") -> Dict[str, object]:
+    """Get annual or quarterly earnings data for a ticker.
+
+    Use this tool for historical earnings result tables. For upcoming and
+    recent earnings event timing, use `get_earnings_dates`.
+    """
+
+    def operation() -> Dict[str, object]:
+        request = EarningsRequest(symbol=symbol, freq=freq)
+        result = wrapper.get_earnings(**request.model_dump())
+        return AnalysisTableResult.model_validate(result).model_dump()
+
+    return _run_tool("get_earnings", operation)
+
+
+@mcp.tool()
+def get_recommendations_summary(symbol: str) -> Dict[str, object]:
+    """Get recommendation summary aggregates for a ticker.
+
+    Use this tool for higher-level analyst recommendation rollups rather than
+    the fuller recommendations table from `get_recommendations`.
+    """
+
+    def operation() -> Dict[str, object]:
+        request = SymbolRequest(symbol=symbol)
+        result = wrapper.get_recommendations_summary(**request.model_dump())
+        return AnalysisTableResult.model_validate(result).model_dump()
+
+    return _run_tool("get_recommendations_summary", operation)
+
+
+@mcp.tool()
+def get_upgrades_downgrades(symbol: str) -> Dict[str, object]:
+    """Get broker upgrades and downgrades for a ticker.
+
+    Use this tool when the user asks about analyst rating changes or recent
+    broker actions affecting a symbol.
+    """
+
+    def operation() -> Dict[str, object]:
+        request = SymbolRequest(symbol=symbol)
+        result = wrapper.get_upgrades_downgrades(**request.model_dump())
+        return AnalysisTableResult.model_validate(result).model_dump()
+
+    return _run_tool("get_upgrades_downgrades", operation)
+
+
+@mcp.tool()
+def get_earnings_estimate(symbol: str) -> Dict[str, object]:
+    """Get analyst earnings estimate data for a ticker."""
+
+    def operation() -> Dict[str, object]:
+        request = SymbolRequest(symbol=symbol)
+        result = wrapper.get_earnings_estimate(**request.model_dump())
+        return AnalysisTableResult.model_validate(result).model_dump()
+
+    return _run_tool("get_earnings_estimate", operation)
+
+
+@mcp.tool()
+def get_revenue_estimate(symbol: str) -> Dict[str, object]:
+    """Get analyst revenue estimate data for a ticker."""
+
+    def operation() -> Dict[str, object]:
+        request = SymbolRequest(symbol=symbol)
+        result = wrapper.get_revenue_estimate(**request.model_dump())
+        return AnalysisTableResult.model_validate(result).model_dump()
+
+    return _run_tool("get_revenue_estimate", operation)
+
+
+@mcp.tool()
+def get_earnings_history(symbol: str) -> Dict[str, object]:
+    """Get historical earnings surprise and estimate data for a ticker."""
+
+    def operation() -> Dict[str, object]:
+        request = SymbolRequest(symbol=symbol)
+        result = wrapper.get_earnings_history(**request.model_dump())
+        return AnalysisTableResult.model_validate(result).model_dump()
+
+    return _run_tool("get_earnings_history", operation)
+
+
+@mcp.tool()
+def get_eps_trend(symbol: str) -> Dict[str, object]:
+    """Get EPS trend data for a ticker."""
+
+    def operation() -> Dict[str, object]:
+        request = SymbolRequest(symbol=symbol)
+        result = wrapper.get_eps_trend(**request.model_dump())
+        return AnalysisTableResult.model_validate(result).model_dump()
+
+    return _run_tool("get_eps_trend", operation)
+
+
+@mcp.tool()
+def get_eps_revisions(symbol: str) -> Dict[str, object]:
+    """Get EPS revision data for a ticker."""
+
+    def operation() -> Dict[str, object]:
+        request = SymbolRequest(symbol=symbol)
+        result = wrapper.get_eps_revisions(**request.model_dump())
+        return AnalysisTableResult.model_validate(result).model_dump()
+
+    return _run_tool("get_eps_revisions", operation)
+
+
+@mcp.tool()
+def get_growth_estimates(symbol: str) -> Dict[str, object]:
+    """Get analyst growth estimate data for a ticker."""
+
+    def operation() -> Dict[str, object]:
+        request = SymbolRequest(symbol=symbol)
+        result = wrapper.get_growth_estimates(**request.model_dump())
+        return AnalysisTableResult.model_validate(result).model_dump()
+
+    return _run_tool("get_growth_estimates", operation)
+
+
+@mcp.tool()
+def get_sustainability(symbol: str) -> Dict[str, object]:
+    """Get sustainability and ESG-related data for a ticker when available."""
+
+    def operation() -> Dict[str, object]:
+        request = SymbolRequest(symbol=symbol)
+        result = wrapper.get_sustainability(**request.model_dump())
+        return AnalysisTableResult.model_validate(result).model_dump()
+
+    return _run_tool("get_sustainability", operation)
 
 
 @mcp.tool()

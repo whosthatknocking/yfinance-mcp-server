@@ -165,3 +165,113 @@ def test_get_analyst_price_targets_returns_serialized_payload():
         result = wrapper.get_analyst_price_targets("AAPL")
 
     assert result == {"current": 253.79, "high": 350.0, "low": 205.0, "mean": 295.31, "median": 300.0}
+
+
+def test_get_earnings_returns_dataframe_payload():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+    payload = pd.DataFrame({"Earnings": [100.0]}, index=["2025"])
+
+    with patch("yfinance_mcp.wrapper.yf.Ticker") as mocked_ticker:
+        mocked_ticker.return_value.get_earnings.return_value = payload
+        result = wrapper.get_earnings("AAPL", freq="yearly")
+
+    assert result == {"columns": ["Earnings"], "data": [[100.0]], "index": ["2025"]}
+
+
+def test_get_recommendations_summary_returns_dataframe_payload():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+    payload = pd.DataFrame({"strongBuy": [12]}, index=["0m"])
+
+    with patch("yfinance_mcp.wrapper.yf.Ticker") as mocked_ticker:
+        mocked_ticker.return_value.get_recommendations_summary.return_value = payload
+        result = wrapper.get_recommendations_summary("AAPL")
+
+    assert result == {"columns": ["strongBuy"], "data": [[12]], "index": ["0m"]}
+
+
+def test_get_upgrades_downgrades_returns_dataframe_payload():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+    payload = pd.DataFrame({"To Grade": ["Buy"]}, index=["2026-01-01"])
+
+    with patch("yfinance_mcp.wrapper.yf.Ticker") as mocked_ticker:
+        mocked_ticker.return_value.get_upgrades_downgrades.return_value = payload
+        result = wrapper.get_upgrades_downgrades("AAPL")
+
+    assert result == {"columns": ["To Grade"], "data": [["Buy"]], "index": ["2026-01-01"]}
+
+
+def test_get_earnings_estimate_returns_dataframe_payload():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+    payload = pd.DataFrame({"avg": [1.2]}, index=["0q"])
+
+    with patch("yfinance_mcp.wrapper.yf.Ticker") as mocked_ticker:
+        mocked_ticker.return_value.get_earnings_estimate.return_value = payload
+        result = wrapper.get_earnings_estimate("AAPL")
+
+    assert result == {"columns": ["avg"], "data": [[1.2]], "index": ["0q"]}
+
+
+def test_get_revenue_estimate_returns_dataframe_payload():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+    payload = pd.DataFrame({"avg": [1000.0]}, index=["0q"])
+
+    with patch("yfinance_mcp.wrapper.yf.Ticker") as mocked_ticker:
+        mocked_ticker.return_value.get_revenue_estimate.return_value = payload
+        result = wrapper.get_revenue_estimate("AAPL")
+
+    assert result == {"columns": ["avg"], "data": [[1000.0]], "index": ["0q"]}
+
+
+def test_get_earnings_history_returns_dataframe_payload():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+    payload = pd.DataFrame({"epsActual": [1.4]}, index=["2026-01-30"])
+
+    with patch("yfinance_mcp.wrapper.yf.Ticker") as mocked_ticker:
+        mocked_ticker.return_value.get_earnings_history.return_value = payload
+        result = wrapper.get_earnings_history("AAPL")
+
+    assert result == {"columns": ["epsActual"], "data": [[1.4]], "index": ["2026-01-30"]}
+
+
+def test_get_eps_trend_returns_dataframe_payload():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+    payload = pd.DataFrame({"current": [5.2]}, index=["0q"])
+
+    with patch("yfinance_mcp.wrapper.yf.Ticker") as mocked_ticker:
+        mocked_ticker.return_value.get_eps_trend.return_value = payload
+        result = wrapper.get_eps_trend("AAPL")
+
+    assert result == {"columns": ["current"], "data": [[5.2]], "index": ["0q"]}
+
+
+def test_get_eps_revisions_returns_dataframe_payload():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+    payload = pd.DataFrame({"upLast7days": [2]}, index=["0q"])
+
+    with patch("yfinance_mcp.wrapper.yf.Ticker") as mocked_ticker:
+        mocked_ticker.return_value.get_eps_revisions.return_value = payload
+        result = wrapper.get_eps_revisions("AAPL")
+
+    assert result == {"columns": ["upLast7days"], "data": [[2]], "index": ["0q"]}
+
+
+def test_get_growth_estimates_returns_dataframe_payload():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+    payload = pd.DataFrame({"stockTrend": ["+10%"]}, index=["AAPL"])
+
+    with patch("yfinance_mcp.wrapper.yf.Ticker") as mocked_ticker:
+        mocked_ticker.return_value.get_growth_estimates.return_value = payload
+        result = wrapper.get_growth_estimates("AAPL")
+
+    assert result == {"columns": ["stockTrend"], "data": [["+10%"]], "index": ["AAPL"]}
+
+
+def test_get_sustainability_returns_dataframe_payload():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+    payload = pd.DataFrame({"Value": [50.0]}, index=["totalEsg"])
+
+    with patch("yfinance_mcp.wrapper.yf.Ticker") as mocked_ticker:
+        mocked_ticker.return_value.get_sustainability.return_value = payload
+        result = wrapper.get_sustainability("AAPL")
+
+    assert result == {"columns": ["Value"], "data": [[50.0]], "index": ["totalEsg"]}

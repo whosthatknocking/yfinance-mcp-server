@@ -27,6 +27,10 @@ class StatementResult(DataFramePayload):
     pass
 
 
+class AnalysisTableResult(DataFramePayload):
+    pass
+
+
 class SeriesPayload(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -321,6 +325,22 @@ class StatementRequest(BaseModel):
         examples=["yearly"],
     )
     pretty: bool = False
+
+
+class EarningsRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    symbol: str = Field(
+        min_length=1,
+        description="Yahoo Finance ticker symbol such as AAPL, AMZN, or MSFT.",
+        examples=["AAPL"],
+    )
+    freq: str = Field(
+        default="yearly",
+        pattern="^(yearly|quarterly)$",
+        description="Earnings frequency. Use yearly for annual results or quarterly for quarterly earnings.",
+        examples=["yearly"],
+    )
 
 
 class DownloadRequest(BaseModel):
