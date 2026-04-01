@@ -49,6 +49,7 @@ from .schemas import (
     QuoteSnapshotResult,
     SearchRequest,
     SearchResult,
+    SharesFullRequest,
     SectorResult,
     StatementRequest,
     StatementResult,
@@ -208,6 +209,18 @@ def get_batch_quote_snapshot(symbols: List[str]) -> Dict[str, object]:
 
 
 @mcp.tool()
+def get_batch_news(symbols: List[str]) -> List[Dict[str, object]]:
+    """Get recent Yahoo Finance news across multiple tickers."""
+
+    def operation() -> List[Dict[str, object]]:
+        request = SymbolsRequest(symbols=symbols)
+        result = wrapper.get_batch_news(**request.model_dump())
+        return NewsListResult(items=result).model_dump()["items"]
+
+    return _run_tool("get_batch_news", operation)
+
+
+@mcp.tool()
 def get_history(
     symbol: str,
     period: Optional[str] = None,
@@ -238,6 +251,30 @@ def get_history(
         result = wrapper.get_history(**request.model_dump())
         return HistoryResult.model_validate(result).model_dump()
     return _run_tool("get_history", operation)
+
+
+@mcp.tool()
+def get_history_metadata(symbol: str) -> Dict[str, object]:
+    """Get Yahoo Finance history metadata for a ticker."""
+
+    def operation() -> Dict[str, object]:
+        request = SymbolRequest(symbol=symbol)
+        result = wrapper.get_history_metadata(**request.model_dump())
+        return MappingResult.model_validate(result).model_dump()
+
+    return _run_tool("get_history_metadata", operation)
+
+
+@mcp.tool()
+def get_isin(symbol: str) -> Dict[str, object]:
+    """Get the ISIN for a ticker when available."""
+
+    def operation() -> Dict[str, object]:
+        request = SymbolRequest(symbol=symbol)
+        result = wrapper.get_isin(**request.model_dump())
+        return TextValueResult.model_validate(result).model_dump()
+
+    return _run_tool("get_isin", operation)
 
 
 @mcp.tool()
@@ -354,6 +391,54 @@ def get_splits(symbol: str, period: str = "max") -> Dict[str, object]:
         return ActionSeriesResult.model_validate(result).model_dump()
 
     return _run_tool("get_splits", operation)
+
+
+@mcp.tool()
+def get_capital_gains(symbol: str, period: str = "max") -> Dict[str, object]:
+    """Get capital gains history for a fund ticker over a named period."""
+
+    def operation() -> Dict[str, object]:
+        request = PeriodRequest(symbol=symbol, period=period)
+        result = wrapper.get_capital_gains(**request.model_dump())
+        return ActionSeriesResult.model_validate(result).model_dump()
+
+    return _run_tool("get_capital_gains", operation)
+
+
+@mcp.tool()
+def get_shares(symbol: str) -> Dict[str, object]:
+    """Get share-count history for a ticker when available."""
+
+    def operation() -> Dict[str, object]:
+        request = SymbolRequest(symbol=symbol)
+        result = wrapper.get_shares(**request.model_dump())
+        return AnalysisTableResult.model_validate(result).model_dump()
+
+    return _run_tool("get_shares", operation)
+
+
+@mcp.tool()
+def get_shares_full(symbol: str, start: Optional[str] = None, end: Optional[str] = None) -> Dict[str, object]:
+    """Get extended share-count history for a ticker."""
+
+    def operation() -> Dict[str, object]:
+        request = SharesFullRequest(symbol=symbol, start=start, end=end)
+        result = wrapper.get_shares_full(**request.model_dump())
+        return ActionSeriesResult.model_validate(result).model_dump()
+
+    return _run_tool("get_shares_full", operation)
+
+
+@mcp.tool()
+def get_sec_filings(symbol: str) -> List[Dict[str, object]]:
+    """Get SEC filings metadata for a ticker."""
+
+    def operation() -> List[Dict[str, object]]:
+        request = SymbolRequest(symbol=symbol)
+        result = wrapper.get_sec_filings(**request.model_dump())
+        return NewsListResult(items=result).model_dump()["items"]
+
+    return _run_tool("get_sec_filings", operation)
 
 
 @mcp.tool()

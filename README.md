@@ -58,7 +58,10 @@ The initial implementation scaffolds the package, abstract cache layer, serializ
 - `get_quote_snapshot`
 - `get_batch_info`
 - `get_batch_quote_snapshot`
+- `get_batch_news`
 - `get_history`
+- `get_history_metadata`
+- `get_isin`
 - `download_history`
 - `get_news`
 - `get_option_expirations`
@@ -66,6 +69,9 @@ The initial implementation scaffolds the package, abstract cache layer, serializ
 - `get_actions`
 - `get_dividends`
 - `get_splits`
+- `get_capital_gains`
+- `get_shares`
+- `get_shares_full`
 - `get_income_stmt`
 - `get_balance_sheet`
 - `get_cashflow`
@@ -102,6 +108,7 @@ The initial implementation scaffolds the package, abstract cache layer, serializ
 - `get_fund_quote_type`
 - `get_market`
 - `get_market_status`
+- `get_sec_filings`
 - `get_calendars`
 - `get_earnings_calendar`
 - `get_economic_events_calendar`

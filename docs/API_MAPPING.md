@@ -277,7 +277,10 @@ These tools should exist first because they cover the highest-value `yfinance` p
 - `get_quote_snapshot`
 - `get_batch_info`
 - `get_batch_quote_snapshot`
+- `get_batch_news`
 - `get_history`
+- `get_history_metadata`
+- `get_isin`
 - `download_history`
 - `get_news`
 - `get_option_expirations`
@@ -285,6 +288,9 @@ These tools should exist first because they cover the highest-value `yfinance` p
 - `get_actions`
 - `get_dividends`
 - `get_splits`
+- `get_capital_gains`
+- `get_shares`
+- `get_shares_full`
 - `get_income_stmt`
 - `get_balance_sheet`
 - `get_cashflow`
@@ -303,6 +309,9 @@ These tools should exist first because they cover the highest-value `yfinance` p
 - `get_growth_estimates`
 - `get_sustainability`
 - `get_market_summary`
+- `get_market`
+- `get_market_status`
+- `get_sec_filings`
 - `search`
 - `lookup`
 - `screen`

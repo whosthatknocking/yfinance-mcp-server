@@ -132,6 +132,23 @@ class YFinanceWrapper:
             allow_stale=False,
         )
 
+    def get_batch_news(self, symbols: List[str]) -> List[Dict[str, Any]]:
+        normalized = normalize_symbols(symbols)
+        if not normalized:
+            raise YFinanceError("invalid_input", "At least one ticker symbol is required.")
+
+        def operation() -> List[Dict[str, Any]]:
+            tickers = yf.Tickers(" ".join(normalized))
+            return serialize_value(tickers.news())
+
+        return self._cached_call(
+            key=f"batch_news:{normalized}",
+            ttl=self.quote_ttl,
+            operation=operation,
+            error_context={"symbols": normalized},
+            allow_stale=True,
+        )
+
     def get_history(
         self,
         symbol: str,
@@ -162,6 +179,26 @@ class YFinanceWrapper:
                 error_context={"symbol": normalized, "params": params},
             ),
             error_context={"symbol": normalized, "params": params},
+            allow_stale=True,
+        )
+
+    def get_history_metadata(self, symbol: str) -> Dict[str, Any]:
+        normalized = normalize_symbol(symbol)
+        return self._cached_call(
+            key=f"history_metadata:{normalized}",
+            ttl=self.reference_ttl,
+            operation=lambda: serialize_value(self._ticker(normalized).get_history_metadata()),
+            error_context={"symbol": normalized},
+            allow_stale=True,
+        )
+
+    def get_isin(self, symbol: str) -> Dict[str, Any]:
+        normalized = normalize_symbol(symbol)
+        return self._cached_call(
+            key=f"isin:{normalized}",
+            ttl=self.reference_ttl,
+            operation=lambda: {"value": serialize_value(self._ticker(normalized).get_isin())},
+            error_context={"symbol": normalized},
             allow_stale=True,
         )
 
@@ -261,6 +298,61 @@ class YFinanceWrapper:
 
     def get_splits(self, symbol: str, period: str = "max") -> Dict[str, Any]:
         return self._series_call(symbol, "splits", period=period)
+
+    def get_capital_gains(self, symbol: str, period: str = "max") -> Dict[str, Any]:
+        return self._series_call(symbol, "capital_gains", period=period)
+
+    def get_shares(self, symbol: str) -> Dict[str, Any]:
+        normalized = normalize_symbol(symbol)
+
+        def operation() -> Dict[str, Any]:
+            result = self._ticker(normalized).get_shares(as_dict=False)
+            if isinstance(result, pd.DataFrame) and result.empty:
+                raise YFinanceError(
+                    "invalid_input",
+                    "No shares data was returned for the requested symbol.",
+                    {"symbol": normalized},
+                )
+            return serialize_value(result)
+
+        return self._cached_call(
+            key=f"shares:{normalized}",
+            ttl=self.reference_ttl,
+            operation=operation,
+            error_context={"symbol": normalized},
+            allow_stale=True,
+        )
+
+    def get_shares_full(self, symbol: str, start: Optional[str] = None, end: Optional[str] = None) -> Dict[str, Any]:
+        normalized = normalize_symbol(symbol)
+
+        def operation() -> Dict[str, Any]:
+            result = self._ticker(normalized).get_shares_full(start=start, end=end)
+            if isinstance(result, pd.Series) and result.empty:
+                raise YFinanceError(
+                    "invalid_input",
+                    "No extended shares data was returned for the requested symbol.",
+                    {"symbol": normalized, "start": start, "end": end},
+                )
+            return serialize_value(result)
+
+        return self._cached_call(
+            key=f"shares_full:{normalized}:{start}:{end}",
+            ttl=self.reference_ttl,
+            operation=operation,
+            error_context={"symbol": normalized, "start": start, "end": end},
+            allow_stale=True,
+        )
+
+    def get_sec_filings(self, symbol: str) -> List[Dict[str, Any]]:
+        normalized = normalize_symbol(symbol)
+        return self._cached_call(
+            key=f"sec_filings:{normalized}",
+            ttl=self.reference_ttl,
+            operation=lambda: serialize_value(self._ticker(normalized).get_sec_filings()),
+            error_context={"symbol": normalized},
+            allow_stale=True,
+        )
 
     def get_income_stmt(self, symbol: str, freq: str = "yearly", pretty: bool = False) -> Dict[str, Any]:
         return self._statement_call(symbol, "income_stmt", freq=freq, pretty=pretty)

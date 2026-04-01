@@ -40,6 +40,15 @@ def test_get_batch_quote_snapshot_returns_named_response_model_payload():
     mocked.assert_called_once_with(symbols=["AAPL", "MSFT"])
 
 
+def test_get_batch_news_returns_list_payload():
+    payload = [{"title": "Example", "publisher": "Example News"}]
+    with patch.object(server.wrapper, "get_batch_news", return_value=payload) as mocked:
+        result = server.get_batch_news(["AAPL", "MSFT"])
+
+    assert result == payload
+    mocked.assert_called_once_with(symbols=["AAPL", "MSFT"])
+
+
 def test_get_info_returns_named_response_model_payload():
     payload = {"symbol": "TSLA", "shortName": "Tesla, Inc.", "marketCap": 1000}
     with patch.object(server.wrapper, "get_info", return_value=payload) as mocked:
@@ -70,6 +79,24 @@ def test_get_history_returns_dataframe_payload():
 
     assert result == DATAFRAME_PAYLOAD
     mocked.assert_called_once()
+
+
+def test_get_history_metadata_returns_mapping_payload():
+    payload = {"currency": "USD", "instrumentType": "EQUITY"}
+    with patch.object(server.wrapper, "get_history_metadata", return_value=payload) as mocked:
+        result = server.get_history_metadata("AAPL")
+
+    assert result == payload
+    mocked.assert_called_once_with(symbol="AAPL")
+
+
+def test_get_isin_returns_text_payload():
+    payload = {"value": "US0378331005"}
+    with patch.object(server.wrapper, "get_isin", return_value=payload) as mocked:
+        result = server.get_isin("AAPL")
+
+    assert result == payload
+    mocked.assert_called_once_with(symbol="AAPL")
 
 
 def test_download_history_returns_dataframe_payload():
@@ -119,6 +146,39 @@ def test_get_splits_returns_series_payload():
 
     assert result == SERIES_PAYLOAD
     mocked.assert_called_once_with(symbol="AAPL", period="1y")
+
+
+def test_get_capital_gains_returns_series_payload():
+    with patch.object(server.wrapper, "get_capital_gains", return_value=SERIES_PAYLOAD) as mocked:
+        result = server.get_capital_gains("VTI", period="1y")
+
+    assert result == SERIES_PAYLOAD
+    mocked.assert_called_once_with(symbol="VTI", period="1y")
+
+
+def test_get_shares_returns_dataframe_payload():
+    with patch.object(server.wrapper, "get_shares", return_value=DATAFRAME_PAYLOAD) as mocked:
+        result = server.get_shares("AAPL")
+
+    assert result == DATAFRAME_PAYLOAD
+    mocked.assert_called_once_with(symbol="AAPL")
+
+
+def test_get_shares_full_returns_series_payload():
+    with patch.object(server.wrapper, "get_shares_full", return_value=SERIES_PAYLOAD) as mocked:
+        result = server.get_shares_full("AAPL", start="2025-01-01", end="2026-01-01")
+
+    assert result == SERIES_PAYLOAD
+    mocked.assert_called_once_with(symbol="AAPL", start="2025-01-01", end="2026-01-01")
+
+
+def test_get_sec_filings_returns_list_payload():
+    payload = [{"date": "2026-02-24", "type": "8-K"}]
+    with patch.object(server.wrapper, "get_sec_filings", return_value=payload) as mocked:
+        result = server.get_sec_filings("AAPL")
+
+    assert result == payload
+    mocked.assert_called_once_with(symbol="AAPL")
 
 
 def test_get_earnings_dates_returns_dataframe_payload():

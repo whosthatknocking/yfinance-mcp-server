@@ -13,6 +13,7 @@ authors = [
   { name = "whosthatknocking" }
 ]
 dependencies = [
+  "lxml>=5.3",
   "modelcontextprotocol>=1.0.1",
   "pandas>=2.2",
   "pydantic>=2.8",

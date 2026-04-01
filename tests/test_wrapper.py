@@ -67,6 +67,22 @@ def test_get_batch_quote_snapshot_returns_payload_keyed_by_symbol():
     assert mocked.call_count == 2
 
 
+def test_get_batch_news_returns_list_payload():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+
+    class FakeTickers:
+        def __init__(self, tickers):
+            self._tickers = tickers
+
+        def news(self):
+            return [{"title": "Example", "publisher": "Example News"}]
+
+    with patch("yfinance_mcp.wrapper.yf.Tickers", FakeTickers):
+        result = wrapper.get_batch_news(["AAPL", "MSFT"])
+
+    assert result == [{"title": "Example", "publisher": "Example News"}]
+
+
 def test_get_market_summary_returns_normalized_payload():
     wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
 
@@ -130,6 +146,26 @@ def test_get_history_raises_invalid_input_for_empty_dataframe():
             assert exc.details["symbol"] == "MSFT"
         else:  # pragma: no cover - defensive
             raise AssertionError("Expected YFinanceError for empty history response")
+
+
+def test_get_history_metadata_returns_mapping_payload():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+
+    with patch("yfinance_mcp.wrapper.yf.Ticker") as mocked_ticker:
+        mocked_ticker.return_value.get_history_metadata.return_value = {"currency": "USD"}
+        result = wrapper.get_history_metadata("AAPL")
+
+    assert result == {"currency": "USD"}
+
+
+def test_get_isin_returns_text_payload():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+
+    with patch("yfinance_mcp.wrapper.yf.Ticker") as mocked_ticker:
+        mocked_ticker.return_value.get_isin.return_value = "US0378331005"
+        result = wrapper.get_isin("AAPL")
+
+    assert result == {"value": "US0378331005"}
 
 
 def test_get_earnings_dates_returns_dataframe_payload():
@@ -652,3 +688,47 @@ def test_get_industry_ticker_returns_text_payload():
         result = wrapper.get_industry_ticker("software-infrastructure")
 
     assert result == {"value": "^YH31110030"}
+
+
+def test_get_capital_gains_returns_series_payload():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+    payload = pd.Series([0.25], index=["2026-01-01"], name="Capital Gains")
+
+    with patch("yfinance_mcp.wrapper.yf.Ticker") as mocked_ticker:
+        mocked_ticker.return_value.get_capital_gains.return_value = payload
+        result = wrapper.get_capital_gains("VTI", period="1y")
+
+    assert result == {"name": "Capital Gains", "index": ["2026-01-01"], "data": [0.25]}
+
+
+def test_get_shares_returns_dataframe_payload():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+    payload = pd.DataFrame({"BasicShares": [1000]}, index=["2025"])
+
+    with patch("yfinance_mcp.wrapper.yf.Ticker") as mocked_ticker:
+        mocked_ticker.return_value.get_shares.return_value = payload
+        result = wrapper.get_shares("AAPL")
+
+    assert result == {"columns": ["BasicShares"], "data": [[1000]], "index": ["2025"]}
+
+
+def test_get_shares_full_returns_series_payload():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+    payload = pd.Series([1000], index=["2025-01-01"], name="Shares")
+
+    with patch("yfinance_mcp.wrapper.yf.Ticker") as mocked_ticker:
+        mocked_ticker.return_value.get_shares_full.return_value = payload
+        result = wrapper.get_shares_full("AAPL", start="2025-01-01", end="2026-01-01")
+
+    assert result == {"name": "Shares", "index": ["2025-01-01"], "data": [1000]}
+
+
+def test_get_sec_filings_returns_list_payload():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+    payload = [{"date": "2026-02-24", "type": "8-K"}]
+
+    with patch("yfinance_mcp.wrapper.yf.Ticker") as mocked_ticker:
+        mocked_ticker.return_value.get_sec_filings.return_value = payload
+        result = wrapper.get_sec_filings("AAPL")
+
+    assert result == payload

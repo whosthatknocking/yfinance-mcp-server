@@ -650,6 +650,18 @@ class PeriodRequest(BaseModel):
         return normalize_period(value) or "max"
 
 
+class SharesFullRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    symbol: str = Field(
+        min_length=1,
+        description="Yahoo Finance ticker symbol such as AAPL or MSFT.",
+        examples=["AAPL"],
+    )
+    start: Optional[str] = Field(default=None, description="Start date in YYYY-MM-DD format.", examples=["2025-01-01"])
+    end: Optional[str] = Field(default=None, description="End date in YYYY-MM-DD format.", examples=["2026-01-01"])
+
+
 class ErrorPayload(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
