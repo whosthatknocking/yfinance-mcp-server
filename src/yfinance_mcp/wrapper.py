@@ -223,7 +223,20 @@ class YFinanceWrapper:
 
         def operation() -> Dict[str, Any]:
             market_obj = yf.Market(normalized, timeout=self.timeout)
-            return serialize_value(market_obj.summary)
+            summary = market_obj.summary
+            status = market_obj.status
+            market_error = self._extract_market_error(summary) or self._extract_market_error(status)
+            if market_error is not None:
+                raise YFinanceError(
+                    "invalid_input",
+                    market_error.get("description", "Invalid market code."),
+                    {"market": normalized, "upstream_error": market_error},
+                )
+            return {
+                "market": normalized,
+                "status": serialize_value(status),
+                "summary": serialize_value(summary),
+            }
 
         return self._cached_call(
             key=f"market_summary:{normalized}",
@@ -361,6 +374,18 @@ class YFinanceWrapper:
         if "timeout" in message:
             return "timeout"
         return "upstream_temporary"
+
+    @staticmethod
+    def _extract_market_error(payload: Any) -> Optional[Dict[str, Any]]:
+        if not isinstance(payload, dict):
+            return None
+        finance = payload.get("finance")
+        if not isinstance(finance, dict):
+            return None
+        error = finance.get("error")
+        if not isinstance(error, dict):
+            return None
+        return error
 
     @staticmethod
     def _ticker(symbol: str) -> yf.Ticker:
