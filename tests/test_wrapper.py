@@ -275,3 +275,69 @@ def test_get_sustainability_returns_dataframe_payload():
         result = wrapper.get_sustainability("AAPL")
 
     assert result == {"columns": ["Value"], "data": [[50.0]], "index": ["totalEsg"]}
+
+
+def test_get_major_holders_returns_dataframe_payload():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+    payload = pd.DataFrame({"Value": [0.55]}, index=["Percent held by insiders"])
+
+    with patch("yfinance_mcp.wrapper.yf.Ticker") as mocked_ticker:
+        mocked_ticker.return_value.get_major_holders.return_value = payload
+        result = wrapper.get_major_holders("AAPL")
+
+    assert result == {"columns": ["Value"], "data": [[0.55]], "index": ["Percent held by insiders"]}
+
+
+def test_get_institutional_holders_returns_dataframe_payload():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+    payload = pd.DataFrame({"Shares": [1000]}, index=["Example Fund"])
+
+    with patch("yfinance_mcp.wrapper.yf.Ticker") as mocked_ticker:
+        mocked_ticker.return_value.get_institutional_holders.return_value = payload
+        result = wrapper.get_institutional_holders("AAPL")
+
+    assert result == {"columns": ["Shares"], "data": [[1000]], "index": ["Example Fund"]}
+
+
+def test_get_mutualfund_holders_returns_dataframe_payload():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+    payload = pd.DataFrame({"Shares": [500]}, index=["Example Mutual Fund"])
+
+    with patch("yfinance_mcp.wrapper.yf.Ticker") as mocked_ticker:
+        mocked_ticker.return_value.get_mutualfund_holders.return_value = payload
+        result = wrapper.get_mutualfund_holders("AAPL")
+
+    assert result == {"columns": ["Shares"], "data": [[500]], "index": ["Example Mutual Fund"]}
+
+
+def test_get_insider_purchases_returns_dataframe_payload():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+    payload = pd.DataFrame({"Shares": [250]}, index=["Purchases"])
+
+    with patch("yfinance_mcp.wrapper.yf.Ticker") as mocked_ticker:
+        mocked_ticker.return_value.get_insider_purchases.return_value = payload
+        result = wrapper.get_insider_purchases("AAPL")
+
+    assert result == {"columns": ["Shares"], "data": [[250]], "index": ["Purchases"]}
+
+
+def test_get_insider_transactions_returns_dataframe_payload():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+    payload = pd.DataFrame({"Shares": [100]}, index=["2026-01-01"])
+
+    with patch("yfinance_mcp.wrapper.yf.Ticker") as mocked_ticker:
+        mocked_ticker.return_value.get_insider_transactions.return_value = payload
+        result = wrapper.get_insider_transactions("AAPL")
+
+    assert result == {"columns": ["Shares"], "data": [[100]], "index": ["2026-01-01"]}
+
+
+def test_get_insider_roster_holders_returns_dataframe_payload():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+    payload = pd.DataFrame({"Position": ["Director"]}, index=["Example Insider"])
+
+    with patch("yfinance_mcp.wrapper.yf.Ticker") as mocked_ticker:
+        mocked_ticker.return_value.get_insider_roster_holders.return_value = payload
+        result = wrapper.get_insider_roster_holders("AAPL")
+
+    assert result == {"columns": ["Position"], "data": [["Director"]], "index": ["Example Insider"]}

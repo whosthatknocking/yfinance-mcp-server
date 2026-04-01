@@ -537,6 +537,54 @@ class YFinanceWrapper:
             empty_message="No sustainability data was returned for the requested symbol.",
         )
 
+    def get_major_holders(self, symbol: str) -> Dict[str, Any]:
+        return self._table_getter_call(
+            symbol,
+            cache_key_prefix="major_holders",
+            getter_name="get_major_holders",
+            empty_message="No major holders data was returned for the requested symbol.",
+        )
+
+    def get_institutional_holders(self, symbol: str) -> Dict[str, Any]:
+        return self._table_getter_call(
+            symbol,
+            cache_key_prefix="institutional_holders",
+            getter_name="get_institutional_holders",
+            empty_message="No institutional holders data was returned for the requested symbol.",
+        )
+
+    def get_mutualfund_holders(self, symbol: str) -> Dict[str, Any]:
+        return self._table_getter_call(
+            symbol,
+            cache_key_prefix="mutualfund_holders",
+            getter_name="get_mutualfund_holders",
+            empty_message="No mutual fund holders data was returned for the requested symbol.",
+        )
+
+    def get_insider_purchases(self, symbol: str) -> Dict[str, Any]:
+        return self._table_getter_call(
+            symbol,
+            cache_key_prefix="insider_purchases",
+            getter_name="get_insider_purchases",
+            empty_message="No insider purchases data was returned for the requested symbol.",
+        )
+
+    def get_insider_transactions(self, symbol: str) -> Dict[str, Any]:
+        return self._table_getter_call(
+            symbol,
+            cache_key_prefix="insider_transactions",
+            getter_name="get_insider_transactions",
+            empty_message="No insider transactions data was returned for the requested symbol.",
+        )
+
+    def get_insider_roster_holders(self, symbol: str) -> Dict[str, Any]:
+        return self._table_getter_call(
+            symbol,
+            cache_key_prefix="insider_roster_holders",
+            getter_name="get_insider_roster_holders",
+            empty_message="No insider roster holders data was returned for the requested symbol.",
+        )
+
     def _statement_call(self, symbol: str, statement_name: str, freq: str, pretty: bool) -> Dict[str, Any]:
         normalized = normalize_symbol(symbol)
         allowed = {"yearly", "quarterly", "trailing"}

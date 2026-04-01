@@ -83,6 +83,12 @@ The initial implementation scaffolds the package, abstract cache layer, serializ
 - `get_eps_revisions`
 - `get_growth_estimates`
 - `get_sustainability`
+- `get_major_holders`
+- `get_institutional_holders`
+- `get_mutualfund_holders`
+- `get_insider_purchases`
+- `get_insider_transactions`
+- `get_insider_roster_holders`
 - `get_market_summary`
 - `search`
 - `lookup`

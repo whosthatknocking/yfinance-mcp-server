@@ -235,6 +235,54 @@ def test_get_sustainability_returns_dataframe_payload():
     mocked.assert_called_once_with(symbol="AAPL")
 
 
+def test_get_major_holders_returns_dataframe_payload():
+    with patch.object(server.wrapper, "get_major_holders", return_value=DATAFRAME_PAYLOAD) as mocked:
+        result = server.get_major_holders("AAPL")
+
+    assert result == DATAFRAME_PAYLOAD
+    mocked.assert_called_once_with(symbol="AAPL")
+
+
+def test_get_institutional_holders_returns_dataframe_payload():
+    with patch.object(server.wrapper, "get_institutional_holders", return_value=DATAFRAME_PAYLOAD) as mocked:
+        result = server.get_institutional_holders("AAPL")
+
+    assert result == DATAFRAME_PAYLOAD
+    mocked.assert_called_once_with(symbol="AAPL")
+
+
+def test_get_mutualfund_holders_returns_dataframe_payload():
+    with patch.object(server.wrapper, "get_mutualfund_holders", return_value=DATAFRAME_PAYLOAD) as mocked:
+        result = server.get_mutualfund_holders("AAPL")
+
+    assert result == DATAFRAME_PAYLOAD
+    mocked.assert_called_once_with(symbol="AAPL")
+
+
+def test_get_insider_purchases_returns_dataframe_payload():
+    with patch.object(server.wrapper, "get_insider_purchases", return_value=DATAFRAME_PAYLOAD) as mocked:
+        result = server.get_insider_purchases("AAPL")
+
+    assert result == DATAFRAME_PAYLOAD
+    mocked.assert_called_once_with(symbol="AAPL")
+
+
+def test_get_insider_transactions_returns_dataframe_payload():
+    with patch.object(server.wrapper, "get_insider_transactions", return_value=DATAFRAME_PAYLOAD) as mocked:
+        result = server.get_insider_transactions("AAPL")
+
+    assert result == DATAFRAME_PAYLOAD
+    mocked.assert_called_once_with(symbol="AAPL")
+
+
+def test_get_insider_roster_holders_returns_dataframe_payload():
+    with patch.object(server.wrapper, "get_insider_roster_holders", return_value=DATAFRAME_PAYLOAD) as mocked:
+        result = server.get_insider_roster_holders("AAPL")
+
+    assert result == DATAFRAME_PAYLOAD
+    mocked.assert_called_once_with(symbol="AAPL")
+
+
 def test_get_income_stmt_returns_statement_payload():
     with patch.object(server.wrapper, "get_income_stmt", return_value=DATAFRAME_PAYLOAD) as mocked:
         result = server.get_income_stmt("AMZN", freq="yearly")

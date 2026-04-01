@@ -543,6 +543,78 @@ def get_sustainability(symbol: str) -> Dict[str, object]:
 
 
 @mcp.tool()
+def get_major_holders(symbol: str) -> Dict[str, object]:
+    """Get major holders data for a ticker."""
+
+    def operation() -> Dict[str, object]:
+        request = SymbolRequest(symbol=symbol)
+        result = wrapper.get_major_holders(**request.model_dump())
+        return AnalysisTableResult.model_validate(result).model_dump()
+
+    return _run_tool("get_major_holders", operation)
+
+
+@mcp.tool()
+def get_institutional_holders(symbol: str) -> Dict[str, object]:
+    """Get institutional holders data for a ticker."""
+
+    def operation() -> Dict[str, object]:
+        request = SymbolRequest(symbol=symbol)
+        result = wrapper.get_institutional_holders(**request.model_dump())
+        return AnalysisTableResult.model_validate(result).model_dump()
+
+    return _run_tool("get_institutional_holders", operation)
+
+
+@mcp.tool()
+def get_mutualfund_holders(symbol: str) -> Dict[str, object]:
+    """Get mutual fund holders data for a ticker."""
+
+    def operation() -> Dict[str, object]:
+        request = SymbolRequest(symbol=symbol)
+        result = wrapper.get_mutualfund_holders(**request.model_dump())
+        return AnalysisTableResult.model_validate(result).model_dump()
+
+    return _run_tool("get_mutualfund_holders", operation)
+
+
+@mcp.tool()
+def get_insider_purchases(symbol: str) -> Dict[str, object]:
+    """Get insider purchases data for a ticker."""
+
+    def operation() -> Dict[str, object]:
+        request = SymbolRequest(symbol=symbol)
+        result = wrapper.get_insider_purchases(**request.model_dump())
+        return AnalysisTableResult.model_validate(result).model_dump()
+
+    return _run_tool("get_insider_purchases", operation)
+
+
+@mcp.tool()
+def get_insider_transactions(symbol: str) -> Dict[str, object]:
+    """Get insider transactions data for a ticker."""
+
+    def operation() -> Dict[str, object]:
+        request = SymbolRequest(symbol=symbol)
+        result = wrapper.get_insider_transactions(**request.model_dump())
+        return AnalysisTableResult.model_validate(result).model_dump()
+
+    return _run_tool("get_insider_transactions", operation)
+
+
+@mcp.tool()
+def get_insider_roster_holders(symbol: str) -> Dict[str, object]:
+    """Get insider roster holders data for a ticker."""
+
+    def operation() -> Dict[str, object]:
+        request = SymbolRequest(symbol=symbol)
+        result = wrapper.get_insider_roster_holders(**request.model_dump())
+        return AnalysisTableResult.model_validate(result).model_dump()
+
+    return _run_tool("get_insider_roster_holders", operation)
+
+
+@mcp.tool()
 def get_income_stmt(symbol: str, freq: str = "yearly", pretty: bool = False) -> Dict[str, object]:
     """Get income statement data for a ticker.
 
