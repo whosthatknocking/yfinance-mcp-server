@@ -25,6 +25,53 @@ def test_compute_backoff_is_bounded():
     mocked.assert_called_once()
 
 
+def test_compute_retry_delay_honors_retry_after_header():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+
+    class FakeResponse:
+        headers = {"Retry-After": "12"}
+
+    class FakeException(RuntimeError):
+        def __init__(self):
+            super().__init__("429 too many requests")
+            self.response = FakeResponse()
+
+    with patch.object(wrapper, "_compute_backoff", return_value=0.5):
+        delay = wrapper._compute_retry_delay(attempt=1, exc=FakeException())
+
+    assert delay == 12.0
+
+
+def test_wait_for_throttle_cooldown_sleeps_for_remaining_budget():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+
+    with patch("yfinance_mcp.wrapper.time.time", side_effect=[100.0, 100.0]), patch(
+        "yfinance_mcp.wrapper.time.sleep"
+    ) as mocked_sleep:
+        wrapper._throttle_cooldown_until = 103.0
+        wrapper._wait_for_throttle_cooldown(start=99.0, error_context={"symbol": "AAPL"})
+
+    mocked_sleep.assert_called_once_with(3.0)
+
+
+def test_repeated_throttle_failures_start_cooldown_and_serve_stale_cache():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+    wrapper.retry_policy.max_retries = 2
+    wrapper.retry_policy.throttle_cooldown_threshold = 2
+    wrapper.retry_policy.throttle_cooldown_seconds = 5.0
+
+    with patch("yfinance_mcp.wrapper.time.sleep") as mocked_sleep:
+        result = wrapper._run_with_retry(
+            operation=lambda: (_ for _ in ()).throw(RuntimeError("429 too many requests")),
+            error_context={"symbol": "AAPL"},
+            stale_value={"cached": True},
+        )
+
+    assert result == {"cached": True}
+    assert wrapper._throttle_cooldown_until > 0
+    assert mocked_sleep.call_count >= 2
+
+
 def test_retry_returns_stale_cache_for_transient_failures():
     wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
 

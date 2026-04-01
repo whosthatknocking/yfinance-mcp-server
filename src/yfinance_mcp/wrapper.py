@@ -6,6 +6,7 @@ import time
 import random
 from dataclasses import dataclass
 from datetime import date, datetime
+from email.utils import parsedate_to_datetime
 from typing import Any, Callable, Dict, List, Optional
 
 import structlog
@@ -34,6 +35,9 @@ class RetryPolicy:
     read_timeout: int
     total_timeout: int
     backoff_cap_seconds: float
+    retry_after_cap_seconds: float
+    throttle_cooldown_threshold: int
+    throttle_cooldown_seconds: float
 
 
 class ConcurrencyLimiter:
@@ -61,9 +65,15 @@ class YFinanceWrapper:
             read_timeout=int(os.getenv("YF_READ_TIMEOUT", "20")),
             total_timeout=int(os.getenv("YF_TOTAL_TIMEOUT", "30")),
             backoff_cap_seconds=float(os.getenv("YF_BACKOFF_CAP_SECONDS", "4")),
+            retry_after_cap_seconds=float(os.getenv("YF_RETRY_AFTER_CAP_SECONDS", "30")),
+            throttle_cooldown_threshold=int(os.getenv("YF_THROTTLE_COOLDOWN_THRESHOLD", "3")),
+            throttle_cooldown_seconds=float(os.getenv("YF_THROTTLE_COOLDOWN_SECONDS", "10")),
         )
         self.timeout = min(self.retry_policy.read_timeout, self.retry_policy.total_timeout)
         self.limiter = ConcurrencyLimiter(int(os.getenv("YF_UPSTREAM_CONCURRENCY", "4")))
+        self._throttle_state_lock = threading.Lock()
+        self._throttle_cooldown_until = 0.0
+        self._consecutive_throttle_failures = 0
 
     def get_metadata(self) -> Dict[str, Any]:
         return {
@@ -1294,19 +1304,26 @@ class YFinanceWrapper:
         attempt = 0
         while True:
             try:
+                self._wait_for_throttle_cooldown(start=start, error_context=error_context)
                 with self.limiter:
-                    return operation()
+                    result = operation()
+                self._clear_throttle_state()
+                return result
             except YFinanceError:
                 raise
             except Exception as exc:
                 attempt += 1
                 category = self._classify_exception(exc)
                 elapsed = time.time() - start
+                retry_after_seconds = self._extract_retry_after_seconds(exc)
+                throttled = self._is_throttle_exception(exc)
                 logger.warning(
                     "upstream_error",
                     attempt=attempt,
                     category=category,
                     error=str(exc),
+                    retry_after_seconds=retry_after_seconds,
+                    throttled=throttled,
                     elapsed_seconds=round(elapsed, 3),
                     total_timeout_seconds=self.retry_policy.total_timeout,
                     **error_context,
@@ -1319,8 +1336,12 @@ class YFinanceWrapper:
                         total_timeout_seconds=self.retry_policy.total_timeout,
                         **error_context,
                     )
-                if category in {"invalid_input", "upstream_permanent"}:
+                if category in {"invalid_input", "upstream_permanent", "internal_error"}:
                     raise YFinanceError(category, str(exc), error_context)
+                if throttled:
+                    self._record_throttle_failure(error_context)
+                else:
+                    self._clear_throttle_state()
                 if attempt > self.retry_policy.max_retries or elapsed >= self.retry_policy.total_timeout:
                     if elapsed >= self.retry_policy.total_timeout:
                         logger.warning(
@@ -1335,11 +1356,18 @@ class YFinanceWrapper:
                         logger.warning("serving_stale_cache", category=category, **error_context)
                         return stale_value
                     raise YFinanceError(category, str(exc), error_context) from exc
-                time.sleep(self._compute_backoff(attempt))
+                time.sleep(self._compute_retry_delay(attempt=attempt, exc=exc))
 
     def _compute_backoff(self, attempt: int) -> float:
         base_delay = min(2 ** (attempt - 1), self.retry_policy.backoff_cap_seconds)
         return random.uniform(0, base_delay)
+
+    def _compute_retry_delay(self, attempt: int, exc: Exception) -> float:
+        backoff = self._compute_backoff(attempt)
+        retry_after = self._extract_retry_after_seconds(exc)
+        if retry_after is None:
+            return backoff
+        return max(backoff, min(retry_after, self.retry_policy.retry_after_cap_seconds))
 
     def _classify_exception(self, exc: Exception) -> str:
         message = str(exc).lower()
@@ -1354,6 +1382,80 @@ class YFinanceWrapper:
         if "timeout" in message:
             return "timeout"
         return "upstream_temporary"
+
+    def _extract_retry_after_seconds(self, exc: Exception, now: Optional[float] = None) -> Optional[float]:
+        response = getattr(exc, "response", None)
+        headers = getattr(response, "headers", None)
+        if headers is None:
+            return None
+        retry_after_value = None
+        if hasattr(headers, "get"):
+            retry_after_value = headers.get("Retry-After") or headers.get("retry-after")
+        elif isinstance(headers, dict):
+            retry_after_value = headers.get("Retry-After") or headers.get("retry-after")
+        if retry_after_value is None:
+            return None
+        retry_after_text = str(retry_after_value).strip()
+        if not retry_after_text:
+            return None
+        if retry_after_text.isdigit():
+            return float(retry_after_text)
+        try:
+            parsed = parsedate_to_datetime(retry_after_text)
+        except (TypeError, ValueError, IndexError, OverflowError):
+            return None
+        current = now if now is not None else time.time()
+        return max(0.0, parsed.timestamp() - current)
+
+    def _is_throttle_exception(self, exc: Exception) -> bool:
+        message = str(exc).lower()
+        if "429" in message or "rate limit" in message or "too many requests" in message:
+            return True
+        retry_after_seconds = self._extract_retry_after_seconds(exc)
+        return retry_after_seconds is not None
+
+    def _record_throttle_failure(self, error_context: Dict[str, Any]) -> None:
+        with self._throttle_state_lock:
+            self._consecutive_throttle_failures += 1
+            if self._consecutive_throttle_failures < self.retry_policy.throttle_cooldown_threshold:
+                return
+            cooldown_until = time.time() + self.retry_policy.throttle_cooldown_seconds
+            if cooldown_until <= self._throttle_cooldown_until:
+                return
+            self._throttle_cooldown_until = cooldown_until
+        logger.warning(
+            "throttle_cooldown_started",
+            cooldown_seconds=self.retry_policy.throttle_cooldown_seconds,
+            threshold=self.retry_policy.throttle_cooldown_threshold,
+            **error_context,
+        )
+
+    def _clear_throttle_state(self) -> None:
+        with self._throttle_state_lock:
+            self._consecutive_throttle_failures = 0
+            self._throttle_cooldown_until = 0.0
+
+    def _get_throttle_cooldown_remaining(self, now: Optional[float] = None) -> float:
+        current = now if now is not None else time.time()
+        with self._throttle_state_lock:
+            return max(0.0, self._throttle_cooldown_until - current)
+
+    def _wait_for_throttle_cooldown(self, start: float, error_context: Dict[str, Any]) -> None:
+        remaining = self._get_throttle_cooldown_remaining()
+        if remaining <= 0:
+            return
+        elapsed = time.time() - start
+        budget_remaining = max(0.0, self.retry_policy.total_timeout - elapsed)
+        if budget_remaining <= 0:
+            return
+        sleep_seconds = min(remaining, budget_remaining)
+        logger.warning(
+            "throttle_cooldown_wait",
+            cooldown_seconds=round(sleep_seconds, 3),
+            total_timeout_seconds=self.retry_policy.total_timeout,
+            **error_context,
+        )
+        time.sleep(sleep_seconds)
 
     def _serialize_history_result(self, result: Any, error_context: Dict[str, Any]) -> Dict[str, Any]:
         if isinstance(result, pd.DataFrame) and result.empty:

@@ -36,7 +36,7 @@ Common settings:
 - YF_HTTP_HOST and YF_HTTP_PORT for remote mode
 - YF_CACHE_BACKEND, YF_CACHE_TTL, and related cache settings
 - YF_UPSTREAM_CONCURRENCY for upstream request concurrency limits
-- YF_READ_TIMEOUT, YF_TOTAL_TIMEOUT, and YF_MAX_RETRIES for upstream call handling
+- YF_READ_TIMEOUT, YF_TOTAL_TIMEOUT, YF_MAX_RETRIES, YF_BACKOFF_CAP_SECONDS, YF_RETRY_AFTER_CAP_SECONDS, YF_THROTTLE_COOLDOWN_THRESHOLD, and YF_THROTTLE_COOLDOWN_SECONDS for upstream retry and throttling behavior
 - YF_LOG_LEVEL to control stderr log verbosity
 
 ## Run Locally with stdio

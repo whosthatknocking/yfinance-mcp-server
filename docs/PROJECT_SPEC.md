@@ -278,6 +278,11 @@ The final `API_MAPPING.md` should be exhaustive and maintained against the offic
   - `YF_CACHE_TTL_HISTORY`
   - `YF_CACHE_PATH`
   - `YF_UPSTREAM_CONCURRENCY`
+  - `YF_MAX_RETRIES`
+  - `YF_BACKOFF_CAP_SECONDS`
+  - `YF_RETRY_AFTER_CAP_SECONDS`
+  - `YF_THROTTLE_COOLDOWN_THRESHOLD`
+  - `YF_THROTTLE_COOLDOWN_SECONDS`
   - `YF_TRANSPORT`
   - `YF_LOG_LEVEL`
 - Recommended cache policy:
@@ -287,6 +292,8 @@ The final `API_MAPPING.md` should be exhaustive and maintained against the offic
 - Recommended operational behavior:
   - normalize cache keys so equivalent requests hit the same cache entry
   - use bounded retries with exponential backoff for transient upstream failures
+  - honor upstream `Retry-After` hints when available, subject to a bounded cap
+  - apply a short process-wide cool-down after repeated throttling responses
   - surface upstream failures with MCP-friendly error messages that preserve context without leaking internals
   - keep cache backend selection and backend-specific settings separate from tool definitions
   - classify errors into categories such as invalid input, upstream temporary failure, upstream permanent failure, timeout, and internal server error
