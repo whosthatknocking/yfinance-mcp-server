@@ -61,6 +61,9 @@ The initial implementation scaffolds the package, abstract cache layer, serializ
 - `get_news`
 - `get_option_expirations`
 - `get_option_chain`
+- `get_actions`
+- `get_dividends`
+- `get_splits`
 - `get_income_stmt`
 - `get_balance_sheet`
 - `get_cashflow`

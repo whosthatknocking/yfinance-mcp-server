@@ -9,6 +9,12 @@ DATAFRAME_PAYLOAD = {
     "index": ["2024-01-01", "2024-01-02"],
 }
 
+SERIES_PAYLOAD = {
+    "name": "Dividends",
+    "index": ["2024-01-01", "2024-02-01"],
+    "data": [0.24, 0.24],
+}
+
 
 def test_get_quote_snapshot_returns_wrapper_payload():
     with patch.object(server.wrapper, "get_fast_info", return_value={"lastPrice": 123.45, "currency": "USD"}) as mocked:
@@ -59,6 +65,30 @@ def test_get_option_expirations_returns_string_list():
 
     assert result == ["2025-06-20", "2025-07-18"]
     mocked.assert_called_once_with("SPY")
+
+
+def test_get_actions_returns_series_payload():
+    with patch.object(server.wrapper, "get_actions", return_value=SERIES_PAYLOAD) as mocked:
+        result = server.get_actions("AAPL", period="1y")
+
+    assert result == SERIES_PAYLOAD
+    mocked.assert_called_once_with(symbol="AAPL", period="1y")
+
+
+def test_get_dividends_returns_series_payload():
+    with patch.object(server.wrapper, "get_dividends", return_value=SERIES_PAYLOAD) as mocked:
+        result = server.get_dividends("AAPL", period="1y")
+
+    assert result == SERIES_PAYLOAD
+    mocked.assert_called_once_with(symbol="AAPL", period="1y")
+
+
+def test_get_splits_returns_series_payload():
+    with patch.object(server.wrapper, "get_splits", return_value=SERIES_PAYLOAD) as mocked:
+        result = server.get_splits("AAPL", period="1y")
+
+    assert result == SERIES_PAYLOAD
+    mocked.assert_called_once_with(symbol="AAPL", period="1y")
 
 
 def test_get_income_stmt_returns_statement_payload():

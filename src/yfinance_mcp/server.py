@@ -19,6 +19,7 @@ from .logging_utils import configure_logging
 from .schemas import (
     DownloadHistoryResult,
     DownloadRequest,
+    ActionSeriesResult,
     HistoryRequest,
     HistoryResult,
     InfoResult,
@@ -30,6 +31,7 @@ from .schemas import (
     NewsRequest,
     OptionChainResult,
     OptionChainRequest,
+    PeriodRequest,
     QuoteSnapshotResult,
     SearchRequest,
     SearchResult,
@@ -259,6 +261,46 @@ def get_option_chain(symbol: str, date: Optional[str] = None) -> Dict[str, objec
         result = wrapper.get_option_chain(**request.model_dump())
         return OptionChainResult.model_validate(result).model_dump()
     return _run_tool("get_option_chain", operation)
+
+
+@mcp.tool()
+def get_actions(symbol: str, period: str = "max") -> Dict[str, object]:
+    """Get combined corporate actions for a ticker.
+
+    Use this tool to retrieve the combined actions series, including dividends
+    and splits where available, over a named period.
+    """
+
+    def operation() -> Dict[str, object]:
+        request = PeriodRequest(symbol=symbol, period=period)
+        result = wrapper.get_actions(**request.model_dump())
+        return ActionSeriesResult.model_validate(result).model_dump()
+
+    return _run_tool("get_actions", operation)
+
+
+@mcp.tool()
+def get_dividends(symbol: str, period: str = "max") -> Dict[str, object]:
+    """Get dividend history for a ticker over a named period."""
+
+    def operation() -> Dict[str, object]:
+        request = PeriodRequest(symbol=symbol, period=period)
+        result = wrapper.get_dividends(**request.model_dump())
+        return ActionSeriesResult.model_validate(result).model_dump()
+
+    return _run_tool("get_dividends", operation)
+
+
+@mcp.tool()
+def get_splits(symbol: str, period: str = "max") -> Dict[str, object]:
+    """Get stock split history for a ticker over a named period."""
+
+    def operation() -> Dict[str, object]:
+        request = PeriodRequest(symbol=symbol, period=period)
+        result = wrapper.get_splits(**request.model_dump())
+        return ActionSeriesResult.model_validate(result).model_dump()
+
+    return _run_tool("get_splits", operation)
 
 
 @mcp.tool()

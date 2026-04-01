@@ -214,6 +214,15 @@ class YFinanceWrapper:
             allow_stale=False,
         )
 
+    def get_actions(self, symbol: str, period: str = "max") -> Dict[str, Any]:
+        return self._series_call(symbol, "actions", period=period)
+
+    def get_dividends(self, symbol: str, period: str = "max") -> Dict[str, Any]:
+        return self._series_call(symbol, "dividends", period=period)
+
+    def get_splits(self, symbol: str, period: str = "max") -> Dict[str, Any]:
+        return self._series_call(symbol, "splits", period=period)
+
     def get_income_stmt(self, symbol: str, freq: str = "yearly", pretty: bool = False) -> Dict[str, Any]:
         return self._statement_call(symbol, "income_stmt", freq=freq, pretty=pretty)
 
@@ -365,6 +374,31 @@ class YFinanceWrapper:
             ttl=self.reference_ttl,
             operation=lambda: serialize_value(operation()),
             error_context={"symbol": normalized, "statement_name": statement_name, "freq": freq},
+            allow_stale=True,
+        )
+
+    def _series_call(self, symbol: str, series_name: str, period: str) -> Dict[str, Any]:
+        normalized = normalize_symbol(symbol)
+        key = f"{series_name}:{normalized}:{period}"
+
+        def operation() -> Any:
+            ticker = self._ticker(normalized)
+            getter_name = f"get_{series_name}"
+            getter = getattr(ticker, getter_name)
+            result = getter(period=period)
+            if isinstance(result, pd.Series) and result.empty:
+                raise YFinanceError(
+                    "invalid_input",
+                    f"No {series_name} data was returned for the requested symbol and period.",
+                    {"symbol": normalized, "period": period, "series": series_name},
+                )
+            return result
+
+        return self._cached_call(
+            key=key,
+            ttl=self.reference_ttl,
+            operation=lambda: serialize_value(operation()),
+            error_context={"symbol": normalized, "series": series_name, "period": period},
             allow_stale=True,
         )
 

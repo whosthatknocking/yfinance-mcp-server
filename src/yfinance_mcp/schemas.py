@@ -27,6 +27,18 @@ class StatementResult(DataFramePayload):
     pass
 
 
+class SeriesPayload(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    name: Optional[str]
+    index: List[Any]
+    data: List[Any]
+
+
+class ActionSeriesResult(SeriesPayload):
+    pass
+
+
 class SearchResult(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -381,6 +393,26 @@ class LookupRequest(BaseModel):
         description="Maximum number of rows to return per lookup category.",
         examples=[25],
     )
+
+
+class PeriodRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    symbol: str = Field(
+        min_length=1,
+        description="Yahoo Finance ticker symbol such as AAPL, MSFT, TSLA, or SPY.",
+        examples=["AAPL"],
+    )
+    period: str = Field(
+        default="max",
+        description="Named lookback period such as 5d, 1mo, 6mo, 1y, ytd, or max.",
+        examples=["max"],
+    )
+
+    @field_validator("period")
+    @classmethod
+    def validate_period(cls, value: str) -> str:
+        return normalize_period(value) or "max"
 
 
 class ErrorPayload(BaseModel):
