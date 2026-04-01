@@ -25,8 +25,6 @@ def serialize_value(value: Any) -> Any:
         return value.isoformat()
     if isinstance(value, date):
         return value.isoformat()
-    if pd.isna(value):
-        return None
     if isinstance(value, dict):
         return {str(key): serialize_value(val) for key, val in value.items()}
     if isinstance(value, (list, tuple)):
@@ -36,6 +34,11 @@ def serialize_value(value: Any) -> Any:
             return serialize_value(value.tolist())
         except Exception:
             pass
+    try:
+        if pd.isna(value):
+            return None
+    except (TypeError, ValueError):
+        pass
     return value
 
 

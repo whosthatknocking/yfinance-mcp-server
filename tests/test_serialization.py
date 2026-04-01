@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 from yfinance_mcp.utils import dataframe_to_payload, normalize_symbols, serialize_value
 
@@ -19,3 +20,11 @@ def test_serialize_value_converts_nan_to_none():
 
 def test_normalize_symbols_filters_empty_values():
     assert normalize_symbols([" aapl ", "", " msft "]) == ["AAPL", "MSFT"]
+
+
+def test_serialize_value_handles_array_like_values():
+    payload = {"items": np.array([1, 2]), "missing": np.array([np.nan, 3.0])}
+
+    result = serialize_value(payload)
+
+    assert result == {"items": [1, 2], "missing": [None, 3.0]}
