@@ -136,14 +136,20 @@ def test_get_batch_quote_snapshot_returns_payload_keyed_by_symbol():
 def test_get_fast_info_uses_explicit_ticker_without_lookup():
     wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
 
-    with patch("yfinance_mcp.wrapper.yf.Ticker") as mocked_ticker, patch.object(wrapper, "lookup") as mocked_lookup:
+    with patch("yfinance_mcp.wrapper.logger") as mocked_logger, patch(
+        "yfinance_mcp.wrapper.yf.Ticker"
+    ) as mocked_ticker, patch.object(wrapper, "lookup") as mocked_lookup:
         mocked_ticker.return_value.fast_info = {"lastPrice": 123.45, "currency": "USD"}
+        mocked_ticker.return_value.info = {}
 
         result = wrapper.get_fast_info("GOOG")
 
     assert result == {"lastPrice": 123.45, "currency": "USD"}
     mocked_ticker.assert_called_once_with("GOOG")
     mocked_lookup.assert_not_called()
+    logged_events = [call.args[0] for call in mocked_logger.info.call_args_list]
+    assert "quote_request_resolved" in logged_events
+    assert "quote_snapshot_ready" in logged_events
 
 
 def test_get_fast_info_resolves_unique_company_name_via_lookup():
@@ -233,6 +239,22 @@ def test_get_fast_info_uses_first_lookup_stock_match_for_company_name():
     assert result["lastPrice"] == 297.37
     mocked_lookup.assert_called_once_with("Google", count=10)
     mocked_ticker.assert_called_once_with("GOOG")
+
+
+def test_get_fast_info_logs_fallback_when_lookup_has_no_match():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+
+    with patch("yfinance_mcp.wrapper.logger") as mocked_logger, patch.object(
+        wrapper, "lookup", return_value={"stock": None, "all": None}
+    ), patch("yfinance_mcp.wrapper.yf.Ticker") as mocked_ticker:
+        mocked_ticker.return_value.fast_info = {"lastPrice": 123.45, "currency": "USD"}
+        mocked_ticker.return_value.info = {}
+
+        result = wrapper.get_fast_info("Google")
+
+    assert result == {"lastPrice": 123.45, "currency": "USD"}
+    logged_events = [call.args[0] for call in mocked_logger.info.call_args_list]
+    assert "quote_symbol_resolution_fallback" in logged_events
 
 
 def test_get_batch_news_returns_list_payload():

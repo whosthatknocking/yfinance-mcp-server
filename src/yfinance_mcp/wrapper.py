@@ -100,6 +100,11 @@ class YFinanceWrapper:
     def get_fast_info(self, symbol: str) -> Dict[str, Any]:
         normalized = self._resolve_quote_symbol(symbol)
         requested_symbol = symbol.strip()
+        logger.info(
+            "quote_request_resolved",
+            requested_symbol=requested_symbol,
+            resolved_symbol=normalized,
+        )
 
         def operation() -> Dict[str, Any]:
             ticker = self._ticker(normalized)
@@ -113,6 +118,14 @@ class YFinanceWrapper:
                     fast_info["lastPrice"] = serialize_value(market_price)
                 if fast_info.get("previousClose") is None and info.get("previousClose") is not None:
                     fast_info["previousClose"] = serialize_value(info.get("previousClose"))
+            logger.info(
+                "quote_snapshot_ready",
+                requested_symbol=requested_symbol,
+                resolved_symbol=normalized,
+                last_price=fast_info.get("lastPrice"),
+                previous_close=fast_info.get("previousClose"),
+                currency=fast_info.get("currency"),
+            )
             return fast_info
 
         return self._cached_call(
@@ -1283,7 +1296,18 @@ class YFinanceWrapper:
 
         matches = self._lookup_stock_candidates(requested, count=10)
         if not matches:
+            logger.info(
+                "quote_symbol_resolution_fallback",
+                requested_symbol=requested,
+                fallback_symbol=normalized,
+            )
             return normalized
+        logger.info(
+            "quote_symbol_lookup_match",
+            requested_symbol=requested,
+            resolved_symbol=matches[0]["symbol"],
+            candidate_count=len(matches),
+        )
         return matches[0]["symbol"]
 
     @staticmethod
