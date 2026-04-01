@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import time
 from typing import Dict, List, Optional
 
 import structlog
@@ -47,6 +48,22 @@ def _handle_error(exc: Exception) -> None:
     raise
 
 
+def _run_tool(tool_name: str, operation):
+    started_at = time.perf_counter()
+    try:
+        result = operation()
+    except Exception as exc:
+        elapsed_ms = round((time.perf_counter() - started_at) * 1000, 2)
+        if isinstance(exc, YFinanceError) and exc.category == "timeout":
+            logger.warning("tool_timeout", tool_name=tool_name, elapsed_ms=elapsed_ms, details=exc.details)
+        else:
+            logger.warning("tool_failed", tool_name=tool_name, elapsed_ms=elapsed_ms, error_type=type(exc).__name__)
+        _handle_error(exc)
+    elapsed_ms = round((time.perf_counter() - started_at) * 1000, 2)
+    logger.info("tool_completed", tool_name=tool_name, elapsed_ms=elapsed_ms)
+    return result
+
+
 @mcp.tool()
 def get_server_metadata() -> Dict[str, object]:
     """Return server metadata.
@@ -55,11 +72,10 @@ def get_server_metadata() -> Dict[str, object]:
     transport modes, and active cache backend. It is useful for environment
     checks and compatibility debugging.
     """
-    try:
+    def operation() -> Dict[str, object]:
         metadata = ToolMetadata(**wrapper.get_metadata())
         return metadata.model_dump()
-    except Exception as exc:  # pragma: no cover - exercised through MCP runtime
-        _handle_error(exc)
+    return _run_tool("get_server_metadata", operation)
 
 
 @mcp.tool()
@@ -70,11 +86,10 @@ def get_info(symbol: str) -> Dict[str, object]:
     exchange metadata, business summary information, and other broad ticker
     details. For a lighter quote snapshot, use `get_quote_snapshot` instead.
     """
-    try:
+    def operation() -> Dict[str, object]:
         result = wrapper.get_info(symbol)
         return InfoResult.model_validate(result).model_dump()
-    except Exception as exc:
-        _handle_error(exc)
+    return _run_tool("get_info", operation)
 
 
 @mcp.tool()
@@ -87,11 +102,10 @@ def get_quote_snapshot(symbol: str) -> Dict[str, object]:
     cap, and recent trading context. For richer company profile information, use
     `get_info`.
     """
-    try:
+    def operation() -> Dict[str, object]:
         result = wrapper.get_fast_info(symbol)
         return QuoteSnapshotResult.model_validate(result).model_dump()
-    except Exception as exc:
-        _handle_error(exc)
+    return _run_tool("get_quote_snapshot", operation)
 
 
 @mcp.tool()
@@ -111,7 +125,7 @@ def get_history(
     It supports either a named lookback period or an explicit start/end date
     range. For multi-ticker historical retrieval, use `download_history`.
     """
-    try:
+    def operation() -> Dict[str, object]:
         request = HistoryRequest(
             symbol=symbol,
             period=period,
@@ -124,8 +138,7 @@ def get_history(
         )
         result = wrapper.get_history(**request.model_dump())
         return HistoryResult.model_validate(result).model_dump()
-    except Exception as exc:
-        _handle_error(exc)
+    return _run_tool("get_history", operation)
 
 
 @mcp.tool()
@@ -145,7 +158,7 @@ def download_history(
     symbols. For a single ticker history request, `get_history` is usually the
     better fit.
     """
-    try:
+    def operation() -> Dict[str, object]:
         request = DownloadRequest(
             tickers=tickers,
             period=period,
@@ -158,8 +171,7 @@ def download_history(
         )
         result = wrapper.download(**request.model_dump())
         return DownloadHistoryResult.model_validate(result).model_dump()
-    except Exception as exc:
-        _handle_error(exc)
+    return _run_tool("download_history", operation)
 
 
 @mcp.tool()
@@ -170,12 +182,11 @@ def get_news(symbol: str, count: int = 10, tab: str = "news") -> List[Dict[str, 
     useful for event-driven analysis, sentiment review, and contextualizing
     recent market moves.
     """
-    try:
+    def operation() -> List[Dict[str, object]]:
         request = NewsRequest(symbol=symbol, count=count, tab=tab)
         result = wrapper.get_news(**request.model_dump())
         return NewsListResult(items=result).model_dump()["items"]
-    except Exception as exc:
-        _handle_error(exc)
+    return _run_tool("get_news", operation)
 
 
 @mcp.tool()
@@ -185,11 +196,10 @@ def get_option_expirations(symbol: str) -> List[str]:
     Use this tool before `get_option_chain` when you need to discover which
     option expiration dates are available for a symbol.
     """
-    try:
+    def operation() -> List[str]:
         result = wrapper.get_option_expirations(symbol)
         return StringListResult(items=result).items
-    except Exception as exc:
-        _handle_error(exc)
+    return _run_tool("get_option_expirations", operation)
 
 
 @mcp.tool()
@@ -200,12 +210,11 @@ def get_option_chain(symbol: str, date: Optional[str] = None) -> Dict[str, objec
     date. Pair it with `get_option_expirations` when you need to discover valid
     dates first.
     """
-    try:
+    def operation() -> Dict[str, object]:
         request = OptionChainRequest(symbol=symbol, date=date)
         result = wrapper.get_option_chain(**request.model_dump())
         return OptionChainResult.model_validate(result).model_dump()
-    except Exception as exc:
-        _handle_error(exc)
+    return _run_tool("get_option_chain", operation)
 
 
 @mcp.tool()
@@ -215,12 +224,11 @@ def get_income_stmt(symbol: str, freq: str = "yearly", pretty: bool = False) -> 
     Use this tool for annual, quarterly, or trailing income statement analysis.
     It is best suited for revenue, margin, and profitability review.
     """
-    try:
+    def operation() -> Dict[str, object]:
         request = StatementRequest(symbol=symbol, freq=freq, pretty=pretty)
         result = wrapper.get_income_stmt(**request.model_dump())
         return StatementResult.model_validate(result).model_dump()
-    except Exception as exc:
-        _handle_error(exc)
+    return _run_tool("get_income_stmt", operation)
 
 
 @mcp.tool()
@@ -230,12 +238,11 @@ def get_balance_sheet(symbol: str, freq: str = "yearly", pretty: bool = False) -
     Use this tool for annual or quarterly balance sheet analysis such as assets,
     liabilities, and capital structure review.
     """
-    try:
+    def operation() -> Dict[str, object]:
         request = StatementRequest(symbol=symbol, freq=freq, pretty=pretty)
         result = wrapper.get_balance_sheet(**request.model_dump())
         return StatementResult.model_validate(result).model_dump()
-    except Exception as exc:
-        _handle_error(exc)
+    return _run_tool("get_balance_sheet", operation)
 
 
 @mcp.tool()
@@ -246,12 +253,11 @@ def get_cashflow(symbol: str, freq: str = "yearly", pretty: bool = False) -> Dic
     including operating cashflow, investing activity, and free-cash-flow style
     review.
     """
-    try:
+    def operation() -> Dict[str, object]:
         request = StatementRequest(symbol=symbol, freq=freq, pretty=pretty)
         result = wrapper.get_cashflow(**request.model_dump())
         return StatementResult.model_validate(result).model_dump()
-    except Exception as exc:
-        _handle_error(exc)
+    return _run_tool("get_cashflow", operation)
 
 
 @mcp.tool()
@@ -262,12 +268,11 @@ def get_market_summary(market: str) -> Dict[str, object]:
     single-ticker lookup. For example, it can provide a quick view of the US
     market summary.
     """
-    try:
+    def operation() -> Dict[str, object]:
         request = MarketRequest(market=market)
         result = wrapper.get_market_summary(**request.model_dump())
         return MarketSummaryResult.model_validate(result).model_dump()
-    except Exception as exc:
-        _handle_error(exc)
+    return _run_tool("get_market_summary", operation)
 
 
 def main() -> None:

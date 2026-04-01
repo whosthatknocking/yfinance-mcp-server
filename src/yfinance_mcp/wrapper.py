@@ -310,11 +310,36 @@ class YFinanceWrapper:
             except Exception as exc:
                 attempt += 1
                 category = self._classify_exception(exc)
-                logger.warning("upstream_error", attempt=attempt, category=category, error=str(exc), **error_context)
+                elapsed = time.time() - start
+                logger.warning(
+                    "upstream_error",
+                    attempt=attempt,
+                    category=category,
+                    error=str(exc),
+                    elapsed_seconds=round(elapsed, 3),
+                    total_timeout_seconds=self.retry_policy.total_timeout,
+                    **error_context,
+                )
+                if category == "timeout":
+                    logger.warning(
+                        "upstream_timeout",
+                        attempt=attempt,
+                        elapsed_seconds=round(elapsed, 3),
+                        total_timeout_seconds=self.retry_policy.total_timeout,
+                        **error_context,
+                    )
                 if category in {"invalid_input", "upstream_permanent"}:
                     raise YFinanceError(category, str(exc), error_context)
-                elapsed = time.time() - start
                 if attempt > self.retry_policy.max_retries or elapsed >= self.retry_policy.total_timeout:
+                    if elapsed >= self.retry_policy.total_timeout:
+                        logger.warning(
+                            "request_deadline_exceeded",
+                            attempt=attempt,
+                            elapsed_seconds=round(elapsed, 3),
+                            total_timeout_seconds=self.retry_policy.total_timeout,
+                            category=category,
+                            **error_context,
+                        )
                     if stale_value is not None and category in {"upstream_temporary", "timeout"}:
                         logger.warning("serving_stale_cache", category=category, **error_context)
                         return stale_value
