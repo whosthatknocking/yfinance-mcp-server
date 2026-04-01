@@ -96,7 +96,7 @@ def _build_http_app() -> Starlette:
         routes=[
             Route("/healthz", _healthz, methods=["GET"]),
             Route("/readyz", _readyz, methods=["GET"]),
-            Mount("/", app=mcp.streamable_http_app()),
+            Mount("/mcp", app=mcp.streamable_http_app()),
         ],
         lifespan=lifespan,
     )
@@ -135,9 +135,11 @@ def get_quote_snapshot(symbol: str) -> Dict[str, object]:
     """Get the latest quote-oriented snapshot for a single ticker.
 
     Use this tool when the request is about the latest stock information, latest
-    market snapshot, current trading context, or a quick symbol overview. This
-    tool is intended for quote-style stock lookups such as latest price, market
-    cap, and recent trading context. For richer company profile information, use
+    stock price, current trading context, or a quick symbol overview for an
+    individual ticker such as AAPL or TSLA. This tool is intended for
+    quote-style stock lookups such as latest price, market cap, and recent
+    trading context. It is the right tool for ticker-specific price questions,
+    not `get_market_summary`. For richer company profile information, use
     `get_info`.
     """
     def operation() -> Dict[str, object]:
@@ -303,8 +305,9 @@ def get_market_summary(market: str) -> Dict[str, object]:
     """Get Yahoo Finance market summary data for a market code.
 
     Use this tool when you need a market-level overview rather than a
-    single-ticker lookup. For example, it can provide a quick view of the US
-    market summary.
+    single-ticker lookup. The `market` argument must be a Yahoo Finance market
+    code such as `us` or `ca`, not a ticker symbol like AAPL or TSLA. For
+    ticker-specific quote or price questions, use `get_quote_snapshot`.
     """
     def operation() -> Dict[str, object]:
         request = MarketRequest(market=market)
