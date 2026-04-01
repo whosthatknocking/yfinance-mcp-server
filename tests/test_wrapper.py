@@ -166,6 +166,19 @@ def test_get_fast_info_resolves_unique_company_name_via_lookup():
     mocked_ticker.assert_called_once_with("TSLA")
 
 
+def test_get_fast_info_prefers_info_market_price_over_fast_info_last_price():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+
+    with patch("yfinance_mcp.wrapper.yf.Ticker") as mocked_ticker:
+        mocked_ticker.return_value.fast_info = {"lastPrice": 245.67, "currency": "USD", "previousClose": 240.0}
+        mocked_ticker.return_value.info = {"regularMarketPrice": 380.87, "previousClose": 371.75}
+
+        result = wrapper.get_fast_info("TSLA")
+
+    assert result["lastPrice"] == 380.87
+    assert result["previousClose"] == 240.0
+
+
 def test_get_fast_info_rejects_ambiguous_company_name_lookup():
     wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
     lookup_payload = {
