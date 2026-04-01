@@ -27,6 +27,30 @@ class StatementResult(DataFramePayload):
     pass
 
 
+class SearchResult(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    quotes: List[Dict[str, Any]]
+    news: List[Dict[str, Any]]
+    lists: List[Dict[str, Any]]
+    research: List[Dict[str, Any]]
+    nav: List[Dict[str, Any]]
+
+
+class LookupResult(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    query: str
+    all: DataFramePayload
+    stock: DataFramePayload
+    etf: DataFramePayload
+    mutualfund: DataFramePayload
+    index: DataFramePayload
+    future: DataFramePayload
+    currency: DataFramePayload
+    cryptocurrency: DataFramePayload
+
+
 class ToolMetadata(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -296,6 +320,66 @@ class MarketRequest(BaseModel):
         min_length=1,
         description="Yahoo Finance market code such as us.",
         examples=["us"],
+    )
+
+
+class SearchRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    query: str = Field(
+        min_length=1,
+        description="Ticker symbol or company name to search, such as microsoft, MSFT, or tesla.",
+        examples=["microsoft"],
+    )
+    max_results: int = Field(
+        default=8,
+        ge=1,
+        le=25,
+        description="Maximum number of quote matches to return.",
+        examples=[8],
+    )
+    news_count: int = Field(
+        default=8,
+        ge=0,
+        le=25,
+        description="Maximum number of related news items to include.",
+        examples=[5],
+    )
+    lists_count: int = Field(
+        default=8,
+        ge=0,
+        le=25,
+        description="Maximum number of Yahoo Finance lists to include.",
+        examples=[5],
+    )
+    include_cb: bool = True
+    include_nav_links: bool = False
+    include_research: bool = False
+    include_cultural_assets: bool = False
+    enable_fuzzy_query: bool = False
+    recommended: int = Field(
+        default=8,
+        ge=0,
+        le=25,
+        description="Recommended result count requested from Yahoo Finance.",
+        examples=[8],
+    )
+
+
+class LookupRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    query: str = Field(
+        min_length=1,
+        description="Instrument lookup query such as microsoft, MSFT, or bitcoin.",
+        examples=["microsoft"],
+    )
+    count: int = Field(
+        default=25,
+        ge=1,
+        le=100,
+        description="Maximum number of rows to return per lookup category.",
+        examples=[25],
     )
 
 

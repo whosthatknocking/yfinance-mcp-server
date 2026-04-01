@@ -251,6 +251,86 @@ class YFinanceWrapper:
             allow_stale=False,
         )
 
+    def search(
+        self,
+        query: str,
+        max_results: int = 8,
+        news_count: int = 8,
+        lists_count: int = 8,
+        include_cb: bool = True,
+        include_nav_links: bool = False,
+        include_research: bool = False,
+        include_cultural_assets: bool = False,
+        enable_fuzzy_query: bool = False,
+        recommended: int = 8,
+    ) -> Dict[str, Any]:
+        normalized = query.strip()
+        if not normalized:
+            raise YFinanceError("invalid_input", "A non-empty search query is required.")
+        params = {
+            "max_results": max_results,
+            "news_count": news_count,
+            "lists_count": lists_count,
+            "include_cb": include_cb,
+            "include_nav_links": include_nav_links,
+            "include_research": include_research,
+            "include_cultural_assets": include_cultural_assets,
+            "enable_fuzzy_query": enable_fuzzy_query,
+            "recommended": recommended,
+            "timeout": self.timeout,
+        }
+
+        def operation() -> Dict[str, Any]:
+            search_obj = yf.Search(
+                normalized,
+                max_results=max_results,
+                news_count=news_count,
+                lists_count=lists_count,
+                include_cb=include_cb,
+                include_nav_links=include_nav_links,
+                include_research=include_research,
+                include_cultural_assets=include_cultural_assets,
+                enable_fuzzy_query=enable_fuzzy_query,
+                recommended=recommended,
+                timeout=self.timeout,
+            )
+            return serialize_value(search_obj.all)
+
+        return self._cached_call(
+            key=f"search:{normalized}:{params}",
+            ttl=self.quote_ttl,
+            operation=operation,
+            error_context={"query": normalized, "params": params},
+            allow_stale=True,
+        )
+
+    def lookup(self, query: str, count: int = 25) -> Dict[str, Any]:
+        normalized = query.strip()
+        if not normalized:
+            raise YFinanceError("invalid_input", "A non-empty lookup query is required.")
+
+        def operation() -> Dict[str, Any]:
+            lookup_obj = yf.Lookup(normalized, timeout=self.timeout)
+            return {
+                "query": normalized,
+                "all": serialize_value(lookup_obj.get_all(count=count)),
+                "stock": serialize_value(lookup_obj.get_stock(count=count)),
+                "etf": serialize_value(lookup_obj.get_etf(count=count)),
+                "mutualfund": serialize_value(lookup_obj.get_mutualfund(count=count)),
+                "index": serialize_value(lookup_obj.get_index(count=count)),
+                "future": serialize_value(lookup_obj.get_future(count=count)),
+                "currency": serialize_value(lookup_obj.get_currency(count=count)),
+                "cryptocurrency": serialize_value(lookup_obj.get_cryptocurrency(count=count)),
+            }
+
+        return self._cached_call(
+            key=f"lookup:{normalized}:{count}",
+            ttl=self.quote_ttl,
+            operation=operation,
+            error_context={"query": normalized, "count": count},
+            allow_stale=True,
+        )
+
     def _statement_call(self, symbol: str, statement_name: str, freq: str, pretty: bool) -> Dict[str, Any]:
         normalized = normalize_symbol(symbol)
         allowed = {"yearly", "quarterly", "trailing"}

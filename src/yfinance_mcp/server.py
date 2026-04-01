@@ -22,6 +22,8 @@ from .schemas import (
     HistoryRequest,
     HistoryResult,
     InfoResult,
+    LookupRequest,
+    LookupResult,
     MarketRequest,
     MarketSummaryResult,
     NewsListResult,
@@ -29,6 +31,8 @@ from .schemas import (
     OptionChainResult,
     OptionChainRequest,
     QuoteSnapshotResult,
+    SearchRequest,
+    SearchResult,
     StatementRequest,
     StatementResult,
     StringListResult,
@@ -314,6 +318,63 @@ def get_market_summary(market: str) -> Dict[str, object]:
         result = wrapper.get_market_summary(**request.model_dump())
         return MarketSummaryResult.model_validate(result).model_dump()
     return _run_tool("get_market_summary", operation)
+
+
+@mcp.tool()
+def search(
+    query: str,
+    max_results: int = 8,
+    news_count: int = 8,
+    lists_count: int = 8,
+    include_cb: bool = True,
+    include_nav_links: bool = False,
+    include_research: bool = False,
+    include_cultural_assets: bool = False,
+    enable_fuzzy_query: bool = False,
+    recommended: int = 8,
+) -> Dict[str, object]:
+    """Search Yahoo Finance for companies, tickers, and related news.
+
+    Use this tool when the user provides a company name, ambiguous symbol, or
+    discovery-oriented prompt and you need quote matches plus related news or
+    navigation results. This is the best starting point when you do not yet have
+    a specific ticker symbol.
+    """
+
+    def operation() -> Dict[str, object]:
+        request = SearchRequest(
+            query=query,
+            max_results=max_results,
+            news_count=news_count,
+            lists_count=lists_count,
+            include_cb=include_cb,
+            include_nav_links=include_nav_links,
+            include_research=include_research,
+            include_cultural_assets=include_cultural_assets,
+            enable_fuzzy_query=enable_fuzzy_query,
+            recommended=recommended,
+        )
+        result = wrapper.search(**request.model_dump())
+        return SearchResult.model_validate(result).model_dump()
+
+    return _run_tool("search", operation)
+
+
+@mcp.tool()
+def lookup(query: str, count: int = 25) -> Dict[str, object]:
+    """Look up matching financial instruments grouped by instrument type.
+
+    Use this tool when you need categorized discovery results such as stocks,
+    ETFs, mutual funds, indices, futures, currencies, or cryptocurrencies for a
+    query like a company name, symbol, or asset keyword.
+    """
+
+    def operation() -> Dict[str, object]:
+        request = LookupRequest(query=query, count=count)
+        result = wrapper.lookup(**request.model_dump())
+        return LookupResult.model_validate(result).model_dump()
+
+    return _run_tool("lookup", operation)
 
 
 def main() -> None:

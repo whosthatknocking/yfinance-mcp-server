@@ -78,6 +78,46 @@ def test_get_market_summary_returns_named_response_model_payload():
     mocked.assert_called_once_with(market="us")
 
 
+def test_search_returns_named_response_model_payload():
+    payload = {"quotes": [{"symbol": "MSFT"}], "news": [], "lists": [], "research": [], "nav": []}
+    with patch.object(server.wrapper, "search", return_value=payload) as mocked:
+        result = server.search("microsoft", max_results=5)
+
+    assert result == payload
+    mocked.assert_called_once_with(
+        query="microsoft",
+        max_results=5,
+        news_count=8,
+        lists_count=8,
+        include_cb=True,
+        include_nav_links=False,
+        include_research=False,
+        include_cultural_assets=False,
+        enable_fuzzy_query=False,
+        recommended=8,
+    )
+
+
+def test_lookup_returns_named_response_model_payload():
+    empty_table = {"columns": [], "data": [], "index": []}
+    payload = {
+        "query": "microsoft",
+        "all": {"columns": ["symbol"], "data": [["MSFT"]], "index": ["MSFT"]},
+        "stock": {"columns": ["symbol"], "data": [["MSFT"]], "index": ["MSFT"]},
+        "etf": empty_table,
+        "mutualfund": empty_table,
+        "index": empty_table,
+        "future": empty_table,
+        "currency": empty_table,
+        "cryptocurrency": empty_table,
+    }
+    with patch.object(server.wrapper, "lookup", return_value=payload) as mocked:
+        result = server.lookup("microsoft", count=10)
+
+    assert result == payload
+    mocked.assert_called_once_with(query="microsoft", count=10)
+
+
 def test_get_history_rejects_invalid_request():
     try:
         server.get_history("", period="1mo")

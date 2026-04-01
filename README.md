@@ -65,6 +65,8 @@ The initial implementation scaffolds the package, abstract cache layer, serializ
 - `get_balance_sheet`
 - `get_cashflow`
 - `get_market_summary`
+- `search`
+- `lookup`
 
 The current slice uses typed request models and validated JSON-safe outputs. History, download, statement, option chain, list-style outputs, and the current metadata, info, quote snapshot, and market summary tools all use named response models. The broadest upstream payloads still allow extra fields where `yfinance` is less stable.
 
@@ -93,7 +95,7 @@ Common settings:
 
 ## Remote Mode
 
-Remote `streamable-http` transport is available in the current slice. Production-focused health and readiness support described in the project spec is still planned work.
+Remote `streamable-http` transport is available in the current slice with basic health and readiness support.
 
 Current remote endpoints:
 
