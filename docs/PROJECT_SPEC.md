@@ -83,7 +83,7 @@ The authoritative source for scope is the latest supported upstream `yfinance` d
 
 ## Technical Stack
 
-- MCP framework: `mcp[cli]` with `FastMCP`
+- MCP framework: official Python MCP SDK with `FastMCP`
 - Data library: `yfinance` (latest stable version available at implementation time)
 - Data handling: `pandas`
 - Caching: backend-agnostic cache layer with pluggable implementations
@@ -162,6 +162,7 @@ The authoritative source for scope is the latest supported upstream `yfinance` d
 ### `utils.py`
 
 - House serialization helpers, datetime normalization, markdown table helpers, and shared error formatting utilities.
+- Normalize host-generated user inputs before upstream calls where practical, including ticker-symbol cleanup and common period alias normalization.
 
 ## API Mapping Requirements
 
@@ -200,6 +201,18 @@ The final `API_MAPPING.md` should be exhaustive and maintained against the offic
   - include paging or truncation metadata when a payload is intentionally limited
   - prefer named response models even when some tools need to allow extra upstream fields
 
+## Input Normalization
+
+- The server should normalize host-generated inputs before passing them to `yfinance` where that improves resilience without changing user intent.
+- Normalization should be conservative and transparent: it should correct common host/model formatting artifacts but must not silently reinterpret materially different requests.
+- Recommended normalization behavior:
+  - trim surrounding whitespace from ticker symbols and market codes
+  - strip common prompt punctuation around ticker symbols, such as trailing periods or leading `$`
+  - normalize common period aliases such as `6m` to upstream-supported forms such as `6mo`
+  - preserve explicit date-range inputs when supplied instead of coercing them into named periods
+  - surface a clear invalid-input error when normalization cannot produce a safe upstream request
+- Input normalization rules should be covered by unit tests because they directly affect host interoperability and MCP discoverability.
+
 ## Concurrency and Resource Limits
 
 - The server must define bounded concurrency for upstream `yfinance` and Yahoo Finance requests.
@@ -208,8 +221,8 @@ The final `API_MAPPING.md` should be exhaustive and maintained against the offic
 - Batch tools should avoid unbounded parallel fan-out and should degrade gracefully under constrained resources.
 - Recommended controls:
   - maximum concurrent upstream requests per process
-  - maximum concurrent upstream requests per MCP call
-  - bounded worker pools for batch tools
+  - maximum concurrent upstream requests per MCP call where batch tools fan out
+  - bounded worker pools for batch tools when parallel fan-out is introduced
   - protection against duplicate in-flight work for identical cache keys where practical
 
 ## Timeouts, Retries, and Stability
@@ -220,7 +233,6 @@ The final `API_MAPPING.md` should be exhaustive and maintained against the offic
 - Cancellation and timeout behavior should leave shared state and caches consistent.
 - Retry policy should distinguish between retryable and non-retryable failures.
 - Recommended controls:
-  - connect timeout
   - read timeout
   - total request deadline
   - bounded exponential backoff with jitter
