@@ -18,20 +18,22 @@ This document maps the latest supported yfinance API surface to explicit MCP too
 - internal: internal wrapper behavior, not exposed directly as an MCP tool
 - documented-out-of-scope: documented for completeness but not part of the MCP information-tool surface
 
+In this document, `not-implemented` can mean one of three things: the feature is still on the roadmap, the behavior is intentionally consolidated into a broader existing tool, or the practical use case is already covered by another MCP tool with a different name.
+
 ## Top-Level Information APIs
 
 | Upstream API | Kind | MCP Tool | Status | Notes |
 | --- | --- | --- | --- | --- |
 | yf.download(...) | function | download_history | implemented | Multi-ticker historical download with explicit history parameters. |
-| yf.screen(...) | function | screen | not-implemented | Screener support is documented in the spec but no MCP screener tool exists yet. |
+| yf.screen(...) | function | screen | not-implemented | Intentionally deferred until the project has an agent-safe screener query construction and validation flow. |
 | yf.Search(...) | class constructor | search | implemented | Returns structured search payload and selected views. |
 | yf.Lookup(...) | class constructor | lookup | implemented | Returns grouped lookup data. |
 | yf.Market(market) | class constructor | get_market | implemented | Returns summary and status for a market code. |
 | yf.Calendars(...) | class constructor | get_calendars | implemented | Returns default calendar bundle for a date range. |
 | yf.Sector(key) | class constructor | get_sector | implemented | Returns sector overview and linked data. |
 | yf.Industry(key) | class constructor | get_industry | implemented | Returns industry overview and linked data. |
-| yf.EquityQuery(...) | class constructor | build_equity_query | not-implemented | Query-builder helper tools are not currently exposed. |
-| yf.FundQuery(...) | class constructor | build_fund_query | not-implemented | Query-builder helper tools are not currently exposed. |
+| yf.EquityQuery(...) | class constructor | build_equity_query | not-implemented | Intentionally deferred because screener query objects are harder for agents to construct safely without stronger validation helpers. |
+| yf.FundQuery(...) | class constructor | build_fund_query | not-implemented | Intentionally deferred because screener query objects are harder for agents to construct safely without stronger validation helpers. |
 
 ## Ticker Construction and Core Access
 
@@ -234,13 +236,13 @@ This document maps the latest supported yfinance API surface to explicit MCP too
 
 | Upstream API | Kind | MCP Tool | Status | Notes |
 | --- | --- | --- | --- | --- |
-| EquityQuery.to_dict() | method | build_equity_query | not-implemented | Query-builder helper tools are not currently exposed. |
-| EquityQuery.valid_fields | attribute | get_equity_query_fields | not-implemented | Query-field metadata is not currently exposed. |
-| FundQuery.to_dict() | method | build_fund_query | not-implemented | Query-builder helper tools are not currently exposed. |
-| FundQuery.valid_fields | attribute | get_fund_query_fields | not-implemented | Query-field metadata is not currently exposed. |
-| screen(query, ...) with predefined name | function | screen | not-implemented | Screener support is not currently exposed. |
-| screen(query, ...) with EquityQuery | function | screen | not-implemented | Screener support is not currently exposed. |
-| screen(query, ...) with FundQuery | function | screen | not-implemented | Screener support is not currently exposed. |
+| EquityQuery.to_dict() | method | build_equity_query | not-implemented | Intentionally deferred because query-builder helpers need stronger agent-facing validation and discoverability support. |
+| EquityQuery.valid_fields | attribute | get_equity_query_fields | not-implemented | Intentionally deferred until query-field metadata can be exposed in a way that improves agent reliability. |
+| FundQuery.to_dict() | method | build_fund_query | not-implemented | Intentionally deferred because query-builder helpers need stronger agent-facing validation and discoverability support. |
+| FundQuery.valid_fields | attribute | get_fund_query_fields | not-implemented | Intentionally deferred until query-field metadata can be exposed in a way that improves agent reliability. |
+| screen(query, ...) with predefined name | function | screen | not-implemented | Intentionally deferred until screener usage is safer for agents than the current free-form query flow. |
+| screen(query, ...) with EquityQuery | function | screen | not-implemented | Intentionally deferred until screener usage is safer for agents than the current free-form query flow. |
+| screen(query, ...) with FundQuery | function | screen | not-implemented | Intentionally deferred until screener usage is safer for agents than the current free-form query flow. |
 
 ## Documented Out-of-Scope APIs
 

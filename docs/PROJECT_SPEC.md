@@ -25,8 +25,8 @@ The authoritative source for scope is the latest supported upstream yfinance doc
 ### Public API Areas
 
 - Core classes: yf.Ticker, yf.Tickers, yf.Market, yf.Calendars
-- Discovery and screening APIs: yf.Search, yf.Lookup, sector and industry queries, and screener-related functions
-- Top-level functions: yf.download, yf.screen
+- Discovery and screening APIs: yf.Search, yf.Lookup, sector and industry queries, and screener-related functions, with screener/query-builder surfaces deferred until they can be exposed safely for agent use
+- Top-level functions: yf.download, and optionally yf.screen when the server has an agent-safe query-construction flow
 - Supported Ticker information APIs include:
   - info
   - history
@@ -56,7 +56,7 @@ The authoritative source for scope is the latest supported upstream yfinance doc
 - Every supported information-collection method or property should be represented as an explicit @mcp.tool() function unless it is listed in an explicit exclusions section.
 - The server must not rely on a single generic "call anything" tool.
 - The core v1 surface should remain focused on read-only request-response data retrieval.
-- Helper tools that support information retrieval, such as validated screener query builders, are allowed when they directly enable read-only data access.
+- Helper tools that support information retrieval, such as validated screener query builders, are allowed when they directly enable read-only data access. Until those helpers are agent-safe and strongly validated, screener/query-builder APIs may remain intentionally deferred.
 
 ### Exclusions and Non-Goals
 
