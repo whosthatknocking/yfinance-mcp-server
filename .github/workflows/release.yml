@@ -23,13 +23,14 @@ jobs:
       - name: Verify tag matches package version
         run: |
           python - <<'PY'
+          import os
           import pathlib
           import re
           import tomllib
 
           pyproject = tomllib.loads(pathlib.Path("pyproject.toml").read_text())
           package_version = pyproject["project"]["version"]
-          tag = "${GITHUB_REF_NAME}"
+          tag = os.environ["GITHUB_REF_NAME"]
 
           if not re.fullmatch(r"v\d+\.\d+\.\d+.*", tag):
               raise SystemExit(f"Tag {tag!r} does not look like a release tag")
