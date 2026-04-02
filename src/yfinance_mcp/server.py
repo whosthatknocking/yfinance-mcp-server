@@ -1,15 +1,17 @@
 from __future__ import annotations
 
 import contextlib
+import functools
 import os
 import time
-from typing import Dict, List, Optional
+from typing import Callable, Dict, List, Optional, TypeVar
 
 import structlog
 import yfinance as yf
 from mcp.server.fastmcp import FastMCP
 from pydantic import ValidationError
 from starlette.applications import Starlette
+from starlette.concurrency import run_in_threadpool
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.routing import Mount, Route
@@ -74,6 +76,20 @@ logger = structlog.get_logger(__name__)
 
 wrapper = YFinanceWrapper()
 mcp = FastMCP("yfinance")
+F = TypeVar("F", bound=Callable[..., object])
+
+
+def tool() -> Callable[[F], F]:
+    def decorator(fn: F) -> F:
+        @functools.wraps(fn)
+        async def async_tool(*args, **kwargs):
+            return await run_in_threadpool(fn, *args, **kwargs)
+
+        mcp.tool()(async_tool)
+        return fn
+
+    return decorator
+
 
 def _run_tool(tool_name: str, operation):
     request_id = next_request_id()
@@ -177,7 +193,7 @@ def _build_http_app() -> Starlette:
     )
 
 
-@mcp.tool()
+@tool()
 def get_server_metadata() -> Dict[str, object]:
     """Return server metadata.
 
@@ -191,7 +207,7 @@ def get_server_metadata() -> Dict[str, object]:
     return _run_tool("get_server_metadata", operation)
 
 
-@mcp.tool()
+@tool()
 def get_info(symbol: str) -> Dict[str, object]:
     """Get detailed company and profile information for a single ticker.
 
@@ -205,7 +221,7 @@ def get_info(symbol: str) -> Dict[str, object]:
     return _run_tool("get_info", operation)
 
 
-@mcp.tool()
+@tool()
 def get_quote_snapshot(symbol: str) -> Dict[str, object]:
     """Get the latest quote-oriented snapshot for a single ticker.
 
@@ -223,7 +239,7 @@ def get_quote_snapshot(symbol: str) -> Dict[str, object]:
     return _run_tool("get_quote_snapshot", operation)
 
 
-@mcp.tool()
+@tool()
 def get_batch_info(symbols: List[str]) -> Dict[str, object]:
     """Get detailed reference information for multiple tickers.
 
@@ -240,7 +256,7 @@ def get_batch_info(symbols: List[str]) -> Dict[str, object]:
     return _run_tool("get_batch_info", operation)
 
 
-@mcp.tool()
+@tool()
 def get_batch_quote_snapshot(symbols: List[str]) -> Dict[str, object]:
     """Get the latest quote-oriented snapshot for multiple tickers.
 
@@ -257,7 +273,7 @@ def get_batch_quote_snapshot(symbols: List[str]) -> Dict[str, object]:
     return _run_tool("get_batch_quote_snapshot", operation)
 
 
-@mcp.tool()
+@tool()
 def get_batch_news(symbols: List[str]) -> List[Dict[str, object]]:
     """Get recent Yahoo Finance news across multiple tickers."""
 
@@ -269,7 +285,7 @@ def get_batch_news(symbols: List[str]) -> List[Dict[str, object]]:
     return _run_tool("get_batch_news", operation)
 
 
-@mcp.tool()
+@tool()
 def get_history(
     symbol: str,
     period: Optional[str] = None,
@@ -302,7 +318,7 @@ def get_history(
     return _run_tool("get_history", operation)
 
 
-@mcp.tool()
+@tool()
 def get_history_metadata(symbol: str) -> Dict[str, object]:
     """Get Yahoo Finance history metadata for a ticker."""
 
@@ -314,7 +330,7 @@ def get_history_metadata(symbol: str) -> Dict[str, object]:
     return _run_tool("get_history_metadata", operation)
 
 
-@mcp.tool()
+@tool()
 def get_isin(symbol: str) -> Dict[str, object]:
     """Get the ISIN for a ticker when available."""
 
@@ -326,7 +342,7 @@ def get_isin(symbol: str) -> Dict[str, object]:
     return _run_tool("get_isin", operation)
 
 
-@mcp.tool()
+@tool()
 def download_history(
     tickers: List[str],
     period: Optional[str] = None,
@@ -359,7 +375,7 @@ def download_history(
     return _run_tool("download_history", operation)
 
 
-@mcp.tool()
+@tool()
 def get_news(symbol: str, count: int = 10, tab: str = "news") -> List[Dict[str, object]]:
     """Get recent Yahoo Finance news for a ticker.
 
@@ -374,7 +390,7 @@ def get_news(symbol: str, count: int = 10, tab: str = "news") -> List[Dict[str, 
     return _run_tool("get_news", operation)
 
 
-@mcp.tool()
+@tool()
 def get_option_expirations(symbol: str) -> List[str]:
     """Get available option expiration dates for a ticker.
 
@@ -387,7 +403,7 @@ def get_option_expirations(symbol: str) -> List[str]:
     return _run_tool("get_option_expirations", operation)
 
 
-@mcp.tool()
+@tool()
 def get_option_chain(symbol: str, date: Optional[str] = None) -> Dict[str, object]:
     """Get calls and puts for a ticker option chain.
 
@@ -402,7 +418,7 @@ def get_option_chain(symbol: str, date: Optional[str] = None) -> Dict[str, objec
     return _run_tool("get_option_chain", operation)
 
 
-@mcp.tool()
+@tool()
 def get_actions(symbol: str, period: str = "max") -> Dict[str, object]:
     """Get combined corporate actions for a ticker.
 
@@ -418,7 +434,7 @@ def get_actions(symbol: str, period: str = "max") -> Dict[str, object]:
     return _run_tool("get_actions", operation)
 
 
-@mcp.tool()
+@tool()
 def get_dividends(symbol: str, period: str = "max") -> Dict[str, object]:
     """Get dividend history for a ticker over a named period."""
 
@@ -430,7 +446,7 @@ def get_dividends(symbol: str, period: str = "max") -> Dict[str, object]:
     return _run_tool("get_dividends", operation)
 
 
-@mcp.tool()
+@tool()
 def get_splits(symbol: str, period: str = "max") -> Dict[str, object]:
     """Get stock split history for a ticker over a named period."""
 
@@ -442,7 +458,7 @@ def get_splits(symbol: str, period: str = "max") -> Dict[str, object]:
     return _run_tool("get_splits", operation)
 
 
-@mcp.tool()
+@tool()
 def get_shares_full(symbol: str, start: Optional[str] = None, end: Optional[str] = None) -> Dict[str, object]:
     """Get extended share-count history for a ticker."""
 
@@ -454,7 +470,7 @@ def get_shares_full(symbol: str, start: Optional[str] = None, end: Optional[str]
     return _run_tool("get_shares_full", operation)
 
 
-@mcp.tool()
+@tool()
 def get_sec_filings(symbol: str) -> List[Dict[str, object]]:
     """Get SEC filings metadata for a ticker."""
 
@@ -466,7 +482,7 @@ def get_sec_filings(symbol: str) -> List[Dict[str, object]]:
     return _run_tool("get_sec_filings", operation)
 
 
-@mcp.tool()
+@tool()
 def get_earnings_dates(symbol: str, limit: int = 12, offset: int = 0) -> Dict[str, object]:
     """Get historical and upcoming earnings dates for a ticker.
 
@@ -482,7 +498,7 @@ def get_earnings_dates(symbol: str, limit: int = 12, offset: int = 0) -> Dict[st
     return _run_tool("get_earnings_dates", operation)
 
 
-@mcp.tool()
+@tool()
 def get_ticker_calendar(symbol: str) -> Dict[str, object]:
     """Get calendar and event summary data for a ticker.
 
@@ -498,7 +514,7 @@ def get_ticker_calendar(symbol: str) -> Dict[str, object]:
     return _run_tool("get_ticker_calendar", operation)
 
 
-@mcp.tool()
+@tool()
 def get_recommendations(symbol: str) -> Dict[str, object]:
     """Get analyst recommendation summary data for a ticker.
 
@@ -514,7 +530,7 @@ def get_recommendations(symbol: str) -> Dict[str, object]:
     return _run_tool("get_recommendations", operation)
 
 
-@mcp.tool()
+@tool()
 def get_analyst_price_targets(symbol: str) -> Dict[str, object]:
     """Get analyst price target summary data for a ticker.
 
@@ -530,7 +546,7 @@ def get_analyst_price_targets(symbol: str) -> Dict[str, object]:
     return _run_tool("get_analyst_price_targets", operation)
 
 
-@mcp.tool()
+@tool()
 def get_recommendations_summary(symbol: str) -> Dict[str, object]:
     """Get recommendation summary aggregates for a ticker.
 
@@ -546,7 +562,7 @@ def get_recommendations_summary(symbol: str) -> Dict[str, object]:
     return _run_tool("get_recommendations_summary", operation)
 
 
-@mcp.tool()
+@tool()
 def get_upgrades_downgrades(symbol: str) -> Dict[str, object]:
     """Get broker upgrades and downgrades for a ticker.
 
@@ -562,7 +578,7 @@ def get_upgrades_downgrades(symbol: str) -> Dict[str, object]:
     return _run_tool("get_upgrades_downgrades", operation)
 
 
-@mcp.tool()
+@tool()
 def get_earnings_estimate(symbol: str) -> Dict[str, object]:
     """Get analyst earnings estimate data for a ticker."""
 
@@ -574,7 +590,7 @@ def get_earnings_estimate(symbol: str) -> Dict[str, object]:
     return _run_tool("get_earnings_estimate", operation)
 
 
-@mcp.tool()
+@tool()
 def get_revenue_estimate(symbol: str) -> Dict[str, object]:
     """Get analyst revenue estimate data for a ticker."""
 
@@ -586,7 +602,7 @@ def get_revenue_estimate(symbol: str) -> Dict[str, object]:
     return _run_tool("get_revenue_estimate", operation)
 
 
-@mcp.tool()
+@tool()
 def get_earnings_history(symbol: str) -> Dict[str, object]:
     """Get historical earnings surprise and estimate data for a ticker."""
 
@@ -598,7 +614,7 @@ def get_earnings_history(symbol: str) -> Dict[str, object]:
     return _run_tool("get_earnings_history", operation)
 
 
-@mcp.tool()
+@tool()
 def get_eps_trend(symbol: str) -> Dict[str, object]:
     """Get EPS trend data for a ticker."""
 
@@ -610,7 +626,7 @@ def get_eps_trend(symbol: str) -> Dict[str, object]:
     return _run_tool("get_eps_trend", operation)
 
 
-@mcp.tool()
+@tool()
 def get_eps_revisions(symbol: str) -> Dict[str, object]:
     """Get EPS revision data for a ticker."""
 
@@ -622,7 +638,7 @@ def get_eps_revisions(symbol: str) -> Dict[str, object]:
     return _run_tool("get_eps_revisions", operation)
 
 
-@mcp.tool()
+@tool()
 def get_growth_estimates(symbol: str) -> Dict[str, object]:
     """Get analyst growth estimate data for a ticker."""
 
@@ -634,7 +650,7 @@ def get_growth_estimates(symbol: str) -> Dict[str, object]:
     return _run_tool("get_growth_estimates", operation)
 
 
-@mcp.tool()
+@tool()
 def get_major_holders(symbol: str) -> Dict[str, object]:
     """Get major holders data for a ticker."""
 
@@ -646,7 +662,7 @@ def get_major_holders(symbol: str) -> Dict[str, object]:
     return _run_tool("get_major_holders", operation)
 
 
-@mcp.tool()
+@tool()
 def get_institutional_holders(symbol: str) -> Dict[str, object]:
     """Get institutional holders data for a ticker."""
 
@@ -658,7 +674,7 @@ def get_institutional_holders(symbol: str) -> Dict[str, object]:
     return _run_tool("get_institutional_holders", operation)
 
 
-@mcp.tool()
+@tool()
 def get_mutualfund_holders(symbol: str) -> Dict[str, object]:
     """Get mutual fund holders data for a ticker."""
 
@@ -670,7 +686,7 @@ def get_mutualfund_holders(symbol: str) -> Dict[str, object]:
     return _run_tool("get_mutualfund_holders", operation)
 
 
-@mcp.tool()
+@tool()
 def get_insider_purchases(symbol: str) -> Dict[str, object]:
     """Get insider purchases data for a ticker."""
 
@@ -682,7 +698,7 @@ def get_insider_purchases(symbol: str) -> Dict[str, object]:
     return _run_tool("get_insider_purchases", operation)
 
 
-@mcp.tool()
+@tool()
 def get_insider_transactions(symbol: str) -> Dict[str, object]:
     """Get insider transactions data for a ticker."""
 
@@ -694,7 +710,7 @@ def get_insider_transactions(symbol: str) -> Dict[str, object]:
     return _run_tool("get_insider_transactions", operation)
 
 
-@mcp.tool()
+@tool()
 def get_insider_roster_holders(symbol: str) -> Dict[str, object]:
     """Get insider roster holders data for a ticker."""
 
@@ -706,7 +722,7 @@ def get_insider_roster_holders(symbol: str) -> Dict[str, object]:
     return _run_tool("get_insider_roster_holders", operation)
 
 
-@mcp.tool()
+@tool()
 def get_funds_data(symbol: str) -> Dict[str, object]:
     """Get the aggregate funds-data bundle for an ETF or fund ticker."""
 
@@ -718,7 +734,7 @@ def get_funds_data(symbol: str) -> Dict[str, object]:
     return _run_tool("get_funds_data", operation)
 
 
-@mcp.tool()
+@tool()
 def get_fund_asset_classes(symbol: str) -> Dict[str, object]:
     """Get fund asset-class allocations for an ETF or fund ticker."""
 
@@ -730,7 +746,7 @@ def get_fund_asset_classes(symbol: str) -> Dict[str, object]:
     return _run_tool("get_fund_asset_classes", operation)
 
 
-@mcp.tool()
+@tool()
 def get_fund_bond_holdings(symbol: str) -> Dict[str, object]:
     """Get bond holdings summary data for an ETF or fund ticker."""
 
@@ -742,7 +758,7 @@ def get_fund_bond_holdings(symbol: str) -> Dict[str, object]:
     return _run_tool("get_fund_bond_holdings", operation)
 
 
-@mcp.tool()
+@tool()
 def get_fund_bond_ratings(symbol: str) -> Dict[str, object]:
     """Get bond ratings allocations for an ETF or fund ticker."""
 
@@ -754,7 +770,7 @@ def get_fund_bond_ratings(symbol: str) -> Dict[str, object]:
     return _run_tool("get_fund_bond_ratings", operation)
 
 
-@mcp.tool()
+@tool()
 def get_fund_description(symbol: str) -> Dict[str, object]:
     """Get descriptive text for an ETF or fund ticker."""
 
@@ -766,7 +782,7 @@ def get_fund_description(symbol: str) -> Dict[str, object]:
     return _run_tool("get_fund_description", operation)
 
 
-@mcp.tool()
+@tool()
 def get_fund_equity_holdings(symbol: str) -> Dict[str, object]:
     """Get equity holdings summary data for an ETF or fund ticker."""
 
@@ -778,7 +794,7 @@ def get_fund_equity_holdings(symbol: str) -> Dict[str, object]:
     return _run_tool("get_fund_equity_holdings", operation)
 
 
-@mcp.tool()
+@tool()
 def get_fund_operations(symbol: str) -> Dict[str, object]:
     """Get fund operations summary data for an ETF or fund ticker."""
 
@@ -790,7 +806,7 @@ def get_fund_operations(symbol: str) -> Dict[str, object]:
     return _run_tool("get_fund_operations", operation)
 
 
-@mcp.tool()
+@tool()
 def get_fund_overview(symbol: str) -> Dict[str, object]:
     """Get high-level overview metadata for an ETF or fund ticker."""
 
@@ -802,7 +818,7 @@ def get_fund_overview(symbol: str) -> Dict[str, object]:
     return _run_tool("get_fund_overview", operation)
 
 
-@mcp.tool()
+@tool()
 def get_fund_sector_weightings(symbol: str) -> Dict[str, object]:
     """Get sector weightings for an ETF or fund ticker."""
 
@@ -814,7 +830,7 @@ def get_fund_sector_weightings(symbol: str) -> Dict[str, object]:
     return _run_tool("get_fund_sector_weightings", operation)
 
 
-@mcp.tool()
+@tool()
 def get_fund_top_holdings(symbol: str) -> Dict[str, object]:
     """Get top holdings for an ETF or fund ticker."""
 
@@ -826,7 +842,7 @@ def get_fund_top_holdings(symbol: str) -> Dict[str, object]:
     return _run_tool("get_fund_top_holdings", operation)
 
 
-@mcp.tool()
+@tool()
 def get_fund_quote_type(symbol: str) -> Dict[str, object]:
     """Get the fund quote type classification for an ETF or fund ticker."""
 
@@ -838,7 +854,7 @@ def get_fund_quote_type(symbol: str) -> Dict[str, object]:
     return _run_tool("get_fund_quote_type", operation)
 
 
-@mcp.tool()
+@tool()
 def get_calendars(
     start: Optional[str] = None,
     end: Optional[str] = None,
@@ -866,7 +882,7 @@ def get_calendars(
     return _run_tool("get_calendars", operation)
 
 
-@mcp.tool()
+@tool()
 def get_earnings_calendar(
     start: Optional[str] = None,
     end: Optional[str] = None,
@@ -894,7 +910,7 @@ def get_earnings_calendar(
     return _run_tool("get_earnings_calendar", operation)
 
 
-@mcp.tool()
+@tool()
 def get_economic_events_calendar(
     start: Optional[str] = None,
     end: Optional[str] = None,
@@ -912,7 +928,7 @@ def get_economic_events_calendar(
     return _run_tool("get_economic_events_calendar", operation)
 
 
-@mcp.tool()
+@tool()
 def get_ipo_calendar(
     start: Optional[str] = None,
     end: Optional[str] = None,
@@ -930,7 +946,7 @@ def get_ipo_calendar(
     return _run_tool("get_ipo_calendar", operation)
 
 
-@mcp.tool()
+@tool()
 def get_splits_calendar(
     start: Optional[str] = None,
     end: Optional[str] = None,
@@ -948,7 +964,7 @@ def get_splits_calendar(
     return _run_tool("get_splits_calendar", operation)
 
 
-@mcp.tool()
+@tool()
 def get_sector(key: str) -> Dict[str, object]:
     """Get aggregate sector overview and linked data for a Yahoo Finance sector key."""
 
@@ -960,7 +976,7 @@ def get_sector(key: str) -> Dict[str, object]:
     return _run_tool("get_sector", operation)
 
 
-@mcp.tool()
+@tool()
 def get_sector_overview(key: str) -> Dict[str, object]:
     """Get sector overview metadata for a Yahoo Finance sector key."""
 
@@ -972,7 +988,7 @@ def get_sector_overview(key: str) -> Dict[str, object]:
     return _run_tool("get_sector_overview", operation)
 
 
-@mcp.tool()
+@tool()
 def get_sector_research_reports(key: str) -> List[Dict[str, object]]:
     """Get sector research reports for a Yahoo Finance sector key."""
 
@@ -984,7 +1000,7 @@ def get_sector_research_reports(key: str) -> List[Dict[str, object]]:
     return _run_tool("get_sector_research_reports", operation)
 
 
-@mcp.tool()
+@tool()
 def get_sector_industries(key: str) -> Dict[str, object]:
     """Get industries within a Yahoo Finance sector."""
 
@@ -996,7 +1012,7 @@ def get_sector_industries(key: str) -> Dict[str, object]:
     return _run_tool("get_sector_industries", operation)
 
 
-@mcp.tool()
+@tool()
 def get_sector_top_companies(key: str) -> Dict[str, object]:
     """Get top companies within a Yahoo Finance sector."""
 
@@ -1008,7 +1024,7 @@ def get_sector_top_companies(key: str) -> Dict[str, object]:
     return _run_tool("get_sector_top_companies", operation)
 
 
-@mcp.tool()
+@tool()
 def get_sector_top_etfs(key: str) -> Dict[str, object]:
     """Get top ETFs for a Yahoo Finance sector."""
 
@@ -1020,7 +1036,7 @@ def get_sector_top_etfs(key: str) -> Dict[str, object]:
     return _run_tool("get_sector_top_etfs", operation)
 
 
-@mcp.tool()
+@tool()
 def get_sector_top_mutual_funds(key: str) -> Dict[str, object]:
     """Get top mutual funds for a Yahoo Finance sector."""
 
@@ -1032,7 +1048,7 @@ def get_sector_top_mutual_funds(key: str) -> Dict[str, object]:
     return _run_tool("get_sector_top_mutual_funds", operation)
 
 
-@mcp.tool()
+@tool()
 def get_sector_ticker(key: str) -> Dict[str, object]:
     """Get the ticker symbol associated with a Yahoo Finance sector."""
 
@@ -1044,7 +1060,7 @@ def get_sector_ticker(key: str) -> Dict[str, object]:
     return _run_tool("get_sector_ticker", operation)
 
 
-@mcp.tool()
+@tool()
 def get_industry(key: str) -> Dict[str, object]:
     """Get aggregate industry overview and linked data for a Yahoo Finance industry key."""
 
@@ -1056,7 +1072,7 @@ def get_industry(key: str) -> Dict[str, object]:
     return _run_tool("get_industry", operation)
 
 
-@mcp.tool()
+@tool()
 def get_industry_overview(key: str) -> Dict[str, object]:
     """Get industry overview metadata for a Yahoo Finance industry key."""
 
@@ -1068,7 +1084,7 @@ def get_industry_overview(key: str) -> Dict[str, object]:
     return _run_tool("get_industry_overview", operation)
 
 
-@mcp.tool()
+@tool()
 def get_industry_research_reports(key: str) -> List[Dict[str, object]]:
     """Get industry research reports for a Yahoo Finance industry key."""
 
@@ -1080,7 +1096,7 @@ def get_industry_research_reports(key: str) -> List[Dict[str, object]]:
     return _run_tool("get_industry_research_reports", operation)
 
 
-@mcp.tool()
+@tool()
 def get_industry_top_companies(key: str) -> Dict[str, object]:
     """Get top companies within a Yahoo Finance industry."""
 
@@ -1092,7 +1108,7 @@ def get_industry_top_companies(key: str) -> Dict[str, object]:
     return _run_tool("get_industry_top_companies", operation)
 
 
-@mcp.tool()
+@tool()
 def get_industry_top_growth_companies(key: str) -> Dict[str, object]:
     """Get top growth companies within a Yahoo Finance industry."""
 
@@ -1104,7 +1120,7 @@ def get_industry_top_growth_companies(key: str) -> Dict[str, object]:
     return _run_tool("get_industry_top_growth_companies", operation)
 
 
-@mcp.tool()
+@tool()
 def get_industry_top_performing_companies(key: str) -> Dict[str, object]:
     """Get top performing companies within a Yahoo Finance industry."""
 
@@ -1116,7 +1132,7 @@ def get_industry_top_performing_companies(key: str) -> Dict[str, object]:
     return _run_tool("get_industry_top_performing_companies", operation)
 
 
-@mcp.tool()
+@tool()
 def get_industry_ticker(key: str) -> Dict[str, object]:
     """Get the ticker symbol associated with a Yahoo Finance industry."""
 
@@ -1128,7 +1144,7 @@ def get_industry_ticker(key: str) -> Dict[str, object]:
     return _run_tool("get_industry_ticker", operation)
 
 
-@mcp.tool()
+@tool()
 def get_income_stmt(symbol: str, freq: str = "yearly", pretty: bool = False) -> Dict[str, object]:
     """Get income statement data for a ticker.
 
@@ -1142,7 +1158,7 @@ def get_income_stmt(symbol: str, freq: str = "yearly", pretty: bool = False) -> 
     return _run_tool("get_income_stmt", operation)
 
 
-@mcp.tool()
+@tool()
 def get_balance_sheet(symbol: str, freq: str = "yearly", pretty: bool = False) -> Dict[str, object]:
     """Get balance sheet data for a ticker.
 
@@ -1156,7 +1172,7 @@ def get_balance_sheet(symbol: str, freq: str = "yearly", pretty: bool = False) -
     return _run_tool("get_balance_sheet", operation)
 
 
-@mcp.tool()
+@tool()
 def get_cashflow(symbol: str, freq: str = "yearly", pretty: bool = False) -> Dict[str, object]:
     """Get cashflow statement data for a ticker.
 
@@ -1171,7 +1187,7 @@ def get_cashflow(symbol: str, freq: str = "yearly", pretty: bool = False) -> Dic
     return _run_tool("get_cashflow", operation)
 
 
-@mcp.tool()
+@tool()
 def get_market_summary(market: str) -> Dict[str, object]:
     """Get Yahoo Finance market summary data for a market code.
 
@@ -1187,7 +1203,7 @@ def get_market_summary(market: str) -> Dict[str, object]:
     return _run_tool("get_market_summary", operation)
 
 
-@mcp.tool()
+@tool()
 def get_market(market: str) -> Dict[str, object]:
     """Get Yahoo Finance market summary and status data for a market code.
 
@@ -1203,7 +1219,7 @@ def get_market(market: str) -> Dict[str, object]:
     return _run_tool("get_market", operation)
 
 
-@mcp.tool()
+@tool()
 def get_market_status(market: str) -> Dict[str, object]:
     """Get Yahoo Finance market status data for a market code."""
 
@@ -1215,7 +1231,7 @@ def get_market_status(market: str) -> Dict[str, object]:
     return _run_tool("get_market_status", operation)
 
 
-@mcp.tool()
+@tool()
 def search(
     query: str,
     max_results: int = 8,
@@ -1255,7 +1271,7 @@ def search(
     return _run_tool("search", operation)
 
 
-@mcp.tool()
+@tool()
 def lookup(query: str, count: int = 25) -> Dict[str, object]:
     """Look up matching financial instruments grouped by instrument type.
 

@@ -15,6 +15,7 @@ yfinance-mcp-server is a Python MCP server that exposes the information-collecti
 - typed request models and validated JSON-serializable responses
 - backend-agnostic caching with an in-memory implementation for v1
 - retry, timeout, and concurrency controls around upstream calls
+- explicit threadpool offload for blocking yfinance calls so remote HTTP mode does not block the event loop
 - support for both local stdio mode and remote streamable-http mode
 - project docs covering scope, API mapping, and user setup
 
@@ -105,6 +106,8 @@ Common settings:
 ## Remote Mode
 
 Remote streamable-http transport is available in the current slice with basic health and readiness support.
+
+Blocking yfinance operations are executed via Starlette's threadpool in registered MCP tools so HTTP requests do not run upstream calls directly on the event loop.
 
 Current remote endpoints:
 

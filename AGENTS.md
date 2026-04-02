@@ -31,6 +31,7 @@ Keep those files aligned with the implementation. If you change tool names, beha
   - FastMCP entrypoint
   - tool registration
   - transport dispatch
+  - async MCP wrappers that offload blocking sync tool bodies to Starlette's threadpool
   - `/healthz`, `/readyz`, and `/mcp` wiring for HTTP mode
 - `src/yfinance_mcp/wrapper.py`
   - all upstream `yfinance` access
@@ -63,6 +64,7 @@ Keep those files aligned with the implementation. If you change tool names, beha
 - Route upstream calls through `YFinanceWrapper`; do not duplicate `yfinance` access in server tools.
 - Validate non-trivial outputs through Pydantic models before returning them.
 - Use `_run_tool(...)` for request context, logging, and error normalization.
+- Preserve the async tool registration pattern so blocking `yfinance` calls stay off the HTTP event loop.
 - Prefer `get_quote_snapshot` for current quote-style requests and `get_info` for broader company metadata.
 - When adding a batch tool, enforce bounded concurrency and avoid unbounded fan-out.
 

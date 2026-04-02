@@ -56,6 +56,13 @@ def test_run_tool_logs_quote_snapshot_completion_details():
     assert completion_call.kwargs["quote_symbol"] == "ORCL"
 
 
+def test_registered_tools_are_async_to_avoid_blocking_http_event_loop():
+    tool = server.mcp._tool_manager.get_tool("get_quote_snapshot")
+
+    assert tool is not None
+    assert tool.is_async is True
+
+
 def test_get_batch_quote_snapshot_returns_named_response_model_payload():
     payload = {
         "symbols": ["AAPL", "MSFT"],

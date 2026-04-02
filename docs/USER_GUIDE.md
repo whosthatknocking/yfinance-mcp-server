@@ -56,6 +56,8 @@ To bind a host and port explicitly:
 
 - YF_TRANSPORT=streamable-http YF_HTTP_HOST=127.0.0.1 YF_HTTP_PORT=8000 uv run python -m yfinance_mcp.server
 
+In remote HTTP mode, blocking `yfinance` work is offloaded to Starlette's threadpool so individual tool calls do not execute directly on the event loop.
+
 ## Examples
 
 Configuration and prompt examples are available in:
@@ -73,6 +75,7 @@ After starting the server:
 
 - local mode should start without errors and wait on stdio
 - remote mode should start an HTTP listener on the configured host and port
+- remote mode should remain responsive while blocking upstream `yfinance` calls are running because tool execution is offloaded to worker threads
 - remote mode exposes /healthz for liveness and /readyz for readiness
 - MCP streamable HTTP traffic is served at /mcp
 

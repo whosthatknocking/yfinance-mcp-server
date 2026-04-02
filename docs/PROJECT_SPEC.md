@@ -119,6 +119,7 @@ The authoritative source for scope is the latest supported upstream yfinance doc
 - Register all MCP tools in one place.
 - Instantiate a shared YFinanceWrapper for caching, serialization, and error handling.
 - Support both stdio and streamable-http execution modes.
+- Register tools so blocking upstream `yfinance` work is offloaded from the HTTP event loop to worker threads.
 - Expose metadata about the server version and supported yfinance version.
 - In remote mode, expose MCP traffic and service-health endpoints from one HTTP app.
 - Example structure:
@@ -242,6 +243,7 @@ The final API_MAPPING.md should be exhaustive and maintained against the officia
 - Shared components such as wrapper instances, HTTP clients, and cache adapters must be safe for the selected concurrency model.
 - The implementation should support configurable worker and concurrency limits for batch and multi-symbol operations.
 - Batch tools should avoid unbounded parallel fan-out and should degrade gracefully under constrained resources.
+- In remote HTTP mode, synchronous upstream calls should be offloaded to worker threads so they do not block the ASGI event loop.
 - Recommended controls:
   - maximum concurrent upstream requests per process
   - maximum concurrent upstream requests per MCP call where batch tools fan out
