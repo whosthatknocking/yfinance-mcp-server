@@ -27,7 +27,7 @@ Using pip:
 
 ## Configure
 
-Optional environment variables can be copied from [.env.example](/Users/emt/Workspace/yfinance-mcp-server/.env.example).
+Optional environment variables can be copied from [.env.example](../.env.example).
 
 If you do not set these variables, the server uses the defaults shown below.
 
@@ -86,10 +86,10 @@ The container image starts in `streamable-http` mode, binds to `0.0.0.0`, expose
 
 Configuration and prompt examples are available in:
 
-- [examples/claude_config.json.example](/Users/emt/Workspace/yfinance-mcp-server/examples/claude_config.json.example) for Claude Desktop
-- [examples/lmstudio_config.json.example](/Users/emt/Workspace/yfinance-mcp-server/examples/lmstudio_config.json.example) for LM Studio with uv
-- [examples/lmstudio_config.venv.json.example](/Users/emt/Workspace/yfinance-mcp-server/examples/lmstudio_config.venv.json.example) for LM Studio with an explicit virtualenv Python path
-- [examples/QUERIES.md](/Users/emt/Workspace/yfinance-mcp-server/examples/QUERIES.md) for example prompts and tool-oriented queries
+- [examples/claude_config.json.example](../examples/claude_config.json.example) for Claude Desktop
+- [examples/lmstudio_config.json.example](../examples/lmstudio_config.json.example) for LM Studio with uv
+- [examples/lmstudio_config.venv.json.example](../examples/lmstudio_config.venv.json.example) for LM Studio with an explicit virtualenv Python path
+- [examples/QUERIES.md](../examples/QUERIES.md) for example prompts and tool-oriented queries
 
 For LM Studio, make sure the config uses the project directory as cwd. If LM Studio launches the system Python without the project environment, it will fail to import yfinance_mcp.
 

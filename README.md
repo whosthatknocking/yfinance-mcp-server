@@ -89,7 +89,7 @@ Not implemented:
 
 ## Configuration
 
-Environment settings are documented in [.env.example](/Users/emt/Workspace/yfinance-mcp-server/.env.example).
+Environment settings are documented in [.env.example](.env.example).
 
 Common settings:
 
@@ -126,10 +126,10 @@ Example:
 
 ## Documentation
 
-- [docs/USER_GUIDE.md](/Users/emt/Workspace/yfinance-mcp-server/docs/USER_GUIDE.md) for installation and run steps
-- [docs/PROJECT_SPEC.md](/Users/emt/Workspace/yfinance-mcp-server/docs/PROJECT_SPEC.md) for requirements and scope
-- [docs/API_MAPPING.md](/Users/emt/Workspace/yfinance-mcp-server/docs/API_MAPPING.md) for upstream-to-MCP tool mapping
-- [examples/QUERIES.md](/Users/emt/Workspace/yfinance-mcp-server/examples/QUERIES.md) for example prompts
+- [docs/USER_GUIDE.md](docs/USER_GUIDE.md) for installation and run steps
+- [docs/PROJECT_SPEC.md](docs/PROJECT_SPEC.md) for requirements and scope
+- [docs/API_MAPPING.md](docs/API_MAPPING.md) for upstream-to-MCP tool mapping
+- [examples/QUERIES.md](examples/QUERIES.md) for example prompts
 
 ## Remote Mode
 
@@ -159,15 +159,15 @@ Current remote endpoints:
 
 ## Project Layout
 
-- [src/yfinance_mcp/server.py](/Users/emt/Workspace/yfinance-mcp-server/src/yfinance_mcp/server.py) contains the MCP server entrypoint and tool registration.
-- [src/yfinance_mcp/wrapper.py](/Users/emt/Workspace/yfinance-mcp-server/src/yfinance_mcp/wrapper.py) contains the yfinance wrapper, retry policy, and cache usage.
-- [src/yfinance_mcp/cache.py](/Users/emt/Workspace/yfinance-mcp-server/src/yfinance_mcp/cache.py) defines the cache abstraction and in-memory backend.
-- [src/yfinance_mcp/schemas.py](/Users/emt/Workspace/yfinance-mcp-server/src/yfinance_mcp/schemas.py) contains request and response schemas.
+- [src/yfinance_mcp/server.py](src/yfinance_mcp/server.py) contains the MCP server entrypoint and tool registration.
+- [src/yfinance_mcp/wrapper.py](src/yfinance_mcp/wrapper.py) contains the yfinance wrapper, retry policy, and cache usage.
+- [src/yfinance_mcp/cache.py](src/yfinance_mcp/cache.py) defines the cache abstraction and in-memory backend.
+- [src/yfinance_mcp/schemas.py](src/yfinance_mcp/schemas.py) contains request and response schemas.
 
 ## Development
 
-See [docs/DEVELOPMENT.md](/Users/emt/Workspace/yfinance-mcp-server/docs/DEVELOPMENT.md).
+See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 
 ## License
 
-This project is licensed under the MIT License. See [LICENSE](/Users/emt/Workspace/yfinance-mcp-server/LICENSE).
+This project is licensed under the MIT License. See [LICENSE](LICENSE).
