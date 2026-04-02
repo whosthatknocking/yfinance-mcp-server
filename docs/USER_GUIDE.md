@@ -29,15 +29,17 @@ Using pip:
 
 Optional environment variables can be copied from [.env.example](/Users/emt/Workspace/yfinance-mcp-server/.env.example).
 
+If you do not set these variables, the server uses the defaults shown below.
+
 Common settings:
 
-- YF_TRANSPORT=stdio for local MCP hosts
-- YF_TRANSPORT=streamable-http for remote HTTP mode
-- YF_HTTP_HOST and YF_HTTP_PORT for remote mode
-- YF_CACHE_BACKEND, YF_CACHE_TTL, and related cache settings
-- YF_UPSTREAM_CONCURRENCY for upstream request concurrency limits
-- YF_READ_TIMEOUT, YF_TOTAL_TIMEOUT, YF_MAX_RETRIES, YF_BACKOFF_CAP_SECONDS, YF_RETRY_AFTER_CAP_SECONDS, YF_THROTTLE_COOLDOWN_THRESHOLD, and YF_THROTTLE_COOLDOWN_SECONDS for upstream retry and throttling behavior
-- YF_LOG_LEVEL to control stderr log verbosity
+- `YF_TRANSPORT=stdio` by default for local MCP hosts. Set `YF_TRANSPORT=streamable-http` for remote HTTP mode.
+- `YF_HTTP_HOST=127.0.0.1` and `YF_HTTP_PORT=8000` by default for remote mode. In Docker, override `YF_HTTP_HOST=0.0.0.0`.
+- `YF_CACHE_BACKEND=memory` by default.
+- `YF_CACHE_TTL=900`, `YF_CACHE_TTL_QUOTE=60`, `YF_CACHE_TTL_REFERENCE=3600`, and `YF_CACHE_TTL_HISTORY=900` by default.
+- `YF_UPSTREAM_CONCURRENCY=4` by default for upstream request concurrency limits.
+- `YF_READ_TIMEOUT=20`, `YF_TOTAL_TIMEOUT=30`, `YF_MAX_RETRIES=3`, `YF_BACKOFF_CAP_SECONDS=4`, `YF_RETRY_AFTER_CAP_SECONDS=30`, `YF_THROTTLE_COOLDOWN_THRESHOLD=3`, and `YF_THROTTLE_COOLDOWN_SECONDS=10` by default for upstream retry and throttling behavior.
+- `YF_LOG_LEVEL` defaults to `WARNING` in `stdio` mode and `INFO` in `streamable-http` mode unless explicitly set.
 
 ## Run Locally with stdio
 
