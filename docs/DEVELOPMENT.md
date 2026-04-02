@@ -34,5 +34,11 @@ Recommended setup:
 ## Pull Requests
 
 - keep changes scoped and reviewable
+- use imperative commit subjects
+- keep commits small and focused
+- include tests with behavior changes when practical
 - include documentation updates when tool signatures, setup, or behavior changes
+- summarize PR intent briefly
+- list validation steps actually run
+- mention skipped validation explicitly when relevant
 - mention any live-network testing limitations in the PR description

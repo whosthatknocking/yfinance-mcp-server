@@ -115,6 +115,16 @@ Common files to update:
 4. Update docs if user-facing behavior changed.
 5. Run targeted tests, then broader tests if warranted.
 
+## Commit and PR Guidance
+
+- Use imperative commit subjects, for example `docs: add selective tool arg guidance`.
+- Keep commits small, single-purpose, and easy to review.
+- Include tests with behavior changes in the same commit when practical.
+- Avoid mixing unrelated refactors, docs updates, and behavior changes unless they are tightly coupled.
+- In PRs, summarize intent in 1-3 sentences.
+- In PRs, list the validation steps actually run.
+- If validation was skipped or limited, say so explicitly.
+
 ## Repository-Specific Notes
 
 - The package version is defined in `pyproject.toml` and exposed by the package.
