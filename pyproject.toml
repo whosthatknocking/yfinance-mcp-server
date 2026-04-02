@@ -42,4 +42,5 @@ where = ["src"]
 testpaths = ["tests"]
 markers = [
   "live: opt-in live-network tests against Yahoo Finance via yfinance",
+  "perf: opt-in performance and benchmark-oriented tests",
 ]

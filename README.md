@@ -119,6 +119,7 @@ Current remote endpoints:
 
 - offline tests: PYTHONPATH=src pytest
 - live integration tests: YF_RUN_LIVE_TESTS=1 PYTHONPATH=src pytest -m live
+- perf tests: PYTHONPATH=src pytest -m perf
 - transport tests: included in the default pytest run and cover main(), /healthz, /readyz, and /mcp route wiring
 
 ## Observability
