@@ -89,7 +89,7 @@ Not implemented:
 
 ## Configuration
 
-Environment settings are documented in [.env.example](.env.example).
+Environment settings are listed in [.env.example](.env.example). Defaults and one-line explanations for the common settings are documented in [docs/USER_GUIDE.md](docs/USER_GUIDE.md).
 
 Common settings:
 

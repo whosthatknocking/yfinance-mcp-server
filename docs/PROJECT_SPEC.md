@@ -6,7 +6,7 @@ yfinance-mcp-server is a Python 3.11+ MCP server built with the official FastMCP
 
 ## Objectives
 
-- Provide coverage of the information-collection yfinance API and observable behavior, as defined by the latest supported upstream release, including Ticker, Tickers, download, Market, Calendars, Search, Lookup, sector and industry queries, and screener support.
+- Provide coverage of the information-collection yfinance API and observable behavior, as defined by the latest supported upstream release, including Ticker, Tickers, download, Market, Calendars, Search, Lookup, and sector and industry queries, while allowing some higher-fragility surfaces such as screeners to remain intentionally deferred.
 - Expose strongly typed MCP tools with clear docstrings, parameter descriptions, and structured return schemas for strong LLM discoverability.
 - Handle data safely and efficiently by converting pandas objects into JSON-serializable payloads or markdown tables where appropriate.
 - Include caching and rate-limit awareness to reduce pressure on Yahoo Finance and improve responsiveness.
@@ -27,23 +27,19 @@ The authoritative source for scope is the latest supported upstream yfinance doc
 - Core classes: yf.Ticker, yf.Tickers, yf.Market, yf.Calendars
 - Discovery and screening APIs: yf.Search, yf.Lookup, sector and industry queries, and screener-related functions, with screener/query-builder surfaces deferred until they can be exposed safely for agent use
 - Top-level functions: yf.download, and optionally yf.screen when the server has an agent-safe query-construction flow
-- Supported Ticker information APIs include:
+- Currently implemented or actively targeted Ticker information APIs include:
   - info
   - history
   - fast_info
   - actions
   - dividends
   - splits
-  - capital_gains
   - financials
   - quarterly_financials
   - balance_sheet
   - quarterly_balance_sheet
   - cashflow
   - quarterly_cashflow
-  - earnings
-  - quarterly_earnings
-  - sustainability
   - analyst price targets and recommendations
   - calendar
   - news
@@ -51,9 +47,15 @@ The authoritative source for scope is the latest supported upstream yfinance doc
   - option_chain
   - funds_data for ETFs and funds
 
+### Intentionally Deferred or Unsupported Areas
+
+- Screener and query-builder APIs such as `yf.screen`, `EquityQuery`, and `FundQuery` are intentionally deferred until they can be exposed with stronger agent-facing validation and discoverability.
+- Some upstream ticker surfaces are intentionally not exposed in the current server because the live upstream behavior is deprecated, unreliable, or consistently empty in practice. Current examples include `earnings`, `capital_gains`, and `sustainability`.
+- Functionally overlapping APIs may be intentionally consolidated into broader MCP tools when separate tools would not provide distinct user intent or response semantics.
+
 ### Tool Exposure Strategy
 
-- Every supported information-collection method or property should be represented as an explicit @mcp.tool() function unless it is listed in an explicit exclusions section.
+- Every supported information-collection method or property should be represented as an explicit @mcp.tool() function unless it is intentionally deferred, intentionally consolidated into a broader MCP tool, or listed in an explicit exclusions section.
 - The server must not rely on a single generic "call anything" tool.
 - The core v1 surface should remain focused on read-only request-response data retrieval.
 - Helper tools that support information retrieval, such as validated screener query builders, are allowed when they directly enable read-only data access. Until those helpers are agent-safe and strongly validated, screener/query-builder APIs may remain intentionally deferred.
@@ -205,7 +207,6 @@ The implementation should maintain an exhaustive mapping of information-collecti
 | yf.Market(market).status | get_market_status | market: str | dict |
 | yf.Search(...) | search | query, result and view controls | dict |
 | yf.Lookup(...) | lookup | query, count | dict |
-| yf.screen(query, ...) | screen | query, count, offset | dict |
 
 The final API_MAPPING.md should be exhaustive and maintained against the official yfinance reference.
 
@@ -449,7 +450,7 @@ Recommended packaging behavior:
 
 - MCP resources for raw CSV or JSON exports
 - MCP prompts for common financial analysis workflows
-- Advanced screener and EquityQuery builder tools
+- Advanced screener and EquityQuery builder tools once they can be exposed safely for agent use
 
 ## Acceptance Criteria
 
