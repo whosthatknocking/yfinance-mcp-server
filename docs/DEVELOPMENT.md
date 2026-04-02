@@ -34,6 +34,40 @@ Recommended setup:
 - keep direct tests around public server tool functions in addition to wrapper and serialization tests
 - for local smoke checks, validate imports and basic wrapper behavior before opening a PR
 
+## Release Process
+
+Releases are created by the GitHub Actions workflow in [.github/workflows/release.yml](../.github/workflows/release.yml).
+
+Current release behavior:
+
+- the workflow runs on pushes of tags that match `v*`
+- the tag must exactly match the package version in `pyproject.toml`
+- the workflow builds both the source distribution and wheel
+- the workflow creates a GitHub release with generated release notes and uploads the build artifacts
+
+Recommended release steps:
+
+1. Update the version in `pyproject.toml`.
+2. Make sure the docs and implementation reflect the release contents.
+3. Run the relevant validation locally:
+   - `PYTHONPATH=src pytest`
+   - optional: `YF_RUN_LIVE_TESTS=1 PYTHONPATH=src pytest -m live`
+   - optional: `python -m build`
+4. Commit the version and release-related changes.
+5. Create an annotated tag that matches the package version, for example `v0.2.1`.
+6. Push the commit and tag to GitHub.
+
+Example:
+
+- `git tag -a v0.2.1 -m "Release v0.2.1"`
+- `git push origin main --follow-tags`
+
+Important constraints:
+
+- do not push a release tag that does not match `project.version` in `pyproject.toml`
+- if the tag and package version differ, the release workflow fails
+- if the release changes the supported upstream `yfinance` version or the public MCP surface, update [docs/API_MAPPING.md](API_MAPPING.md), [docs/PROJECT_SPEC.md](PROJECT_SPEC.md), and the user-facing docs in the same change
+
 ## Performance Baseline
 
 Use `scripts/benchmark_baseline.py` for a quick, repeatable snapshot of representative behavior. The benchmark is intentionally mock-based so it stays stable across runs and does not depend on Yahoo Finance latency.
