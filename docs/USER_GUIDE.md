@@ -33,13 +33,23 @@ If you do not set these variables, the server uses the defaults shown below.
 
 Common settings:
 
-- `YF_TRANSPORT=stdio` by default for local MCP hosts. Set `YF_TRANSPORT=streamable-http` for remote HTTP mode.
-- `YF_HTTP_HOST=127.0.0.1` and `YF_HTTP_PORT=8000` by default for remote mode. In Docker, override `YF_HTTP_HOST=0.0.0.0`.
-- `YF_CACHE_BACKEND=memory` by default.
-- `YF_CACHE_TTL=900`, `YF_CACHE_TTL_QUOTE=60`, `YF_CACHE_TTL_REFERENCE=3600`, and `YF_CACHE_TTL_HISTORY=900` by default.
-- `YF_UPSTREAM_CONCURRENCY=4` by default for upstream request concurrency limits.
-- `YF_READ_TIMEOUT=20`, `YF_TOTAL_TIMEOUT=30`, `YF_MAX_RETRIES=3`, `YF_BACKOFF_CAP_SECONDS=4`, `YF_RETRY_AFTER_CAP_SECONDS=30`, `YF_THROTTLE_COOLDOWN_THRESHOLD=3`, and `YF_THROTTLE_COOLDOWN_SECONDS=10` by default for upstream retry and throttling behavior.
-- `YF_LOG_LEVEL` defaults to `WARNING` in `stdio` mode and `INFO` in `streamable-http` mode unless explicitly set.
+- `YF_TRANSPORT=stdio` by default. Selects the server transport. Set `YF_TRANSPORT=streamable-http` for remote HTTP mode.
+- `YF_HTTP_HOST=127.0.0.1` by default. Sets the bind host for remote HTTP mode. In Docker, override `YF_HTTP_HOST=0.0.0.0`.
+- `YF_HTTP_PORT=8000` by default. Sets the bind port for remote HTTP mode.
+- `YF_CACHE_BACKEND=memory` by default. Selects the cache backend implementation.
+- `YF_CACHE_TTL=900` by default. Sets the general cache lifetime in seconds.
+- `YF_CACHE_TTL_QUOTE=60` by default. Sets the cache lifetime for quote-style responses in seconds.
+- `YF_CACHE_TTL_REFERENCE=3600` by default. Sets the cache lifetime for reference-style metadata responses in seconds.
+- `YF_CACHE_TTL_HISTORY=900` by default. Sets the cache lifetime for historical data responses in seconds.
+- `YF_UPSTREAM_CONCURRENCY=4` by default. Caps concurrent upstream Yahoo Finance work per process.
+- `YF_READ_TIMEOUT=20` by default. Sets the upstream read timeout in seconds.
+- `YF_TOTAL_TIMEOUT=30` by default. Sets the total deadline for an upstream call in seconds.
+- `YF_MAX_RETRIES=3` by default. Sets the maximum number of retry attempts for transient upstream failures.
+- `YF_BACKOFF_CAP_SECONDS=4` by default. Caps exponential backoff delay between retries.
+- `YF_RETRY_AFTER_CAP_SECONDS=30` by default. Caps server-directed `Retry-After` delays.
+- `YF_THROTTLE_COOLDOWN_THRESHOLD=3` by default. Sets how many consecutive throttle-like failures trigger cooldown behavior.
+- `YF_THROTTLE_COOLDOWN_SECONDS=10` by default. Sets how long the server pauses upstream work after repeated throttle failures.
+- `YF_LOG_LEVEL` defaults to `WARNING` in `stdio` mode and `INFO` in `streamable-http` mode unless explicitly set. Controls stderr log verbosity.
 
 ## Run Locally with stdio
 
