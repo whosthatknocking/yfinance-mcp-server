@@ -18,6 +18,18 @@ yfinance-mcp-server is a Python MCP server that exposes the information-collecti
 - support for both local stdio mode and remote streamable-http mode
 - project docs covering scope, API mapping, and user setup
 
+## Use Cases
+
+- retrieve a current quote snapshot for a single ticker such as AAPL, TSLA, or SPY
+- compare multiple tickers using recent price history, quote snapshots, and news in one agent workflow
+- download historical OHLCV data across one or more symbols for charting or downstream analysis
+- fetch company metadata, analyst data, earnings dates, insider activity, and holder data for research prompts
+- pull annual or quarterly income statements, balance sheets, and cash flow statements for fundamental analysis
+- inspect available options expirations and fetch option chains for a selected date
+- access Yahoo market summary, sector, industry, search, and lookup endpoints for discovery-oriented tasks
+- support AI hosts that need explicit tool selection instead of relying on a generic Python or HTTP wrapper
+- run the same tool set locally over stdio for desktop hosts or remotely over streamable HTTP for shared deployments
+
 ## Requirements
 
 - Python 3.11+
