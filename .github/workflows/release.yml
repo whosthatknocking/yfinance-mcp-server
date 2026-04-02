@@ -1,0 +1,62 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Verify tag matches package version
+        run: |
+          python - <<'PY'
+          import pathlib
+          import re
+          import tomllib
+
+          pyproject = tomllib.loads(pathlib.Path("pyproject.toml").read_text())
+          package_version = pyproject["project"]["version"]
+          tag = "${GITHUB_REF_NAME}"
+
+          if not re.fullmatch(r"v\d+\.\d+\.\d+.*", tag):
+              raise SystemExit(f"Tag {tag!r} does not look like a release tag")
+
+          expected_tag = f"v{package_version}"
+          if tag != expected_tag:
+              raise SystemExit(
+                  f"Git tag {tag!r} does not match package version {package_version!r} "
+                  f"(expected {expected_tag!r})"
+              )
+
+          print(f"Verified release tag {tag} matches package version {package_version}")
+          PY
+
+      - name: Install build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install build
+
+      - name: Build distribution artifacts
+        run: |
+          python -m build
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            dist/*.tar.gz
+            dist/*.whl
