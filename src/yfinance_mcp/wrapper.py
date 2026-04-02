@@ -113,11 +113,6 @@ class YFinanceWrapper:
             fast_info = serialize_value(dict(ticker.fast_info))
             info = ticker.info
             if isinstance(info, dict):
-                market_price = info.get("regularMarketPrice")
-                if market_price is None:
-                    market_price = info.get("currentPrice")
-                if market_price is not None:
-                    fast_info["lastPrice"] = serialize_value(market_price)
                 if fast_info.get("previousClose") is None and info.get("previousClose") is not None:
                     fast_info["previousClose"] = serialize_value(info.get("previousClose"))
             logger.info(

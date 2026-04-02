@@ -222,7 +222,7 @@ def test_get_fast_info_resolves_unique_company_name_via_lookup():
     mocked_ticker.assert_called_once_with("TSLA")
 
 
-def test_get_fast_info_prefers_info_market_price_over_fast_info_last_price():
+def test_get_fast_info_preserves_fast_info_last_price_when_info_has_market_price():
     wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
 
     with patch("yfinance_mcp.wrapper.yf.Ticker") as mocked_ticker:
@@ -231,11 +231,11 @@ def test_get_fast_info_prefers_info_market_price_over_fast_info_last_price():
 
         result = wrapper.get_fast_info("TSLA")
 
-    assert result["lastPrice"] == 380.87
+    assert result["lastPrice"] == 245.67
     assert result["previousClose"] == 240.0
 
 
-def test_get_fast_info_uses_current_price_and_fills_previous_close_when_missing():
+def test_get_fast_info_fills_previous_close_from_info_without_overwriting_last_price():
     wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
 
     with patch("yfinance_mcp.wrapper.yf.Ticker") as mocked_ticker:
@@ -244,7 +244,7 @@ def test_get_fast_info_uses_current_price_and_fills_previous_close_when_missing(
 
         result = wrapper.get_fast_info("TSLA")
 
-    assert result["lastPrice"] == 380.87
+    assert result["lastPrice"] == 245.67
     assert result["previousClose"] == 371.75
 
 
