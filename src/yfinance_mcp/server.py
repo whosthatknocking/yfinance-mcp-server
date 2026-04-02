@@ -301,6 +301,16 @@ def get_history(
     Use this tool for charting, trend analysis, and recent performance review.
     It supports either a named lookback period or an explicit start/end date
     range. For multi-ticker historical retrieval, use `download_history`.
+
+    Args:
+        symbol: Ticker symbol such as AAPL or MSFT.
+        period: Named lookback window such as 1mo, 6mo, 1y, or max. Use this or `start`/`end`.
+        interval: Candle interval such as 1d, 1wk, or 1h when supported upstream.
+        start: Inclusive start date in YYYY-MM-DD format for explicit date-range requests.
+        end: Exclusive end date in YYYY-MM-DD format for explicit date-range requests.
+        prepost: Whether to include pre-market and after-hours data when supported.
+        auto_adjust: Whether to return prices adjusted for splits and dividends.
+        actions: Whether to include dividends and split events in the returned history payload.
     """
     def operation() -> Dict[str, object]:
         request = HistoryRequest(
@@ -358,6 +368,16 @@ def download_history(
     Use this tool when you need a batch historical dataset across multiple
     symbols. For a single ticker history request, `get_history` is usually the
     better fit.
+
+    Args:
+        tickers: One or more ticker symbols such as ["AAPL", "MSFT"].
+        period: Named lookback window such as 1mo, 6mo, 1y, or max. Use this or `start`/`end`.
+        interval: Candle interval such as 1d, 1wk, or 1h when supported upstream.
+        start: Inclusive start date in YYYY-MM-DD format for explicit date-range requests.
+        end: Exclusive end date in YYYY-MM-DD format for explicit date-range requests.
+        auto_adjust: Whether to return prices adjusted for splits and dividends.
+        prepost: Whether to include pre-market and after-hours data when supported.
+        actions: Whether to include dividends and split events in the downloaded payload.
     """
     def operation() -> Dict[str, object]:
         request = DownloadRequest(
@@ -382,6 +402,11 @@ def get_news(symbol: str, count: int = 10, tab: str = "news") -> List[Dict[str, 
     Use this tool to retrieve recent article metadata tied to a symbol. It is
     useful for event-driven analysis, sentiment review, and contextualizing
     recent market moves.
+
+    Args:
+        symbol: Ticker symbol such as TSLA or NVDA.
+        count: Maximum number of news items to request.
+        tab: Yahoo news view to query, usually `news`.
     """
     def operation() -> List[Dict[str, object]]:
         request = NewsRequest(symbol=symbol, count=count, tab=tab)
@@ -410,6 +435,10 @@ def get_option_chain(symbol: str, date: Optional[str] = None) -> Dict[str, objec
     Use this tool for options analysis after you know the desired expiration
     date. Pair it with `get_option_expirations` when you need to discover valid
     dates first.
+
+    Args:
+        symbol: Ticker symbol such as SPY or AAPL.
+        date: Expiration date in YYYY-MM-DD format. If omitted, Yahoo's default chain is returned.
     """
     def operation() -> Dict[str, object]:
         request = OptionChainRequest(symbol=symbol, date=date)
@@ -488,6 +517,11 @@ def get_earnings_dates(symbol: str, limit: int = 12, offset: int = 0) -> Dict[st
 
     Use this tool when the user asks about earnings events, earnings timing, or
     recent earnings history for a specific symbol.
+
+    Args:
+        symbol: Ticker symbol such as AAPL.
+        limit: Maximum number of earnings rows to return.
+        offset: Pagination offset for fetching older or later earnings rows.
     """
 
     def operation() -> Dict[str, object]:
@@ -1150,6 +1184,11 @@ def get_income_stmt(symbol: str, freq: str = "yearly", pretty: bool = False) -> 
 
     Use this tool for annual, quarterly, or trailing income statement analysis.
     It is best suited for revenue, margin, and profitability review.
+
+    Args:
+        symbol: Ticker symbol such as AMZN.
+        freq: Statement frequency such as `yearly`, `quarterly`, or `trailing`.
+        pretty: Whether to request the prettier upstream column labeling when supported.
     """
     def operation() -> Dict[str, object]:
         request = StatementRequest(symbol=symbol, freq=freq, pretty=pretty)
@@ -1164,6 +1203,11 @@ def get_balance_sheet(symbol: str, freq: str = "yearly", pretty: bool = False) -
 
     Use this tool for annual or quarterly balance sheet analysis such as assets,
     liabilities, and capital structure review.
+
+    Args:
+        symbol: Ticker symbol such as META.
+        freq: Statement frequency such as `yearly` or `quarterly`.
+        pretty: Whether to request the prettier upstream column labeling when supported.
     """
     def operation() -> Dict[str, object]:
         request = StatementRequest(symbol=symbol, freq=freq, pretty=pretty)
@@ -1179,6 +1223,11 @@ def get_cashflow(symbol: str, freq: str = "yearly", pretty: bool = False) -> Dic
     Use this tool for annual, quarterly, or trailing cashflow analysis,
     including operating cashflow, investing activity, and free-cash-flow style
     review.
+
+    Args:
+        symbol: Ticker symbol such as GOOGL.
+        freq: Statement frequency such as `yearly`, `quarterly`, or `trailing`.
+        pretty: Whether to request the prettier upstream column labeling when supported.
     """
     def operation() -> Dict[str, object]:
         request = StatementRequest(symbol=symbol, freq=freq, pretty=pretty)
@@ -1195,6 +1244,9 @@ def get_market_summary(market: str) -> Dict[str, object]:
     single-ticker lookup. The `market` argument must be a Yahoo Finance market
     code such as `us` or `ca`, not a ticker symbol like AAPL or TSLA. For
     ticker-specific quote or price questions, use `get_quote_snapshot`.
+
+    Args:
+        market: Yahoo Finance market code such as `us`, `ca`, or another supported market identifier.
     """
     def operation() -> Dict[str, object]:
         request = MarketRequest(market=market)
@@ -1209,6 +1261,9 @@ def get_market(market: str) -> Dict[str, object]:
 
     Use this tool when you want the combined market-level payload in one call.
     For status-only requests, use `get_market_status`.
+
+    Args:
+        market: Yahoo Finance market code such as `us`, not a ticker symbol.
     """
 
     def operation() -> Dict[str, object]:
@@ -1250,6 +1305,18 @@ def search(
     discovery-oriented prompt and you need quote matches plus related news or
     navigation results. This is the best starting point when you do not yet have
     a specific ticker symbol.
+
+    Args:
+        query: Search text such as a company name, ticker fragment, or asset keyword.
+        max_results: Maximum number of quote-style matches to return.
+        news_count: Maximum number of related news items to include.
+        lists_count: Maximum number of list-style results to include.
+        include_cb: Whether to include company breakdown style search results.
+        include_nav_links: Whether to include Yahoo navigation links in the result.
+        include_research: Whether to include research results when available.
+        include_cultural_assets: Whether to include cultural-asset style matches when available.
+        enable_fuzzy_query: Whether to allow fuzzier matching for misspelled or approximate queries.
+        recommended: Recommendation limit used by the upstream search endpoint.
     """
 
     def operation() -> Dict[str, object]:
@@ -1278,6 +1345,10 @@ def lookup(query: str, count: int = 25) -> Dict[str, object]:
     Use this tool when you need categorized discovery results such as stocks,
     ETFs, mutual funds, indices, futures, currencies, or cryptocurrencies for a
     query like a company name, symbol, or asset keyword.
+
+    Args:
+        query: Lookup text such as a company name, symbol, or asset keyword.
+        count: Maximum number of grouped matches to request.
     """
 
     def operation() -> Dict[str, object]:
