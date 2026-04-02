@@ -53,32 +53,9 @@ The docs are split by purpose so the README stays brief:
 - [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md): development workflow, tests, and benchmark notes
 - [examples/QUERIES.md](examples/QUERIES.md): example prompts and query patterns
 
-## Project Scope
+Scope, exclusions, and contract rules live in [docs/PROJECT_SPEC.md](docs/PROJECT_SPEC.md) and [docs/API_MAPPING.md](docs/API_MAPPING.md).
 
-This server is intentionally:
-
-- read-only
-- explicit-tool based
-- transport-consistent across `stdio` and `streamable-http`
-- conservative about unstable upstream surfaces
-
-Some upstream `yfinance` APIs remain intentionally excluded because they are deprecated, unreliable, or consistently empty in practice. The current exclusions and rationale live in [docs/API_MAPPING.md](docs/API_MAPPING.md) and [docs/PROJECT_SPEC.md](docs/PROJECT_SPEC.md).
-
-## Development
-
-Install development dependencies with:
-
-```bash
-uv pip install -e .[dev]
-```
-
-Run the main test suite with:
-
-```bash
-PYTHONPATH=src pytest
-```
-
-Development workflow and validation details are in [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
+Development setup, testing, and benchmark guidance live in [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 
 ## License
 
