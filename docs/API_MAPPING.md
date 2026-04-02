@@ -24,6 +24,7 @@ In this document, `not-implemented` can mean one of three things: the feature is
 
 | Upstream API | Kind | MCP Tool | Status | Notes |
 | --- | --- | --- | --- | --- |
+| Server metadata | internal server capability | get_server_metadata | implemented | Returns server version, supported yfinance version, transport modes, and cache backend metadata. |
 | yf.download(...) | function | download_history | implemented | Multi-ticker historical download with explicit history parameters. |
 | yf.screen(...) | function | screen | not-implemented | Intentionally deferred until the project has an agent-safe screener query construction and validation flow. |
 | yf.Search(...) | class constructor | search | implemented | Returns structured search payload and selected views. |
@@ -268,6 +269,7 @@ In this document, `not-implemented` can mean one of three things: the feature is
 These tools are implemented today and cover the highest-value yfinance paths in the current server:
 
 - get_info
+- get_server_metadata
 - get_quote_snapshot
 - get_batch_info
 - get_batch_quote_snapshot

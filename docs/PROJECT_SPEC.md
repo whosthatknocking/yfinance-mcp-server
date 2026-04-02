@@ -284,14 +284,17 @@ The final API_MAPPING.md should be exhaustive and maintained against the officia
   - YF_CACHE_TTL_QUOTE
   - YF_CACHE_TTL_REFERENCE
   - YF_CACHE_TTL_HISTORY
-  - YF_CACHE_PATH
   - YF_UPSTREAM_CONCURRENCY
+  - YF_READ_TIMEOUT
+  - YF_TOTAL_TIMEOUT
   - YF_MAX_RETRIES
   - YF_BACKOFF_CAP_SECONDS
   - YF_RETRY_AFTER_CAP_SECONDS
   - YF_THROTTLE_COOLDOWN_THRESHOLD
   - YF_THROTTLE_COOLDOWN_SECONDS
   - YF_TRANSPORT
+  - YF_HTTP_HOST
+  - YF_HTTP_PORT
   - YF_LOG_LEVEL
 - Recommended cache policy:
   - short TTL for quote-like and market summary data

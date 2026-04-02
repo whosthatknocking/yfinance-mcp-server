@@ -36,7 +36,7 @@ Common settings:
 - `YF_TRANSPORT=stdio` by default. Selects the server transport. Set `YF_TRANSPORT=streamable-http` for remote HTTP mode.
 - `YF_HTTP_HOST=127.0.0.1` by default. Sets the bind host for remote HTTP mode. In Docker, override `YF_HTTP_HOST=0.0.0.0`.
 - `YF_HTTP_PORT=8000` by default. Sets the bind port for remote HTTP mode.
-- `YF_CACHE_BACKEND=memory` by default. Selects the cache backend implementation.
+- `YF_CACHE_BACKEND=memory` by default. The current implementation uses the in-memory cache backend; this variable is reserved for future backend selection and is reported in server metadata.
 - `YF_CACHE_TTL=900` by default. Sets the general cache lifetime in seconds.
 - `YF_CACHE_TTL_QUOTE=60` by default. Sets the cache lifetime for quote-style responses in seconds.
 - `YF_CACHE_TTL_REFERENCE=3600` by default. Sets the cache lifetime for reference-style metadata responses in seconds.
@@ -118,8 +118,4 @@ After starting the server:
 
 - The package expects Python 3.11+, even if some local smoke checks were done with an older interpreter.
 - If dependencies such as the MCP SDK are missing, install the project again in a fresh Python 3.11+ environment.
-- Not implemented:
-- `get_shares` is not implemented because current `yfinance` does not implement the upstream shares call reliably.
-- `get_earnings` is not implemented because the upstream earnings table path is deprecated and unstable.
-- `get_capital_gains` is not implemented because live upstream checks consistently returned no capital gains data.
-- `get_sustainability` is not implemented because Yahoo frequently returns no sustainability or ESG fundamentals data.
+- For current unsupported or intentionally excluded upstream surfaces, see [docs/API_MAPPING.md](API_MAPPING.md) and [docs/PROJECT_SPEC.md](PROJECT_SPEC.md).
