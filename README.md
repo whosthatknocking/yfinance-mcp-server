@@ -22,7 +22,7 @@ yfinance-mcp-server is a Python MCP server that exposes the information-collecti
 ## Why This Project
 
 - use this project when you need a finance MCP server designed for reliable AI integration rather than a thin local wrapper around `yfinance`
-- explicit tools with typed inputs and validated JSON-safe outputs improve tool discovery, host compatibility, and long-term maintainability
+- explicit tools with typed inputs and validated JSON-safe outputs improve tool discovery, host compatibility, and make it easier to evolve tool contracts safely as `yfinance` changes
 - operational controls such as caching, retries, timeouts, bounded concurrency, health endpoints, benchmark baselines, and remote HTTP deployment support make it a stronger fit for hosted or repeatable environments
 - unsupported or unreliable upstream surfaces are documented clearly instead of being exposed as if they were stable
 
