@@ -1,0 +1,52 @@
+name: Docker
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate docker-compose config
+        run: |
+          docker compose config
+
+      - name: Build image
+        run: |
+          docker build -t yfinance-mcp-server:ci .
+
+      - name: Start container
+        run: |
+          docker run -d --rm -p 8000:8000 --name yfinance-mcp-ci yfinance-mcp-server:ci
+
+      - name: Wait for health endpoint
+        run: |
+          for _ in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:8000/healthz > /tmp/healthz.json; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Container did not become healthy in time"
+          docker logs yfinance-mcp-ci
+          exit 1
+
+      - name: Check ready endpoint
+        run: |
+          curl --fail --silent http://127.0.0.1:8000/readyz > /tmp/readyz.json
+          cat /tmp/healthz.json
+          cat /tmp/readyz.json
+
+      - name: Show container logs
+        if: always()
+        run: |
+          docker logs yfinance-mcp-ci || true
+
+      - name: Stop container
+        if: always()
+        run: |
+          docker stop yfinance-mcp-ci || true
