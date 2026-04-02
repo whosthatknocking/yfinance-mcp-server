@@ -62,6 +62,11 @@ Remote HTTP mode:
 1. Install the project.
 2. Run YF_TRANSPORT=streamable-http uv run python -m yfinance_mcp.server.
 
+Docker HTTP mode:
+
+1. Build the image with docker build -t yfinance-mcp-server .
+2. Run docker run --rm -p 8000:8000 yfinance-mcp-server.
+
 ## Current Status
 
 The current implementation includes the core information-retrieval surface for yfinance, including quote and company metadata, history, statements, news, options, earnings and analyst data, holders and insider data, fund data, calendars, market endpoints, sector and industry endpoints, and discovery tools such as search and lookup.
@@ -95,6 +100,22 @@ Common settings:
 - YF_LOG_LEVEL
 - YF_HTTP_HOST
 - YF_HTTP_PORT
+
+## Docker
+
+Docker is recommended for remote `streamable-http` deployments rather than local `stdio` host integrations.
+
+Files:
+
+- `Dockerfile` builds a production-oriented image that starts the server in `streamable-http` mode
+- `docker-compose.yml` provides a local container run configuration with health checks
+- `.dockerignore` keeps the build context small
+
+Example:
+
+- build: `docker build -t yfinance-mcp-server .`
+- run: `docker run --rm -p 8000:8000 -e YF_LOG_LEVEL=INFO yfinance-mcp-server`
+- compose: `docker compose up --build`
 
 ## Documentation
 

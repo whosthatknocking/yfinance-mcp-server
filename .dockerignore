@@ -1,0 +1,14 @@
+.git
+.github
+.idea
+.pytest_cache
+.venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.coverage
+tests
+docs
+examples
+scripts

@@ -88,6 +88,7 @@ The authoritative source for scope is the latest supported upstream yfinance doc
 - Data handling: pandas
 - Caching: backend-agnostic cache layer with pluggable implementations
 - HTTP transport: Starlette/uvicorn plus MCP streamable-http support
+- Container deployment: Docker support for remote streamable-http mode
 - Packaging: uv preferred, pip acceptable
 - Testing: pytest and MCP CLI via mcp dev
 - Logging: structlog

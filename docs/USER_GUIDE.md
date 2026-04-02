@@ -58,6 +58,28 @@ To bind a host and port explicitly:
 
 In remote HTTP mode, blocking `yfinance` work is offloaded to Starlette's threadpool so individual tool calls do not execute directly on the event loop.
 
+## Run with Docker
+
+Docker is the preferred containerized path for remote HTTP deployments. It is less suitable for local `stdio` desktop-host workflows.
+
+Build the image:
+
+- `docker build -t yfinance-mcp-server .`
+
+Run the container:
+
+- `docker run --rm -p 8000:8000 yfinance-mcp-server`
+
+Run with explicit environment overrides:
+
+- `docker run --rm -p 8000:8000 -e YF_LOG_LEVEL=INFO -e YF_UPSTREAM_CONCURRENCY=4 yfinance-mcp-server`
+
+Run with Docker Compose:
+
+- `docker compose up --build`
+
+The container image starts in `streamable-http` mode, binds to `0.0.0.0`, exposes port `8000`, and includes a `/healthz` health check.
+
 ## Examples
 
 Configuration and prompt examples are available in:
@@ -75,6 +97,7 @@ After starting the server:
 
 - local mode should start without errors and wait on stdio
 - remote mode should start an HTTP listener on the configured host and port
+- Docker mode should publish port `8000` by default unless overridden
 - remote mode should remain responsive while blocking upstream `yfinance` calls are running because tool execution is offloaded to worker threads
 - remote mode exposes /healthz for liveness and /readyz for readiness
 - MCP streamable HTTP traffic is served at /mcp
