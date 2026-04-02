@@ -118,6 +118,40 @@ def benchmark_concurrent_quote_snapshot_tool() -> BenchmarkResult:
     return result
 
 
+def benchmark_get_batch_info_uncached_x4() -> BenchmarkResult:
+    def slow_get_info(symbol: str):
+        time.sleep(0.03)
+        return {"symbol": symbol, "marketCap": 100}
+
+    def run_once() -> None:
+        wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+        wrapper.batch_worker_limit = 4
+        with patch.object(wrapper, "get_info", side_effect=slow_get_info):
+            wrapper.get_batch_info(["AAPL", "MSFT", "NVDA", "AMZN"])
+
+    result = _measure(run_once, iterations=5)
+    result.name = "get_batch_info_uncached_x4"
+    result.notes = "Four-symbol uncached batch info call with bounded parallel fan-out and mocked 30 ms per-symbol work."
+    return result
+
+
+def benchmark_get_batch_quote_snapshot_uncached_x4() -> BenchmarkResult:
+    def slow_get_fast_info(symbol: str):
+        time.sleep(0.03)
+        return {"lastPrice": 123.45, "currency": "USD", "symbol": symbol}
+
+    def run_once() -> None:
+        wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+        wrapper.batch_worker_limit = 4
+        with patch.object(wrapper, "get_fast_info", side_effect=slow_get_fast_info):
+            wrapper.get_batch_quote_snapshot(["AAPL", "MSFT", "NVDA", "AMZN"])
+
+    result = _measure(run_once, iterations=5)
+    result.name = "get_batch_quote_snapshot_uncached_x4"
+    result.notes = "Four-symbol uncached batch quote snapshot call with bounded parallel fan-out and mocked 30 ms per-symbol work."
+    return result
+
+
 def benchmark_large_history_serialization() -> BenchmarkResult:
     rows = 2_000
     columns = 6
@@ -139,6 +173,8 @@ def main() -> None:
     results = [
         benchmark_get_info_cold_cache(),
         benchmark_get_info_warm_cache(),
+        benchmark_get_batch_info_uncached_x4(),
+        benchmark_get_batch_quote_snapshot_uncached_x4(),
         benchmark_concurrent_quote_snapshot_tool(),
         benchmark_large_history_serialization(),
     ]

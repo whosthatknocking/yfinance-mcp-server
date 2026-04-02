@@ -250,6 +250,12 @@ The final API_MAPPING.md should be exhaustive and maintained against the officia
   - bounded worker pools for batch tools when parallel fan-out is introduced
   - protection against duplicate in-flight work for identical cache keys where practical
 
+### Future Performance Improvements
+
+- Add single-flight protection for identical cache misses so concurrent callers do not duplicate the same upstream work.
+- Revisit `get_fast_info` fallback behavior so the server only touches the heavier `info` payload when quote fields are actually missing or when a caller explicitly needs the slower path.
+- Continue to maintain benchmark baselines for warm-cache latency, batch fan-out latency, and serialization cost so future changes can be compared against documented reference runs.
+
 ## Timeouts, Retries, and Stability
 
 - Every upstream request path must have explicit timeout behavior.

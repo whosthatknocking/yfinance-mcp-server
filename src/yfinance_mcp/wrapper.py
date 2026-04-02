@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import concurrent.futures
 import os
 import threading
 import time
@@ -74,6 +75,7 @@ class YFinanceWrapper:
         )
         self.timeout = min(self.retry_policy.read_timeout, self.retry_policy.total_timeout)
         self.limiter = ConcurrencyLimiter(int(os.getenv("YF_UPSTREAM_CONCURRENCY", "4")))
+        self.batch_worker_limit = max(1, int(os.getenv("YF_UPSTREAM_CONCURRENCY", "4")))
         self._throttle_state_lock = threading.Lock()
         self._throttle_cooldown_until = 0.0
         self._consecutive_throttle_failures = 0
@@ -144,7 +146,7 @@ class YFinanceWrapper:
         def operation() -> Dict[str, Any]:
             return {
                 "symbols": normalized,
-                "results": {symbol: self.get_info(symbol) for symbol in normalized},
+                "results": self._run_batch_symbol_calls(normalized, self.get_info),
             }
 
         return self._cached_call(
@@ -163,7 +165,7 @@ class YFinanceWrapper:
         def operation() -> Dict[str, Any]:
             return {
                 "symbols": normalized,
-                "results": {symbol: self.get_fast_info(symbol) for symbol in normalized},
+                "results": self._run_batch_symbol_calls(normalized, self.get_fast_info),
             }
 
         return self._cached_call(
@@ -173,6 +175,25 @@ class YFinanceWrapper:
             error_context={"symbols": normalized},
             allow_stale=False,
         )
+
+    def _run_batch_symbol_calls(
+        self,
+        symbols: List[str],
+        fetcher: Callable[[str], Dict[str, Any]],
+    ) -> Dict[str, Dict[str, Any]]:
+        if len(symbols) == 1:
+            symbol = symbols[0]
+            return {symbol: fetcher(symbol)}
+
+        max_workers = min(len(symbols), self.batch_worker_limit)
+        results: Dict[str, Dict[str, Any]] = {}
+        with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+            future_to_symbol = {executor.submit(fetcher, symbol): symbol for symbol in symbols}
+            for future in concurrent.futures.as_completed(future_to_symbol):
+                symbol = future_to_symbol[future]
+                results[symbol] = future.result()
+
+        return {symbol: results[symbol] for symbol in symbols}
 
     def get_batch_news(self, symbols: List[str]) -> List[Dict[str, Any]]:
         normalized = normalize_symbols(symbols)

@@ -40,7 +40,7 @@ Use `scripts/benchmark_baseline.py` for a quick, repeatable snapshot of represen
 
 Current baseline snapshot:
 
-- Run date: 2026-04-01 local time / 2026-04-02T03:54:14Z
+- Run date: 2026-04-01 local time / 2026-04-02T04:00:43Z
 - Command: `PYTHONPATH=src .venv/bin/python scripts/benchmark_baseline.py`
 - Python: `3.11.15`
 
@@ -48,10 +48,12 @@ Reference results from that run:
 
 | Benchmark | Median | Min | Max | Notes |
 | --- | ---: | ---: | ---: | --- |
-| `get_info_cold_cache` | 32.593 ms | 30.318 ms | 35.230 ms | One uncached `get_info` call with a mocked 30 ms upstream property. |
-| `get_info_warm_cache` | 0.002 ms | 0.001 ms | 0.003 ms | Warm-cache `get_info` after one priming request. |
-| `get_quote_snapshot_tool_concurrent_x3` | 102.895 ms | 101.278 ms | 106.124 ms | Three concurrent MCP tool invocations backed by mocked 100 ms blocking upstream work. |
-| `serialize_dataframe_2000x6` | 4.763 ms | 4.648 ms | 4.885 ms | Serialize a representative 2,000-row by 6-column DataFrame payload. |
+| `get_info_cold_cache` | 34.287 ms | 31.723 ms | 35.285 ms | One uncached `get_info` call with a mocked 30 ms upstream property. |
+| `get_info_warm_cache` | 0.002 ms | 0.001 ms | 0.004 ms | Warm-cache `get_info` after one priming request. |
+| `get_batch_info_uncached_x4` | 35.359 ms | 31.203 ms | 35.457 ms | Four-symbol uncached batch info call with bounded parallel fan-out and mocked 30 ms per-symbol work. |
+| `get_batch_quote_snapshot_uncached_x4` | 33.810 ms | 31.690 ms | 35.444 ms | Four-symbol uncached batch quote snapshot call with bounded parallel fan-out and mocked 30 ms per-symbol work. |
+| `get_quote_snapshot_tool_concurrent_x3` | 104.151 ms | 102.060 ms | 106.069 ms | Three concurrent MCP tool invocations backed by mocked 100 ms blocking upstream work. |
+| `serialize_dataframe_2000x6` | 4.688 ms | 4.538 ms | 4.956 ms | Serialize a representative 2,000-row by 6-column DataFrame payload. |
 
 How to use this baseline:
 

@@ -1,6 +1,7 @@
 from unittest.mock import patch
 from types import SimpleNamespace
 from datetime import date
+import time
 import pandas as pd
 import pytest
 
@@ -131,6 +132,52 @@ def test_get_batch_quote_snapshot_returns_payload_keyed_by_symbol():
         },
     }
     assert mocked.call_count == 2
+
+
+def test_get_batch_info_fans_out_in_parallel_with_bounded_workers():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+    wrapper.batch_worker_limit = 3
+
+    def slow_get_info(symbol: str):
+        time.sleep(0.05)
+        return {"symbol": symbol}
+
+    started = time.perf_counter()
+    with patch.object(wrapper, "get_info", side_effect=slow_get_info) as mocked:
+        result = wrapper.get_batch_info(["AAPL", "MSFT", "NVDA"])
+    elapsed = time.perf_counter() - started
+
+    assert result == {
+        "symbols": ["AAPL", "MSFT", "NVDA"],
+        "results": {"AAPL": {"symbol": "AAPL"}, "MSFT": {"symbol": "MSFT"}, "NVDA": {"symbol": "NVDA"}},
+    }
+    assert mocked.call_count == 3
+    assert elapsed < 0.12
+
+
+def test_get_batch_quote_snapshot_fans_out_in_parallel_with_bounded_workers():
+    wrapper = YFinanceWrapper(cache=InMemoryTTLCache())
+    wrapper.batch_worker_limit = 3
+
+    def slow_get_fast_info(symbol: str):
+        time.sleep(0.05)
+        return {"lastPrice": 123.45, "currency": "USD", "symbol": symbol}
+
+    started = time.perf_counter()
+    with patch.object(wrapper, "get_fast_info", side_effect=slow_get_fast_info) as mocked:
+        result = wrapper.get_batch_quote_snapshot(["AAPL", "MSFT", "NVDA"])
+    elapsed = time.perf_counter() - started
+
+    assert result == {
+        "symbols": ["AAPL", "MSFT", "NVDA"],
+        "results": {
+            "AAPL": {"lastPrice": 123.45, "currency": "USD", "symbol": "AAPL"},
+            "MSFT": {"lastPrice": 123.45, "currency": "USD", "symbol": "MSFT"},
+            "NVDA": {"lastPrice": 123.45, "currency": "USD", "symbol": "NVDA"},
+        },
+    }
+    assert mocked.call_count == 3
+    assert elapsed < 0.12
 
 
 def test_get_fast_info_uses_explicit_ticker_without_lookup():
